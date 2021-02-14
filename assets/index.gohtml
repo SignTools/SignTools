@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iOS Signer Service</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+          crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+            integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+            crossorigin="anonymous"></script>
+    <style>
+        a, a:hover {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .vertical-center {
+            margin: 0;
+        }
+
+        .jumbotron {
+            background-color: transparent !important;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand navbar-dark bg-dark py-3">
+    <div class="container">
+        <ol class="breadcrumb bg-transparent py-2 my-0 mr-auto text-white">
+            <li class="breadcrumb-item"><a href="/">iOS Signer</a></li>
+        </ol>
+        <a id="fileSelect" class="btn btn-outline-light my-0 ml-auto" href="#">
+            <form action="/file" method="post" enctype="multipart/form-data">
+                <input id="fileElem" type="file" name="file" onchange="this.form.submit()" style="display:none"/>
+            </form>
+            Upload IPA
+        </a>
+    </div>
+</nav>
+<div class="jumbotron vertical-center">
+    <div class="container">
+        <div class="card-columns">
+            {{range $_, $file := .Files}}
+                <div class="card text-white {{if $file.IsSigned}} bg-success {{else}} bg-primary {{end}}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{$file.Name}}</h5>
+                        <p class="card-text mb-2">
+                            {{if $file.IsSigned}} Signed {{else}} Processing {{end}}
+                        </p>
+                        <div class="d-flex flex-wrap justify-content-end">
+                            {{if $file.IsSigned}}
+                                <a class="btn btn-outline-light ml-auto mr-2 mt-2"
+                                   href="itms-services://?action=download-manifest&url={{$file.ManifestUrl}}">Install</a>
+                                <a class="btn btn-outline-light ml-0 mt-2"
+                                   href="{{$file.DownloadUrl}}">Download</a>
+                            {{else}}
+                                <a class="btn btn-outline-light ml-auto mt-2" href="{{$file.JobUrl}}">Status</a>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+            {{end}}
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    const fileSelect = document.getElementById("fileSelect")
+    const fileElem = document.getElementById("fileElem");
+    fileSelect.addEventListener("click", function (e) {
+        if (fileElem) {
+            fileElem.click();
+        }
+    }, false);
+</script>
+</html>
