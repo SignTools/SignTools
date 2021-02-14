@@ -54,6 +54,12 @@ jobs:
         with:
           token: ${{ secrets.API_GITHUB_TOKEN }}
 
+      - name: Setup Go environment
+        uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 1.16.0-rc1
+          stable: "false"
+
       - name: Binaries Release
         uses: goreleaser/goreleaser-action@v2
         with:
