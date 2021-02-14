@@ -87,7 +87,7 @@ func main() {
 }
 
 func downloadManifest(c echo.Context) error {
-	t, err := textTemplate.New("").Parse(assets.ManifestHtml)
+	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
 	if err != nil {
 		return err
 	}

@@ -6,4 +6,4 @@ import _ "embed"
 var IndexHtml string
 
 //go:embed manifest.xml
-var ManifestHtml string
+var ManifestPlist string
