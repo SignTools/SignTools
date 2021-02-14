@@ -51,6 +51,6 @@ This project consists of two sub-projects:
 - [ios-signer-service](https://github.com/SignTools/ios-signer-service) (this repo)
 - [ios-signer-ci](https://github.com/SignTools/ios-signer-ci)
 
-`ios-signer-service` is a web service that you install on any server that offers HTTPS. The service exposes a web interface which allows the user to upload "unsigned" app files. The easiest way to install the service is using the [Docker image](TODO).
+`ios-signer-service` is a web service that you install on any server that offers HTTPS. The service exposes a web interface which allows the user to upload "unsigned" app files. The easiest way to install the service is using the [Docker image](https://hub.docker.com/r/signtools/ios-signer-service).
 
 Uploaded "unsigned" app files are sent from `ios-signer-service` to `ios-signer-ci` for signing. This offloading is necessary because signing is only supported on a macOS system. `ios-signer-ci` uses GitHub's CI, which offers a macOS environment, to sign the file, and then sends it back to `ios-signer-service`. Finally, the user is able to download or install the signed app from the same web interface where they uploaded it. To host your own `ios-signer-ci`, simply fork the repo and follow its README.
