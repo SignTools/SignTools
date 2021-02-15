@@ -26,7 +26,7 @@ Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign a
 
 <table>
 <tr>
-    <th>Web</th>
+    <th>Mobile</th>
     <th>Desktop</th>
 </tr>
 <tr>
