@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/google/go-github/v33 v33.0.0
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.2.0
 	github.com/labstack/echo/v4 v4.2.0
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/viper v1.7.1
