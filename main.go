@@ -75,14 +75,14 @@ func main() {
 	e.Use(middleware.Logger())
 
 	e.GET("/", index)
-	e.POST("/file", uploadUnsigned)
-	e.GET("/file/:id/unsigned", downloadUnsigned)
-	e.GET("/file/:id/signed", downloadSigned)
-	e.GET("/file/:id/manifest", downloadManifest)
-	e.GET("/file/:id/delete", deleteApp)
+	e.POST("/app", uploadUnsigned)
+	e.GET("/app/:id/unsigned", downloadUnsigned)
+	e.GET("/app/:id/signed", downloadSigned)
+	e.GET("/app/:id/manifest", downloadManifest)
+	e.GET("/app/:id/delete", deleteApp)
 
 	e.GET("/cert/:file", certFile, authMiddleware)
-	e.POST("/file/:id/signed", uploadSigned, authMiddleware)
+	e.POST("/app/:id/signed", uploadSigned, authMiddleware)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
@@ -110,7 +110,7 @@ func downloadManifest(c echo.Context) error {
 		return err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "file", c.Param("id"), "signed"),
+		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", c.Param("id"), "signed"),
 		BundleId:    "com.foo.bar",
 		Title:       fileName,
 	}
@@ -248,9 +248,9 @@ func index(c echo.Context) error {
 			Name:         name,
 			UploadedTime: info.ModTime(),
 			JobUrl:       string(workflowUrl),
-			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "manifest"),
-			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "signed"),
-			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "delete"),
+			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "manifest"),
+			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "signed"),
+			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "delete"),
 		})
 	}
 	// reverse sort
@@ -283,8 +283,8 @@ func triggerWorkflow(id string) (string, error) {
 		github.CreateWorkflowDispatchEventRequest{
 			Ref: cfg.WorkflowRef,
 			Inputs: map[string]interface{}{
-				"download_suffix": path.Join("file", id, "unsigned"),
-				"upload_suffix":   path.Join("file", id, "signed"),
+				"download_suffix": path.Join("app", id, "unsigned"),
+				"upload_suffix":   path.Join("app", id, "signed"),
 				"cert_suffix":     path.Join("cert", config.Current.CertFileName),
 				"prov_suffix":     path.Join("cert", config.Current.ProvFileName),
 			},
