@@ -53,13 +53,14 @@
                             {{if $file.IsSigned}}
                                 <a class="btn btn-outline-light ml-auto mr-2 mt-2"
                                    href="itms-services://?action=download-manifest&url={{$file.ManifestUrl}}">Install</a>
-                                <a class="btn btn-outline-light ml-0 mt-2"
+                                <a class="btn btn-outline-light ml-0 mr-2 mt-2"
                                    href="{{$file.DownloadUrl}}">Download</a>
                             {{else}}
-                                <a class="btn btn-outline-light ml-auto mt-2"
+                                <a class="btn btn-outline-light ml-auto mr-2 mt-2"
                                    target="_blank"
                                    href="{{$file.JobUrl}}">Status</a>
                             {{end}}
+                            <a class="btn btn-outline-light ml-0 mt-2" href="{{$file.DeleteUrl}}">X</a>
                         </div>
                     </div>
                 </div>

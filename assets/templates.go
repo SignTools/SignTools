@@ -10,6 +10,7 @@ type ServerFile struct {
 	JobUrl       string
 	ManifestUrl  string
 	DownloadUrl  string
+	DeleteUrl    string
 }
 
 type IndexData struct {

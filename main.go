@@ -79,11 +79,25 @@ func main() {
 	e.GET("/file/:id/unsigned", downloadUnsigned)
 	e.GET("/file/:id/signed", downloadSigned)
 	e.GET("/file/:id/manifest", downloadManifest)
+	e.GET("/file/:id/delete", deleteApp)
 
 	e.GET("/cert/:file", certFile, authMiddleware)
 	e.POST("/file/:id/signed", uploadSigned, authMiddleware)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
+}
+
+func deleteApp(c echo.Context) error {
+	filePath := config.SaveFilePath(c.Param("id"))
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return c.NoContent(404)
+	} else if err != nil {
+		return err
+	}
+	if err := os.RemoveAll(filePath); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/")
 }
 
 func downloadManifest(c echo.Context) error {
@@ -235,6 +249,7 @@ func index(c echo.Context) error {
 			JobUrl:       string(workflowUrl),
 			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "manifest"),
 			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "signed"),
+			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerURL, "file", idFile.Name(), "delete"),
 		})
 	}
 	// reverse sort
