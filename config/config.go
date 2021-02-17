@@ -47,7 +47,7 @@ func createDefaultConfig() *Config {
 		RepoName:            "bar",
 		WorkflowFileName:    "sign.yml",
 		WorkflowRef:         "master",
-		ServerURL:           "https://website.com",
+		ServerURL:           "http://localhost:8080",
 		SaveDir:             "uploads",
 		Key:                 "MY_SUPER_LONG_SECRET_KEY",
 		CertDir:             "certs",
