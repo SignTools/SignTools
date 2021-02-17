@@ -75,14 +75,14 @@ func main() {
 	e.Use(middleware.Logger())
 
 	e.GET("/", index)
-	e.POST("/app", uploadUnsigned)
-	e.GET("/app/:id/unsigned", downloadUnsigned)
-	e.GET("/app/:id/signed", downloadSigned)
-	e.GET("/app/:id/manifest", downloadManifest)
+	e.POST("/app", uploadUnsignedApp)
+	e.GET("/app/:id/unsigned", getUnsignedApp)
+	e.GET("/app/:id/signed", getSignedApp)
+	e.GET("/app/:id/manifest", getManifest)
 	e.GET("/app/:id/delete", deleteApp)
 
-	e.GET("/cert/:file", certFile, authMiddleware)
-	e.POST("/app/:id/signed", uploadSigned, authMiddleware)
+	e.GET("/cert/:file", getCertFile, authMiddleware)
+	e.POST("/app/:id/signed", uploadSignedApp, authMiddleware)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
@@ -100,7 +100,7 @@ func deleteApp(c echo.Context) error {
 	return c.Redirect(302, "/")
 }
 
-func downloadManifest(c echo.Context) error {
+func getManifest(c echo.Context) error {
 	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
 	if err != nil {
 		return err
@@ -121,12 +121,12 @@ func downloadManifest(c echo.Context) error {
 	return c.Blob(200, "text/plain", result.Bytes())
 }
 
-func certFile(c echo.Context) error {
+func getCertFile(c echo.Context) error {
 	addFileNameHeader(c, c.Param("file"))
 	return c.File(util.SafeJoin(cfg.CertDir, c.Param("file")))
 }
 
-func uploadSigned(c echo.Context) error {
+func uploadSignedApp(c echo.Context) error {
 	file, err := c.FormFile(config.FormFileName)
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func uploadSigned(c echo.Context) error {
 	return c.NoContent(200)
 }
 
-func downloadSigned(c echo.Context) error {
+func getSignedApp(c echo.Context) error {
 	name, err := getFileName(c.Param("id"))
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func downloadSigned(c echo.Context) error {
 	return c.File(config.SaveSignedPath(c.Param("id")))
 }
 
-func downloadUnsigned(c echo.Context) error {
+func getUnsignedApp(c echo.Context) error {
 	name, err := getFileName(c.Param("id"))
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func getFileName(id string) (string, error) {
 	return string(nameBytes), nil
 }
 
-func uploadUnsigned(c echo.Context) error {
+func uploadUnsignedApp(c echo.Context) error {
 	file, err := c.FormFile(config.FormFileName)
 	if err != nil {
 		return err
