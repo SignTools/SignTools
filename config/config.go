@@ -54,7 +54,7 @@ func createDefaultConfig() *Config {
 		CertFileName:        "cert.p12",
 		ProvFileName:        "prov.mobileprovision",
 		CertPass:            "123456",
-		CleanupMins:         60 * 2,
+		CleanupMins:         60 * 24,
 		CleanupIntervalMins: 30,
 	}
 }
