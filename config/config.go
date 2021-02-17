@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/viper"
 	"ios-signer-service/util"
 	"log"
-	"path/filepath"
 	"strings"
 )
 
@@ -37,7 +36,7 @@ var (
 
 var resolveSavedFileWithId = func(path string) func(id string) string {
 	return func(id string) string {
-		return filepath.Join(Current.SaveDir, id, path)
+		return util.SafeJoin(Current.SaveDir, id, path)
 	}
 }
 

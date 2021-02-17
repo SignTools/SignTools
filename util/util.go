@@ -20,8 +20,8 @@ func Restructure(source interface{}, dest interface{}) error {
 	return nil
 }
 
-func SafeJoin(basePath string, unsafePath string) string {
-	return filepath.Join(basePath, filepath.Clean("/"+unsafePath))
+func SafeJoin(basePath string, unsafePath ...string) string {
+	return filepath.Join(basePath, filepath.Clean("/"+filepath.Join(unsafePath...)))
 }
 
 func JoinUrlsPanic(fullBaseUrl string, relativeUrl ...string) string {
