@@ -238,7 +238,8 @@ func index(c echo.Context) error {
 		if !isSigned {
 			workflowUrl, err = ioutil.ReadFile(config.SaveWorkflowPath(idFile.Name()))
 			if err != nil {
-				return err
+				log.Printf("failed to read job url for %s (%s)\n", idFile.Name(), name)
+				workflowUrl = []byte("#")
 			}
 		}
 		data.Files = append(data.Files, assets.ServerFile{
