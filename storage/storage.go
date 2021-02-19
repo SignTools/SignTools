@@ -2,8 +2,10 @@ package storage
 
 import (
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"ios-signer-service/config"
 	"ios-signer-service/util"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -17,6 +19,12 @@ var (
 	SaveWorkflowUrlPath = resolveLocationWithId(SaveAppsPath, "workflow_url")
 	SaveNamePath        = resolveLocationWithId(SaveAppsPath, "name")
 )
+
+func init() {
+	if err := os.MkdirAll(SaveAppsPath, 0666); err != nil {
+		log.Fatalln(errors.WithMessage(err, "mkdir SaveAppsPath"))
+	}
+}
 
 var resolveLocationWithId = func(parent string, path string) func(id string) string {
 	return func(id string) string {
