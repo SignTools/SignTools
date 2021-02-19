@@ -6,43 +6,47 @@ import (
 	"flag"
 	"fmt"
 	"github.com/google/go-github/v33/github"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	htmlTemplate "html/template"
-	"io"
-	"io/ioutil"
 	"ios-signer-service/assets"
 	"ios-signer-service/config"
+	"ios-signer-service/storage"
 	"ios-signer-service/util"
 	"log"
 	"os"
 	"path"
-	"path/filepath"
 	"sort"
 	textTemplate "text/template"
 	"time"
 )
 
-var cfg = config.Current
+var (
+	cfg          = config.Current
+	formFileName = "file"
+)
 
 func cleanupFiles() error {
-	idFiles, err := ioutil.ReadDir(cfg.SaveDir)
+	apps, err := storage.Apps.GetAll()
 	if err != nil {
-		return errors.WithMessage(err, "could not read save directory")
+		return err
 	}
 	now := time.Now()
-	for _, idFile := range idFiles {
-		if idFile.ModTime().Add(time.Duration(cfg.CleanupMins) * time.Minute).Before(now) {
-			name, err := getFileName(idFile.Name())
+	for _, app := range apps {
+		modTime, err := app.GetModTime()
+		if err != nil {
+			return err
+		}
+		if modTime.Add(time.Duration(cfg.CleanupMins) * time.Minute).Before(now) {
+			name, err := app.GetName()
 			if err != nil {
-				return errors.WithMessage(err, "could not read file name")
+				log.Printf("could not read file name for %s: %v\n", app.GetId(), err)
 			}
-			log.Printf("Removing file: %s/%s", idFile.Name(), name)
-			if err := os.RemoveAll(filepath.Join(cfg.SaveDir, idFile.Name())); err != nil {
-				return errors.WithMessage(err, "could not remove file")
+			log.Printf("Removing file: %s/%s", name, name)
+			if err := storage.Apps.Delete(app.GetId()); err != nil {
+				return errors.WithMessage(err, "could not remove app")
 			}
 		}
 	}
@@ -76,36 +80,40 @@ func main() {
 
 	e.GET("/", index)
 	e.POST("/app", uploadUnsignedApp)
-	e.GET("/app/:id/unsigned", getUnsignedApp)
-	e.GET("/app/:id/signed", getSignedApp)
-	e.GET("/app/:id/manifest", getManifest)
+	e.GET("/app/:id/unsigned", appResolver(getUnsignedApp))
+	e.GET("/app/:id/signed", appResolver(getSignedApp))
+	e.GET("/app/:id/manifest", appResolver(getManifest))
 	e.GET("/app/:id/delete", deleteApp)
 
 	e.GET("/cert/:file", getCertFile, authMiddleware)
-	e.POST("/app/:id/signed", uploadSignedApp, authMiddleware)
+	e.POST("/app/:id/signed", appResolver(uploadSignedApp), authMiddleware)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
 
-func deleteApp(c echo.Context) error {
-	filePath := config.SaveFilePath(c.Param("id"))
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		return c.NoContent(404)
-	} else if err != nil {
-		return err
+func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		app, ok := storage.Apps.Get(c.Param("id"))
+		if !ok {
+			return c.NoContent(404)
+		}
+		return handler(c, app)
 	}
-	if err := os.RemoveAll(filePath); err != nil {
+}
+
+func deleteApp(c echo.Context) error {
+	if err := storage.Apps.Delete(c.Param("id")); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
 }
 
-func getManifest(c echo.Context) error {
+func getManifest(c echo.Context, app storage.App) error {
 	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
 	if err != nil {
 		return err
 	}
-	fileName, err := getFileName(c.Param("id"))
+	fileName, err := app.GetName()
 	if err != nil {
 		return err
 	}
@@ -122,140 +130,119 @@ func getManifest(c echo.Context) error {
 }
 
 func getCertFile(c echo.Context) error {
-	addFileNameHeader(c, c.Param("file"))
+	writeFileNameHeader(c, c.Param("file"))
 	return c.File(util.SafeJoin(cfg.CertDir, c.Param("file")))
 }
 
-func uploadSignedApp(c echo.Context) error {
-	file, err := c.FormFile(config.FormFileName)
+func uploadSignedApp(c echo.Context, app storage.App) error {
+	header, err := c.FormFile(formFileName)
 	if err != nil {
 		return err
 	}
-	src, err := file.Open()
+	file, err := header.Open()
 	if err != nil {
 		return err
 	}
-	defer src.Close()
-	dst, err := os.Create(config.SaveSignedPath(c.Param("id")))
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-	if _, err = io.Copy(dst, src); err != nil {
+	defer file.Close()
+	if _, err := app.SetSigned(file); err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func getSignedApp(c echo.Context) error {
-	name, err := getFileName(c.Param("id"))
+func getSignedApp(c echo.Context, app storage.App) error {
+	if _, err := app.GetSigned(c.Response().Writer); err != nil {
+		return err
+	}
+	return writeAppResponse(c, app)
+}
+
+func getUnsignedApp(c echo.Context, app storage.App) error {
+	if _, err := app.GetUnsigned(c.Response().Writer); err != nil {
+		return err
+	}
+	return writeAppResponse(c, app)
+}
+
+func writeAppResponse(c echo.Context, app storage.App) error {
+	name, err := app.GetName()
 	if err != nil {
 		return err
 	}
-	addFileNameHeader(c, name)
-	return c.File(config.SaveSignedPath(c.Param("id")))
+	writeFileNameHeader(c, name)
+	c.Response().Header().Set("Content-Type", "application/octet-stream")
+	c.Response().WriteHeader(200)
+	return nil
 }
 
-func getUnsignedApp(c echo.Context) error {
-	name, err := getFileName(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	addFileNameHeader(c, name)
-	return c.File(config.SaveUnsignedPath(c.Param("id")))
-}
-
-func addFileNameHeader(c echo.Context, name string) {
+func writeFileNameHeader(c echo.Context, name string) {
 	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, name))
 }
 
-func getFileName(id string) (string, error) {
-	nameBytes, err := ioutil.ReadFile(config.SaveDisplayNamePath(id))
-	if err != nil {
-		return "", err
-	}
-	return string(nameBytes), nil
-}
-
 func uploadUnsignedApp(c echo.Context) error {
-	file, err := c.FormFile(config.FormFileName)
+	header, err := c.FormFile(formFileName)
 	if err != nil {
 		return err
 	}
-	src, err := file.Open()
+	app, err := storage.Apps.New()
 	if err != nil {
 		return err
 	}
-	defer src.Close()
-	id := uuid.NewString()
-	if err := os.MkdirAll(config.SaveFilePath(id), 0666); err != nil {
-		return err
-	}
-	nameBytes := []byte(filepath.Clean(file.Filename))
-	if err := ioutil.WriteFile(config.SaveDisplayNamePath(id), nameBytes, 0600); err != nil {
-		return err
-	}
-	dst, err := os.Create(config.SaveUnsignedPath(id))
+	file, err := header.Open()
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
-	if _, err = io.Copy(dst, src); err != nil {
+	defer file.Close()
+	if _, err := app.SetUnsigned(file); err != nil {
 		return err
 	}
-	workflowUrl, err := triggerWorkflow(id)
+	workflowUrl, err := triggerWorkflow(app.GetId())
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(config.SaveWorkflowPath(id), []byte(workflowUrl), 0600); err != nil {
+	if err := app.SetWorkflowUrl(workflowUrl); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
 }
 
 func index(c echo.Context) error {
-	idFiles, err := os.ReadDir(cfg.SaveDir)
+	apps, err := storage.Apps.GetAll()
 	if err != nil {
 		return err
 	}
 	data := assets.IndexData{}
-	for _, idFile := range idFiles {
-		name, err := getFileName(idFile.Name())
+	for _, app := range apps {
+		isSigned, err := app.IsSigned()
 		if err != nil {
 			return err
 		}
-		var isSigned = false
-		if _, err := os.Stat(config.SaveSignedPath(idFile.Name())); err == nil {
-			isSigned = true
-		} else if !os.IsNotExist(err) {
-			return err
-		}
-		info, err := idFile.Info()
+		modTime, err := app.GetModTime()
 		if err != nil {
 			return err
 		}
-		var workflowUrl []byte
-		if !isSigned {
-			workflowUrl, err = ioutil.ReadFile(config.SaveWorkflowPath(idFile.Name()))
-			if err != nil {
-				log.Printf("failed to read job url for %s (%s)\n", idFile.Name(), name)
-				workflowUrl = []byte("#")
-			}
+		name, err := app.GetName()
+		if err != nil {
+			log.Printf("read name for %s: %v\n", app.GetId(), err)
+		}
+		workflowUrl, err := app.GetWorkflowUrl()
+		if err != nil {
+			log.Printf("read workflow url for %s (%s): %v\n", app.GetId(), name, err)
 		}
 		data.Files = append(data.Files, assets.ServerFile{
-			Id:           idFile.Name(),
-			IsSigned:     isSigned,
-			Name:         name,
-			UploadedTime: info.ModTime(),
-			JobUrl:       string(workflowUrl),
-			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "manifest"),
-			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "signed"),
-			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerURL, "app", idFile.Name(), "delete"),
+			Id:          app.GetId(),
+			IsSigned:    isSigned,
+			Name:        name,
+			ModTime:     modTime,
+			WorkflowUrl: workflowUrl,
+			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "manifest"),
+			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "signed"),
+			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "delete"),
 		})
 	}
 	// reverse sort
 	sort.Slice(data.Files, func(i, j int) bool {
-		return data.Files[i].UploadedTime.After(data.Files[j].UploadedTime)
+		return data.Files[i].ModTime.After(data.Files[j].ModTime)
 	})
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)
 	if err != nil {

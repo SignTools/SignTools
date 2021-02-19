@@ -3,14 +3,14 @@ package assets
 import "time"
 
 type ServerFile struct {
-	Id           string
-	IsSigned     bool
-	Name         string
-	UploadedTime time.Time
-	JobUrl       string
-	ManifestUrl  string
-	DownloadUrl  string
-	DeleteUrl    string
+	Id          string
+	IsSigned    bool
+	Name        string
+	ModTime     time.Time
+	WorkflowUrl string
+	ManifestUrl string
+	DownloadUrl string
+	DeleteUrl   string
 }
 
 type IndexData struct {

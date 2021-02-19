@@ -25,21 +25,6 @@ type Config struct {
 	CleanupIntervalMins uint64 `yaml:"cleanup_interval_mins"`
 }
 
-var (
-	SaveFilePath        = resolveSavedFileWithId("")
-	SaveSignedPath      = resolveSavedFileWithId("signed")
-	SaveUnsignedPath    = resolveSavedFileWithId("unsigned")
-	SaveWorkflowPath    = resolveSavedFileWithId("job")
-	SaveDisplayNamePath = resolveSavedFileWithId("name")
-	FormFileName        = "file"
-)
-
-var resolveSavedFileWithId = func(path string) func(id string) string {
-	return func(id string) string {
-		return util.SafeJoin(Current.SaveDir, id, path)
-	}
-}
-
 func createDefaultConfig() *Config {
 	return &Config{
 		GitHubToken:         "MY_GITHUB_TOKEN",
@@ -48,7 +33,7 @@ func createDefaultConfig() *Config {
 		WorkflowFileName:    "sign.yml",
 		WorkflowRef:         "master",
 		ServerURL:           "http://localhost:8080",
-		SaveDir:             "uploads",
+		SaveDir:             "data",
 		Key:                 "MY_SUPER_LONG_SECRET_KEY",
 		CertDir:             "certs",
 		CertFileName:        "cert.p12",
