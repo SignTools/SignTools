@@ -6,10 +6,9 @@ import (
 
 type profileResolver struct {
 	idToProfileMap map[string]*Profile
-	scannedDir     bool
 }
 
-func (r *profileResolver) Refresh() error {
+func (r *profileResolver) refresh() error {
 	idDirs, err := os.ReadDir(profilesPath)
 	if err != nil {
 		return &AppError{"read profiles dir", ".", err}
@@ -22,12 +21,6 @@ func (r *profileResolver) Refresh() error {
 }
 
 func (r *profileResolver) GetAll() ([]*Profile, error) {
-	if !r.scannedDir {
-		if err := r.Refresh(); err != nil {
-			return nil, &AppError{"refresh profiles", ".", err}
-		}
-		r.scannedDir = true
-	}
 	var profiles []*Profile
 	for _, profile := range r.idToProfileMap {
 		profiles = append(profiles, profile)

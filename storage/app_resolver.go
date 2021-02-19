@@ -9,10 +9,9 @@ import (
 type appResolver struct {
 	idToAppMap map[string]App
 	mutex      sync.Mutex
-	scannedDir bool
 }
 
-func (r *appResolver) Refresh() error {
+func (r *appResolver) refresh() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	idDirs, err := os.ReadDir(saveAppsPath)
@@ -27,12 +26,6 @@ func (r *appResolver) Refresh() error {
 }
 
 func (r *appResolver) GetAll() ([]App, error) {
-	if !r.scannedDir {
-		if err := r.Refresh(); err != nil {
-			return nil, &AppError{"refresh apps", ".", err}
-		}
-		r.scannedDir = true
-	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	var apps []App

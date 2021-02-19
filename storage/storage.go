@@ -24,12 +24,21 @@ var (
 	profilesNamePath = resolveLocationWithId(profilesPath, "name.txt")
 )
 
+var Apps = appResolver{idToAppMap: map[string]App{}}
+var Profiles = profileResolver{idToProfileMap: map[string]*Profile{}}
+
 func init() {
 	requiredPaths := []string{saveAppsPath, profilesPath}
 	for _, path := range requiredPaths {
 		if err := os.MkdirAll(path, 0666); err != nil {
 			log.Fatalln(errors.WithMessage(err, "mkdir required path"))
 		}
+	}
+	if err := Apps.refresh(); err != nil {
+		log.Fatalln(errors.WithMessage(err, "refresh apps"))
+	}
+	if err := Profiles.refresh(); err != nil {
+		log.Fatalln(errors.WithMessage(err, "refresh profiles"))
 	}
 }
 
@@ -38,6 +47,3 @@ var resolveLocationWithId = func(parent string, path string) func(id string) str
 		return util.SafeJoin(parent, id, path)
 	}
 }
-
-var Apps = appResolver{idToAppMap: map[string]App{}}
-var Profiles = profileResolver{idToProfileMap: map[string]*Profile{}}
