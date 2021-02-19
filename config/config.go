@@ -54,7 +54,7 @@ func init() {
 
 	cfg, err := getConfig()
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln(errors.WithMessage(err, "get config"))
 	}
 
 	if len(strings.TrimSpace(cfg.Key)) < 16 {
@@ -71,7 +71,7 @@ func getConfig() (*Config, error) {
 	}
 	// don't use viper.Unmarshal because it doesn't support nested structs: https://github.com/spf13/viper/issues/488
 	if err := util.Restructure(viper.AllSettings(), cfg); err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "config restructure")
 	}
 	return cfg, nil
 }
@@ -79,13 +79,13 @@ func getConfig() (*Config, error) {
 func handleNoConfigFile(config *Config) error {
 	defaultMap := make(map[string]interface{})
 	if err := util.Restructure(config, &defaultMap); err != nil {
-		return err
+		return errors.WithMessage(err, "restructure")
 	}
 	if err := viper.MergeConfigMap(defaultMap); err != nil {
-		return err
+		return errors.WithMessage(err, "merge default config")
 	}
 	if err := viper.SafeWriteConfig(); err != nil {
-		return err
+		return errors.WithMessage(err, "save config")
 	}
-	return errors.New("config: not present, template generated")
+	return errors.New("file not present, template generated")
 }

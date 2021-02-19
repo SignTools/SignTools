@@ -14,8 +14,8 @@ var (
 	SaveAppPath         = resolveLocationWithId(SaveAppsPath, "")
 	SaveSignedPath      = resolveLocationWithId(SaveAppsPath, "signed")
 	SaveUnsignedPath    = resolveLocationWithId(SaveAppsPath, "unsigned")
-	SaveWorkflowPath    = resolveLocationWithId(SaveAppsPath, "workflow")
-	SaveDisplayNamePath = resolveLocationWithId(SaveAppsPath, "name")
+	SaveWorkflowUrlPath = resolveLocationWithId(SaveAppsPath, "workflow_url")
+	SaveNamePath        = resolveLocationWithId(SaveAppsPath, "name")
 )
 
 var resolveLocationWithId = func(parent string, path string) func(id string) string {
@@ -37,7 +37,7 @@ func (r *appResolver) GetAll() ([]App, error) {
 	var apps []App
 	idDirs, err := os.ReadDir(SaveAppsPath)
 	if err != nil {
-		return nil, err
+		return nil, &AppError{"read apps dir", ".", err}
 	}
 	r.idToAppMap = map[string]App{}
 	for _, idDir := range idDirs {
@@ -65,7 +65,7 @@ func (r *appResolver) New() (App, error) {
 	defer r.mutex.Unlock()
 	id := uuid.NewString()
 	if err := os.MkdirAll(SaveAppPath(id), 0666); err != nil {
-		return nil, err
+		return nil, &AppError{"make app dir", id, err}
 	}
 	app := newApp(id)
 	r.idToAppMap[id] = app
@@ -80,7 +80,7 @@ func (r *appResolver) Delete(id string) error {
 		return nil
 	}
 	if err := app.prune(); err != nil {
-		return err
+		return &AppError{"prune app", ".", err}
 	}
 	delete(r.idToAppMap, app.GetId())
 	return nil

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"net/url"
 	"path"
@@ -12,10 +13,10 @@ import (
 func Restructure(source interface{}, dest interface{}) error {
 	bytes, err := yaml.Marshal(source)
 	if err != nil {
-		return err
+		return errors.WithMessage(err, "marshal")
 	}
 	if err := yaml.Unmarshal(bytes, dest); err != nil {
-		return err
+		return errors.WithMessage(err, "unmarshal")
 	}
 	return nil
 }

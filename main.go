@@ -41,7 +41,7 @@ func cleanupApps() error {
 		}
 		if modTime.Add(time.Duration(cfg.CleanupMins) * time.Minute).Before(now) {
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
-				return errors.WithMessage(err, "cleanup app")
+				return err
 			}
 		}
 	}
@@ -63,7 +63,7 @@ func main() {
 	go func() {
 		for {
 			if err := cleanupApps(); err != nil {
-				log.Println(err)
+				log.Println(errors.WithMessage(err, "cleanup apps"))
 			}
 			time.Sleep(time.Duration(cfg.CleanupIntervalMins) * time.Minute)
 		}
