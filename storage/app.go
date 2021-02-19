@@ -11,11 +11,11 @@ import (
 
 type App interface {
 	GetId() string
-	GetSigned(io.Writer) (int64, error)
-	SetSigned(io.Reader) (int64, error)
+	ReadSigned(func(io.ReadSeeker) error) error
+	WriteSigned(func(io.WriteSeeker) error) error
 	IsSigned() (bool, error)
-	GetUnsigned(io.Writer) (int64, error)
-	SetUnsigned(io.Reader) (int64, error)
+	ReadUnsigned(func(io.ReadSeeker) error) error
+	WriteUnsigned(func(io.WriteSeeker) error) error
 	GetName() (string, error)
 	SetName(string) error
 	GetWorkflowUrl() (string, error)
@@ -68,44 +68,40 @@ func (a *app) GetId() string {
 	return a.id
 }
 
-func (a *app) GetSigned(writer io.Writer) (int64, error) {
+func (a *app) ReadSigned(f func(io.ReadSeeker) error) error {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	i, err := a.readFile(writer, SaveSignedPath(a.id))
-	if err != nil {
-		return 0, &AppError{"read signed file", a.id, err}
+	if err := a.readFile(f, SaveSignedPath(a.id)); err != nil {
+		return err
 	}
-	return i, nil
+	return nil
 }
 
-func (a *app) SetSigned(reader io.Reader) (int64, error) {
+func (a *app) WriteSigned(f func(io.WriteSeeker) error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	i, err := a.writeFile(reader, SaveSignedPath(a.id))
-	if err != nil {
-		return 0, &AppError{"write signed file", a.id, err}
+	if err := a.writeFile(f, SaveSignedPath(a.id)); err != nil {
+		return err
 	}
-	return i, nil
+	return nil
 }
 
-func (a *app) GetUnsigned(writer io.Writer) (int64, error) {
+func (a *app) ReadUnsigned(f func(io.ReadSeeker) error) error {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	i, err := a.readFile(writer, SaveUnsignedPath(a.id))
-	if err != nil {
-		return 0, &AppError{"read unsigned file", a.id, err}
+	if err := a.readFile(f, SaveUnsignedPath(a.id)); err != nil {
+		return err
 	}
-	return i, nil
+	return nil
 }
 
-func (a *app) SetUnsigned(reader io.Reader) (int64, error) {
+func (a *app) WriteUnsigned(f func(io.WriteSeeker) error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	i, err := a.writeFile(reader, SaveUnsignedPath(a.id))
-	if err != nil {
-		return 0, &AppError{"set unsigned file", a.id, err}
+	if err := a.writeFile(f, SaveUnsignedPath(a.id)); err != nil {
+		return err
 	}
-	return i, nil
+	return nil
 }
 
 func (a *app) GetName() (string, error) {
@@ -153,28 +149,26 @@ func (a *app) prune() error {
 	return nil
 }
 
-func (a *app) readFile(writer io.Writer, path string) (int64, error) {
+func (a *app) readFile(f func(io.ReadSeeker) error, path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return 0, err
+		return &AppError{"open file", a.id, err}
 	}
 	defer file.Close()
-	if n, err := io.Copy(writer, file); err != nil {
-		return 0, err
-	} else {
-		return n, nil
+	if err := f(file); err != nil {
+		return &AppError{"user read function", a.id, err}
 	}
+	return nil
 }
 
-func (a *app) writeFile(reader io.Reader, path string) (int64, error) {
+func (a *app) writeFile(f func(io.WriteSeeker) error, path string) error {
 	file, err := os.Create(path)
 	if err != nil {
-		return 0, err
+		return &AppError{"create file", a.id, err}
 	}
 	defer file.Close()
-	if n, err := io.Copy(file, reader); err != nil {
-		return 0, err
-	} else {
-		return n, nil
+	if err := f(file); err != nil {
+		return &AppError{"user write function", a.id, err}
 	}
+	return nil
 }

@@ -11,11 +11,13 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	htmlTemplate "html/template"
+	"io"
 	"ios-signer-service/assets"
 	"ios-signer-service/config"
 	"ios-signer-service/storage"
 	"ios-signer-service/util"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"sort"
@@ -125,7 +127,7 @@ func getManifest(c echo.Context, app storage.App) error {
 }
 
 func getCertFile(c echo.Context) error {
-	writeFileNameHeader(c, c.Param("file"))
+	writeAttachmentHeader(c, c.Param("file"))
 	return c.File(util.SafeJoin(cfg.CertDir, c.Param("file")))
 }
 
@@ -139,38 +141,58 @@ func uploadSignedApp(c echo.Context, app storage.App) error {
 		return err
 	}
 	defer file.Close()
-	if _, err := app.SetSigned(file); err != nil {
+	err = app.WriteSigned(func(dstFile io.WriteSeeker) error {
+		if _, err := io.Copy(dstFile, file); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
 func getSignedApp(c echo.Context, app storage.App) error {
-	if _, err := app.GetSigned(c.Response().Writer); err != nil {
-		return err
-	}
-	return writeAppResponse(c, app)
-}
-
-func getUnsignedApp(c echo.Context, app storage.App) error {
-	if _, err := app.GetUnsigned(c.Response().Writer); err != nil {
-		return err
-	}
-	return writeAppResponse(c, app)
-}
-
-func writeAppResponse(c echo.Context, app storage.App) error {
-	name, err := app.GetName()
+	f, err := writeFileResponse(c, app)
 	if err != nil {
 		return err
 	}
-	writeFileNameHeader(c, name)
-	c.Response().Header().Set("Content-Type", "application/octet-stream")
-	c.Response().WriteHeader(200)
+	if err := app.ReadSigned(f); err != nil {
+		return err
+	}
 	return nil
 }
 
-func writeFileNameHeader(c echo.Context, name string) {
+func getUnsignedApp(c echo.Context, app storage.App) error {
+	f, err := writeFileResponse(c, app)
+	if err != nil {
+		return err
+	}
+	if err := app.ReadUnsigned(f); err != nil {
+		return err
+	}
+	return nil
+}
+
+func writeFileResponse(c echo.Context, app storage.App) (func(io.ReadSeeker) error, error) {
+	name, err := app.GetName()
+	if err != nil {
+		return nil, err
+	}
+	//TODO: Should use the file's mod time, otherwise may tell client to use cached file even though it has changed
+	modTime, err := app.GetModTime()
+	if err != nil {
+		return nil, err
+	}
+	writeAttachmentHeader(c, name)
+	return func(file io.ReadSeeker) error {
+		http.ServeContent(c.Response(), c.Request(), name, modTime, file)
+		return nil
+	}, nil
+}
+
+func writeAttachmentHeader(c echo.Context, name string) {
 	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, name))
 }
 
@@ -188,7 +210,16 @@ func uploadUnsignedApp(c echo.Context) error {
 		return err
 	}
 	defer file.Close()
-	if _, err := app.SetUnsigned(file); err != nil {
+	err = app.WriteUnsigned(func(dstFile io.WriteSeeker) error {
+		if _, err := io.Copy(dstFile, file); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if err := app.SetName(header.Filename); err != nil {
 		return err
 	}
 	workflowUrl, err := triggerWorkflow(app.GetId())
@@ -218,11 +249,11 @@ func index(c echo.Context) error {
 		}
 		name, err := app.GetName()
 		if err != nil {
-			log.Printf("read name for %s: %v\n", app.GetId(), err)
+			log.Println(errors.WithMessage(err, "get name"))
 		}
 		workflowUrl, err := app.GetWorkflowUrl()
 		if err != nil {
-			log.Printf("read workflow url for %s (%s): %v\n", app.GetId(), name, err)
+			log.Println(errors.WithMessage(err, "get workflow url"))
 		}
 		data.Apps = append(data.Apps, assets.App{
 			Id:          app.GetId(),
