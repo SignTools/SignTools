@@ -46,7 +46,7 @@ type app struct {
 func (a *app) GetModTime() (time.Time, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	appDir, err := os.Stat(SaveAppPath(a.id))
+	appDir, err := os.Stat(saveAppPath(a.id))
 	if err != nil {
 		return time.Time{}, &AppError{"stat app dir", a.id, err}
 	}
@@ -56,7 +56,7 @@ func (a *app) GetModTime() (time.Time, error) {
 func (a *app) IsSigned() (bool, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if _, err := os.Stat(SaveSignedPath(a.id)); os.IsNotExist(err) {
+	if _, err := os.Stat(saveSignedPath(a.id)); os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
 		return false, &AppError{"stat signed file", a.id, err}
@@ -71,7 +71,7 @@ func (a *app) GetId() string {
 func (a *app) ReadSigned(f func(io.ReadSeeker) error) error {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if err := a.readFile(f, SaveSignedPath(a.id)); err != nil {
+	if err := a.readFile(f, saveSignedPath(a.id)); err != nil {
 		return err
 	}
 	return nil
@@ -80,7 +80,7 @@ func (a *app) ReadSigned(f func(io.ReadSeeker) error) error {
 func (a *app) WriteSigned(f func(io.WriteSeeker) error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := a.writeFile(f, SaveSignedPath(a.id)); err != nil {
+	if err := a.writeFile(f, saveSignedPath(a.id)); err != nil {
 		return err
 	}
 	return nil
@@ -89,7 +89,7 @@ func (a *app) WriteSigned(f func(io.WriteSeeker) error) error {
 func (a *app) ReadUnsigned(f func(io.ReadSeeker) error) error {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if err := a.readFile(f, SaveUnsignedPath(a.id)); err != nil {
+	if err := a.readFile(f, saveUnsignedPath(a.id)); err != nil {
 		return err
 	}
 	return nil
@@ -98,7 +98,7 @@ func (a *app) ReadUnsigned(f func(io.ReadSeeker) error) error {
 func (a *app) WriteUnsigned(f func(io.WriteSeeker) error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := a.writeFile(f, SaveUnsignedPath(a.id)); err != nil {
+	if err := a.writeFile(f, saveUnsignedPath(a.id)); err != nil {
 		return err
 	}
 	return nil
@@ -107,7 +107,7 @@ func (a *app) WriteUnsigned(f func(io.WriteSeeker) error) error {
 func (a *app) GetName() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(SaveNamePath(a.id))
+	b, err := ioutil.ReadFile(saveNamePath(a.id))
 	if err != nil {
 		return "", &AppError{"read name file", a.id, err}
 	}
@@ -117,7 +117,7 @@ func (a *app) GetName() (string, error) {
 func (a *app) SetName(name string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := ioutil.WriteFile(SaveNamePath(a.id), []byte(name), 0666); err != nil {
+	if err := ioutil.WriteFile(saveNamePath(a.id), []byte(name), 0666); err != nil {
 		return &AppError{"write name file", a.id, err}
 	}
 	return nil
@@ -126,7 +126,7 @@ func (a *app) SetName(name string) error {
 func (a *app) GetWorkflowUrl() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(SaveWorkflowUrlPath(a.id))
+	b, err := ioutil.ReadFile(saveWorkflowUrlPath(a.id))
 	if err != nil {
 		return "", &AppError{"read workflow url file", a.id, err}
 	}
@@ -136,7 +136,7 @@ func (a *app) GetWorkflowUrl() (string, error) {
 func (a *app) SetWorkflowUrl(url string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := ioutil.WriteFile(SaveWorkflowUrlPath(a.id), []byte(url), 0666); err != nil {
+	if err := ioutil.WriteFile(saveWorkflowUrlPath(a.id), []byte(url), 0666); err != nil {
 		return &AppError{"set workflow url file", a.id, err}
 	}
 	return nil
@@ -146,7 +146,7 @@ func (a *app) SetWorkflowUrl(url string) error {
 func (a *app) prune() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := os.RemoveAll(SaveAppPath(a.id)); err != nil {
+	if err := os.RemoveAll(saveAppPath(a.id)); err != nil {
 		return &AppError{"remove app dir", a.id, err}
 	}
 	return nil

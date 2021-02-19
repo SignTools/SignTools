@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	SaveAppsPath        = filepath.Join(config.Current.SaveDir, "apps")
-	SaveAppPath         = resolveLocationWithId(SaveAppsPath, "")
-	SaveSignedPath      = resolveLocationWithId(SaveAppsPath, "signed")
-	SaveUnsignedPath    = resolveLocationWithId(SaveAppsPath, "unsigned")
-	SaveWorkflowUrlPath = resolveLocationWithId(SaveAppsPath, "workflow_url")
-	SaveNamePath        = resolveLocationWithId(SaveAppsPath, "name")
+	saveAppsPath        = filepath.Join(config.Current.SaveDir, "apps")
+	saveAppPath         = resolveLocationWithId(saveAppsPath, "")
+	saveSignedPath      = resolveLocationWithId(saveAppsPath, "signed")
+	saveUnsignedPath    = resolveLocationWithId(saveAppsPath, "unsigned")
+	saveWorkflowUrlPath = resolveLocationWithId(saveAppsPath, "workflow_url")
+	saveNamePath        = resolveLocationWithId(saveAppsPath, "name")
 )
 
 func init() {

@@ -15,7 +15,7 @@ type appResolver struct {
 func (r *appResolver) Refresh() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	idDirs, err := os.ReadDir(SaveAppsPath)
+	idDirs, err := os.ReadDir(saveAppsPath)
 	if err != nil {
 		return &AppError{"read apps dir", ".", err}
 	}
@@ -56,7 +56,7 @@ func (r *appResolver) New() (App, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	id := uuid.NewString()
-	if err := os.MkdirAll(SaveAppPath(id), 0666); err != nil {
+	if err := os.MkdirAll(saveAppPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
 	app := newApp(id)
