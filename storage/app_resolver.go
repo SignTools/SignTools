@@ -9,23 +9,35 @@ import (
 type appResolver struct {
 	idToAppMap map[string]App
 	mutex      sync.Mutex
+	scannedDir bool
+}
+
+func (r *appResolver) Refresh() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	idDirs, err := os.ReadDir(SaveAppsPath)
+	if err != nil {
+		return &AppError{"read apps dir", ".", err}
+	}
+	for _, idDir := range idDirs {
+		id := idDir.Name()
+		r.idToAppMap[id] = newApp(id)
+	}
+	return nil
 }
 
 func (r *appResolver) GetAll() ([]App, error) {
+	if !r.scannedDir {
+		if err := r.Refresh(); err != nil {
+			return nil, &AppError{"refresh apps", ".", err}
+		}
+		r.scannedDir = true
+	}
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	var apps []App
-	idDirs, err := os.ReadDir(SaveAppsPath)
-	if err != nil {
-		return nil, &AppError{"read apps dir", ".", err}
-	}
-	r.idToAppMap = map[string]App{}
-	for _, idDir := range idDirs {
-		id := idDir.Name()
-		if _, ok := r.idToAppMap[id]; !ok {
-			r.idToAppMap[id] = newApp(id)
-		}
-		apps = append(apps, r.idToAppMap[id])
+	for _, app := range r.idToAppMap {
+		apps = append(apps, app)
 	}
 	return apps, nil
 }
