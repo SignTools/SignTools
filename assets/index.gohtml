@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <title>iOS Signer Service</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
-          crossorigin="anonymous">
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-            integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
             crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+            integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"
+            async></script>
     <style>
         a, a:hover {
             color: inherit;
@@ -27,11 +29,11 @@
 </head>
 <body>
 <nav class="navbar navbar-expand navbar-dark bg-dark py-3">
-    <div class="container">
-        <ol class="breadcrumb bg-transparent py-2 my-0 mr-auto text-white">
+    <div class="container px-4">
+        <ol class="breadcrumb bg-transparent py-2 my-0 me-auto text-white">
             <li class="breadcrumb-item"><a href="/">iOS Signer</a></li>
         </ol>
-        <a id="fileSelect" class="btn btn-outline-light my-0 ml-auto" href="#">
+        <a id="fileSelect" class="btn btn-outline-light my-0 ms-auto" href="#">
             <form action="/app" method="post" enctype="multipart/form-data" style="display:none">
                 <input type="text" id="profile_id" name="profile_id" value="{{ (index .Profiles 0).Id }}">
                 <input id="fileElem" type="file" name="file" onchange="this.form.submit()"/>
@@ -41,27 +43,29 @@
     </div>
 </nav>
 <div class="jumbotron vertical-center">
-    <div class="container">
-        <div class="card-columns">
+    <div class="container py-4 py-xxl-5 py-xl-5 px-4">
+        <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true }'>
             {{range $_, $app := .Apps}}
-                <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{$app.Name}}</h5>
-                        <p class="card-text mb-2">
-                            {{if $app.IsSigned}} Signed {{else}} Processing {{end}}
-                        </p>
-                        <div class="d-flex flex-wrap justify-content-end">
-                            {{if $app.IsSigned}}
-                                <a class="btn btn-outline-light ml-auto mr-2 mt-2"
-                                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
-                                <a class="btn btn-outline-light ml-0 mr-2 mt-2"
-                                   href="{{$app.DownloadUrl}}">Download</a>
-                            {{else}}
-                                <a class="btn btn-outline-light ml-auto mr-2 mt-2"
-                                   target="_blank"
-                                   href="{{$app.WorkflowUrl}}">Status</a>
-                            {{end}}
-                            <a class="btn btn-outline-light ml-0 mt-2" href="{{$app.DeleteUrl}}">X</a>
+                <div class="col-sm-6 col-lg-3 p-2">
+                    <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{$app.Name}}</h5>
+                            <p class="card-text mb-2">
+                                {{if $app.IsSigned}} Signed {{else}} Processing {{end}}
+                            </p>
+                            <div class="d-flex flex-wrap justify-content-end">
+                                {{if $app.IsSigned}}
+                                    <a class="btn btn-outline-light ms-auto me-2 mt-2"
+                                       href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
+                                    <a class="btn btn-outline-light ms-0 me-2 mt-2"
+                                       href="{{$app.DownloadUrl}}">Download</a>
+                                {{else}}
+                                    <a class="btn btn-outline-light ms-auto me-2 mt-2"
+                                       target="_blank"
+                                       href="{{$app.WorkflowUrl}}">Status</a>
+                                {{end}}
+                                <a class="btn btn-outline-light ms-0 mt-2" href="{{$app.DeleteUrl}}">X</a>
+                            </div>
                         </div>
                     </div>
                 </div>
