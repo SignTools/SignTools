@@ -80,7 +80,7 @@ func main() {
 	e.GET("/app/:id/unsigned", appResolver(getUnsignedApp))
 	e.GET("/app/:id/signed", appResolver(getSignedApp))
 	e.GET("/app/:id/manifest", appResolver(getManifest))
-	e.GET("/app/:id/delete", deleteApp)
+	e.GET("/app/:id/delete", appResolver(deleteApp))
 
 	e.GET("/cert/:file", getCertFile, authMiddleware)
 	e.POST("/app/:id/signed", appResolver(uploadSignedApp), authMiddleware)
@@ -98,8 +98,8 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 	}
 }
 
-func deleteApp(c echo.Context) error {
-	if err := storage.Apps.Delete(c.Param("id")); err != nil {
+func deleteApp(c echo.Context, app storage.App) error {
+	if err := storage.Apps.Delete(app.GetId()); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
