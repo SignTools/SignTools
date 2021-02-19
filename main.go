@@ -26,8 +26,9 @@ import (
 )
 
 var (
-	cfg          = config.Current
-	formFileName = "file"
+	cfg               = config.Current
+	formFileName      = "file"
+	formProfileIdName = "profile_id"
 )
 
 func cleanupApps() error {
@@ -82,7 +83,7 @@ func main() {
 	e.GET("/app/:id/manifest", appResolver(getManifest))
 	e.GET("/app/:id/delete", appResolver(deleteApp))
 
-	e.GET("/cert/:file", getCertFile, authMiddleware)
+	e.GET("/profile/:id/:file", profileResolver(getProfileFile), authMiddleware)
 	e.POST("/app/:id/signed", appResolver(uploadSignedApp), authMiddleware)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
@@ -95,6 +96,16 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 			return c.NoContent(404)
 		}
 		return handler(c, app)
+	}
+}
+
+func profileResolver(handler func(echo.Context, *storage.Profile) error) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		profile, ok := storage.Profiles.Get(c.Param("id"))
+		if !ok {
+			return c.NoContent(404)
+		}
+		return handler(c, profile)
 	}
 }
 
@@ -126,9 +137,29 @@ func getManifest(c echo.Context, app storage.App) error {
 	return c.Blob(200, "text/plain", result.Bytes())
 }
 
-func getCertFile(c echo.Context) error {
-	writeAttachmentHeader(c, c.Param("file"))
-	return c.File(util.SafeJoin(cfg.CertDir, c.Param("file")))
+func getProfileFile(c echo.Context, profile *storage.Profile) error {
+	var file io.ReadSeekCloser
+	var err error
+	switch c.Param("file") {
+	case "cert":
+		file, err = profile.GetCert()
+	case "prov":
+		file, err = profile.GetProv()
+	case "pass":
+		file, err = profile.GetPassword()
+	default:
+		return c.NoContent(404)
+	}
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	name, err := profile.GetName()
+	if err != nil {
+		return err
+	}
+	http.ServeContent(c.Response(), c.Request(), name, time.Now(), file)
+	return nil
 }
 
 func uploadSignedApp(c echo.Context, app storage.App) error {
@@ -197,6 +228,11 @@ func writeAttachmentHeader(c echo.Context, name string) {
 }
 
 func uploadUnsignedApp(c echo.Context) error {
+	profileId := c.FormValue(formProfileIdName)
+	profile, ok := storage.Profiles.Get(profileId)
+	if !ok {
+		return errors.New("no profile with id " + profileId)
+	}
 	header, err := c.FormFile(formFileName)
 	if err != nil {
 		return err
@@ -222,7 +258,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := app.SetName(header.Filename); err != nil {
 		return err
 	}
-	workflowUrl, err := triggerWorkflow(app.GetId())
+	workflowUrl, err := triggerWorkflow(app, profile)
 	if err != nil {
 		return err
 	}
@@ -270,6 +306,20 @@ func index(c echo.Context) error {
 	sort.Slice(data.Apps, func(i, j int) bool {
 		return data.Apps[i].ModTime.After(data.Apps[j].ModTime)
 	})
+	profiles, err := storage.Profiles.GetAll()
+	if err != nil {
+		return err
+	}
+	for _, profile := range profiles {
+		name, err := profile.GetName()
+		if err != nil {
+			return err
+		}
+		data.Profiles = append(data.Profiles, assets.Profile{
+			Id:   profile.GetId(),
+			Name: name,
+		})
+	}
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)
 	if err != nil {
 		return err
@@ -281,7 +331,7 @@ func index(c echo.Context) error {
 	return c.HTMLBlob(200, result.Bytes())
 }
 
-func triggerWorkflow(id string) (string, error) {
+func triggerWorkflow(app storage.App, profile *storage.Profile) (string, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHubToken},
@@ -296,10 +346,11 @@ func triggerWorkflow(id string) (string, error) {
 		github.CreateWorkflowDispatchEventRequest{
 			Ref: cfg.WorkflowRef,
 			Inputs: map[string]interface{}{
-				"download_suffix": path.Join("app", id, "unsigned"),
-				"upload_suffix":   path.Join("app", id, "signed"),
-				"cert_suffix":     path.Join("cert", config.Current.CertFileName),
-				"prov_suffix":     path.Join("cert", config.Current.ProvFileName),
+				"download_suffix": path.Join("app", app.GetId(), "unsigned"),
+				"upload_suffix":   path.Join("app", app.GetId(), "signed"),
+				"cert_suffix":     path.Join("profile", profile.GetId(), "cert"),
+				"prov_suffix":     path.Join("profile", profile.GetId(), "prov"),
+				"pass_suffix":     path.Join("profile", profile.GetId(), "pass"),
 			},
 		}); err != nil {
 		return "", err

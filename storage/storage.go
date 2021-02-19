@@ -16,11 +16,20 @@ var (
 	saveUnsignedPath    = resolveLocationWithId(saveAppsPath, "unsigned")
 	saveWorkflowUrlPath = resolveLocationWithId(saveAppsPath, "workflow_url")
 	saveNamePath        = resolveLocationWithId(saveAppsPath, "name")
+
+	profilesPath     = filepath.Join(config.Current.SaveDir, "profiles")
+	profilesCertPath = resolveLocationWithId(profilesPath, "cert.p12")
+	profilesPassPath = resolveLocationWithId(profilesPath, "pass.txt")
+	profilesProvPath = resolveLocationWithId(profilesPath, "prov.mobileprovision")
+	profilesNamePath = resolveLocationWithId(profilesPath, "name.txt")
 )
 
 func init() {
-	if err := os.MkdirAll(SaveAppsPath, 0666); err != nil {
-		log.Fatalln(errors.WithMessage(err, "mkdir SaveAppsPath"))
+	requiredPaths := []string{saveAppsPath, profilesPath}
+	for _, path := range requiredPaths {
+		if err := os.MkdirAll(path, 0666); err != nil {
+			log.Fatalln(errors.WithMessage(err, "mkdir required path"))
+		}
 	}
 }
 
@@ -31,3 +40,4 @@ var resolveLocationWithId = func(parent string, path string) func(id string) str
 }
 
 var Apps = appResolver{idToAppMap: map[string]App{}}
+var Profiles = profileResolver{idToProfileMap: map[string]*Profile{}}

@@ -17,9 +17,6 @@ type Config struct {
 	ServerURL           string `yaml:"server_url"`
 	SaveDir             string `yaml:"save_dir"`
 	Key                 string `yaml:"key"`
-	CertDir             string `yaml:"cert_dir"`
-	CertFileName        string `yaml:"cert_file_name"`
-	ProvFileName        string `yaml:"prov_file_name"`
 	CertPass            string `yaml:"cert_pass"`
 	CleanupMins         uint64 `yaml:"cleanup_mins"`
 	CleanupIntervalMins uint64 `yaml:"cleanup_interval_mins"`
@@ -35,10 +32,6 @@ func createDefaultConfig() *Config {
 		ServerURL:           "http://localhost:8080",
 		SaveDir:             "data",
 		Key:                 "MY_SUPER_LONG_SECRET_KEY",
-		CertDir:             "certs",
-		CertFileName:        "cert.p12",
-		ProvFileName:        "prov.mobileprovision",
-		CertPass:            "123456",
 		CleanupMins:         60 * 24,
 		CleanupIntervalMins: 30,
 	}

@@ -13,8 +13,14 @@ type App struct {
 	DeleteUrl   string
 }
 
+type Profile struct {
+	Id   string
+	Name string
+}
+
 type IndexData struct {
-	Apps []App
+	Apps     []App
+	Profiles []Profile
 }
 
 type ManifestData struct {
