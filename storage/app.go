@@ -142,7 +142,10 @@ func (a *app) SetWorkflowUrl(url string) error {
 	return nil
 }
 
+// used by appResolver.Delete, must be synchronized
 func (a *app) prune() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if err := os.RemoveAll(SaveAppPath(a.id)); err != nil {
 		return &AppError{"remove app dir", a.id, err}
 	}
