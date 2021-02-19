@@ -54,11 +54,11 @@ func init() {
 
 	cfg, err := getConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	if len(strings.TrimSpace(cfg.Key)) < 16 {
-		log.Fatalln("bad secret, must be at least 16 characters long")
+		log.Fatalln("init: bad secret, must be at least 16 characters long")
 	}
 
 	Current = cfg
@@ -87,5 +87,5 @@ func handleNoConfigFile(config *Config) error {
 	if err := viper.SafeWriteConfig(); err != nil {
 		return err
 	}
-	return errors.New("no config, template generated")
+	return errors.New("config: not present, template generated")
 }

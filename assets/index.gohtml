@@ -42,25 +42,25 @@
 <div class="jumbotron vertical-center">
     <div class="container">
         <div class="card-columns">
-            {{range $_, $file := .Files}}
-                <div class="card text-white {{if $file.IsSigned}} bg-success {{else}} bg-primary {{end}}">
+            {{range $_, $app := .Apps}}
+                <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
                     <div class="card-body">
-                        <h5 class="card-title">{{$file.Name}}</h5>
+                        <h5 class="card-title">{{$app.Name}}</h5>
                         <p class="card-text mb-2">
-                            {{if $file.IsSigned}} Signed {{else}} Processing {{end}}
+                            {{if $app.IsSigned}} Signed {{else}} Processing {{end}}
                         </p>
                         <div class="d-flex flex-wrap justify-content-end">
-                            {{if $file.IsSigned}}
+                            {{if $app.IsSigned}}
                                 <a class="btn btn-outline-light ml-auto mr-2 mt-2"
-                                   href="itms-services://?action=download-manifest&url={{$file.ManifestUrl}}">Install</a>
+                                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
                                 <a class="btn btn-outline-light ml-0 mr-2 mt-2"
-                                   href="{{$file.DownloadUrl}}">Download</a>
+                                   href="{{$app.DownloadUrl}}">Download</a>
                             {{else}}
                                 <a class="btn btn-outline-light ml-auto mr-2 mt-2"
                                    target="_blank"
-                                   href="{{$file.WorkflowUrl}}">Status</a>
+                                   href="{{$app.WorkflowUrl}}">Status</a>
                             {{end}}
-                            <a class="btn btn-outline-light ml-0 mt-2" href="{{$file.DeleteUrl}}">X</a>
+                            <a class="btn btn-outline-light ml-0 mt-2" href="{{$app.DeleteUrl}}">X</a>
                         </div>
                     </div>
                 </div>

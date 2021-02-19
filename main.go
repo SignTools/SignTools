@@ -28,7 +28,7 @@ var (
 	formFileName = "file"
 )
 
-func cleanupFiles() error {
+func cleanupApps() error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
 		return err
@@ -40,13 +40,8 @@ func cleanupFiles() error {
 			return err
 		}
 		if modTime.Add(time.Duration(cfg.CleanupMins) * time.Minute).Before(now) {
-			name, err := app.GetName()
-			if err != nil {
-				log.Printf("could not read file name for %s: %v\n", app.GetId(), err)
-			}
-			log.Printf("Removing file: %s/%s", name, name)
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
-				return errors.WithMessage(err, "could not remove app")
+				return errors.WithMessage(err, "cleanup app")
 			}
 		}
 	}
@@ -67,7 +62,7 @@ func main() {
 
 	go func() {
 		for {
-			if err := cleanupFiles(); err != nil {
+			if err := cleanupApps(); err != nil {
 				log.Println(err)
 			}
 			time.Sleep(time.Duration(cfg.CleanupIntervalMins) * time.Minute)
@@ -113,14 +108,14 @@ func getManifest(c echo.Context, app storage.App) error {
 	if err != nil {
 		return err
 	}
-	fileName, err := app.GetName()
+	appName, err := app.GetName()
 	if err != nil {
 		return err
 	}
 	data := assets.ManifestData{
 		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", c.Param("id"), "signed"),
 		BundleId:    "com.foo.bar",
-		Title:       fileName,
+		Title:       appName,
 	}
 	var result bytes.Buffer
 	if err := t.Execute(&result, data); err != nil {
@@ -229,7 +224,7 @@ func index(c echo.Context) error {
 		if err != nil {
 			log.Printf("read workflow url for %s (%s): %v\n", app.GetId(), name, err)
 		}
-		data.Files = append(data.Files, assets.ServerFile{
+		data.Apps = append(data.Apps, assets.App{
 			Id:          app.GetId(),
 			IsSigned:    isSigned,
 			Name:        name,
@@ -241,8 +236,8 @@ func index(c echo.Context) error {
 		})
 	}
 	// reverse sort
-	sort.Slice(data.Files, func(i, j int) bool {
-		return data.Files[i].ModTime.After(data.Files[j].ModTime)
+	sort.Slice(data.Apps, func(i, j int) bool {
+		return data.Apps[i].ModTime.After(data.Apps[j].ModTime)
 	})
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)
 	if err != nil {

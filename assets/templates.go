@@ -2,7 +2,7 @@ package assets
 
 import "time"
 
-type ServerFile struct {
+type App struct {
 	Id          string
 	IsSigned    bool
 	Name        string
@@ -14,7 +14,7 @@ type ServerFile struct {
 }
 
 type IndexData struct {
-	Files []ServerFile
+	Apps []App
 }
 
 type ManifestData struct {
