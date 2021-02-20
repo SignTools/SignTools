@@ -80,7 +80,14 @@
                 <div class="col-sm-6 col-lg-3 p-2">
                     <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
                         <div class="card-body">
-                            <h5 class="card-title">{{$app.Name}}</h5>
+                            <div class="row">
+                                <div class="col">
+                                    <h5 class="card-title" style="word-break: break-all">{{$app.Name}}</h5>
+                                </div>
+                                <div class="col-auto">
+                                    <a type="button" class="btn-close btn-close-white" href="{{$app.DeleteUrl}}" aria-label="Close"></a>
+                                </div>
+                            </div>
                             <p class="card-text mb-2">
                                 Profile: {{$app.ProfileName}}
                                 <br>
@@ -96,7 +103,6 @@
                                     <a class="btn btn-outline-light ms-auto me-2 mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
                                        href="{{$app.WorkflowUrl}}">Status</a>
                                 {{end}}
-                                <a class="btn btn-outline-light ms-0 mt-2" href="{{$app.DeleteUrl}}">X</a>
                             </div>
                         </div>
                     </div>
