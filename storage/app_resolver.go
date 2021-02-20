@@ -3,7 +3,6 @@ package storage
 import (
 	"github.com/google/uuid"
 	"io"
-	"io/ioutil"
 	"os"
 	"sync"
 )
@@ -56,18 +55,14 @@ func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profi
 	if err := os.MkdirAll(appPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
-	if err := ioutil.WriteFile(appNamePath(id), []byte(name), 0666); err != nil {
-		return nil, &AppError{"write name file", id, err}
+	if err := app.setName(name); err != nil {
+		return nil, &AppError{"set name", id, err}
 	}
-	if err := ioutil.WriteFile(appProfileIdPath(id), []byte(profile.GetId()), 0666); err != nil {
-		return nil, &AppError{"write profile id file", id, err}
+	if err := app.setProfileId(profile); err != nil {
+		return nil, &AppError{"set profile id", id, err}
 	}
-	file, err := os.Create(appUnsignedPath(id))
-	if err != nil {
-		return nil, &AppError{"create unsigned", id, err}
-	}
-	if _, err := io.Copy(file, unsignedFile); err != nil {
-		return nil, &AppError{"write unsigned", id, err}
+	if err := app.setUnsigned(unsignedFile); err != nil {
+		return nil, &AppError{"set unsigned", id, err}
 	}
 
 	r.idToAppMap[id] = app

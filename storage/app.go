@@ -153,3 +153,28 @@ func (a *app) hasSignedFile() (bool, error) {
 	}
 	return true, nil
 }
+
+func (a *app) setUnsigned(file io.ReadSeeker) error {
+	dstFile, err := os.Create(appUnsignedPath(a.id))
+	if err != nil {
+		return &AppError{"create unsigned", a.id, err}
+	}
+	if _, err := io.Copy(dstFile, file); err != nil {
+		return &AppError{"write unsigned", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) setProfileId(profile Profile) error {
+	if err := ioutil.WriteFile(appProfileIdPath(a.id), []byte(profile.GetId()), 0666); err != nil {
+		return &AppError{"write profile id file", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) setName(name string) error {
+	if err := ioutil.WriteFile(appNamePath(a.id), []byte(name), 0666); err != nil {
+		return &AppError{"write name file", a.id, err}
+	}
+	return nil
+}
