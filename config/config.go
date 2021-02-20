@@ -9,17 +9,18 @@ import (
 )
 
 type Config struct {
-	GitHubToken         string `yaml:"github_token"`
-	RepoOwner           string `yaml:"repo_owner"`
-	RepoName            string `yaml:"repo_name"`
-	WorkflowFileName    string `yaml:"workflow_file_name"`
-	WorkflowRef         string `yaml:"workflow_ref"`
-	ServerURL           string `yaml:"server_url"`
-	SaveDir             string `yaml:"save_dir"`
-	Key                 string `yaml:"key"`
-	CertPass            string `yaml:"cert_pass"`
-	CleanupMins         uint64 `yaml:"cleanup_mins"`
-	CleanupIntervalMins uint64 `yaml:"cleanup_interval_mins"`
+	GitHubToken         string  `yaml:"github_token"`
+	RepoOwner           string  `yaml:"repo_owner"`
+	RepoName            string  `yaml:"repo_name"`
+	WorkflowFileName    string  `yaml:"workflow_file_name"`
+	WorkflowRef         string  `yaml:"workflow_ref"`
+	ServerURL           string  `yaml:"server_url"`
+	SaveDir             string  `yaml:"save_dir"`
+	Key                 string  `yaml:"key"`
+	SSOHeader           *string `yaml:"sso_header"`
+	CertPass            string  `yaml:"cert_pass"`
+	CleanupMins         uint64  `yaml:"cleanup_mins"`
+	CleanupIntervalMins uint64  `yaml:"cleanup_interval_mins"`
 }
 
 func createDefaultConfig() *Config {

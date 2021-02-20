@@ -51,9 +51,17 @@ func cleanupApps() error {
 	return nil
 }
 
-var authMiddleware = middleware.KeyAuth(func(key string, c echo.Context) (bool, error) {
-	return key == cfg.Key, nil
-})
+var authMiddleware = func(nextHandler echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if c.Request().Header.Get("Authorization") == "Bearer "+cfg.Key {
+			return nextHandler(c)
+		}
+		if cfg.SSOHeader != nil && c.Request().Header.Get(*cfg.SSOHeader) != "" {
+			return nextHandler(c)
+		}
+		return c.NoContent(403)
+	}
+}
 
 func main() {
 	port := flag.Uint64("port", 8080, "Listen port")
@@ -75,16 +83,16 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Logger())
+	e.Use(authMiddleware)
 
 	e.GET("/", index)
 	e.POST("/app", uploadUnsignedApp)
 	e.GET("/app/:id/unsigned", appResolver(getUnsignedApp))
 	e.GET("/app/:id/signed", appResolver(getSignedApp))
+	e.POST("/app/:id/signed", appResolver(uploadSignedApp))
 	e.GET("/app/:id/manifest", appResolver(getManifest))
 	e.GET("/app/:id/delete", appResolver(deleteApp))
-
-	e.GET("/profile/:id/:file", profileResolver(getProfileFile), authMiddleware)
-	e.POST("/app/:id/signed", appResolver(uploadSignedApp), authMiddleware)
+	e.GET("/profile/:id/:file", profileResolver(getProfileFile))
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
 }
