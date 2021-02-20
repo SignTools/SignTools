@@ -20,8 +20,10 @@ type Profile struct {
 }
 
 type IndexData struct {
-	Apps     []App
-	Profiles []Profile
+	Apps            []App
+	Profiles        []Profile
+	FormFileName    string
+	FormProfileName string
 }
 
 type ManifestData struct {

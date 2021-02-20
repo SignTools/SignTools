@@ -34,14 +34,45 @@
             <li class="breadcrumb-item"><a href="/">iOS Signer</a></li>
         </ol>
         <a id="fileSelect" class="btn btn-outline-light my-0 ms-auto" href="#">
-            <form action="/app" method="post" enctype="multipart/form-data" style="display:none">
-                <input type="text" id="profile_id" name="profile_id" value="{{ (index .Profiles 0).Id }}">
-                <input id="fileElem" type="file" name="file" onchange="this.form.submit()"/>
-            </form>
             Upload App
         </a>
     </div>
 </nav>
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="/app" method="post" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload App</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">App file</label>
+                        <input class="form-control" type="file" id="fileElem" name="{{.FormFileName}}">
+                    </div>
+                    <div class="mb-3">
+                        <div class="col-md-6">
+                            <label for="formProfile" class="form-label">Signing profile</label>
+                            <select class="form-select" id="formProfile" name="{{.FormProfileName}}" required>
+                                <option selected disabled value="">Choose...</option>
+                                {{range $_, $profile := .Profiles}}
+                                    <option>{{$profile.Name}}</option>
+                                {{end}}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a valid state.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <div class="jumbotron vertical-center">
     <div class="container py-4 py-xxl-5 py-xl-5 px-4">
         <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true }'>
@@ -51,9 +82,9 @@
                         <div class="card-body">
                             <h5 class="card-title">{{$app.Name}}</h5>
                             <p class="card-text mb-2">
-                                Profile: {{ $app.ProfileName }}
+                                Profile: {{$app.ProfileName}}
                                 <br>
-                                {{if $app.IsSigned}} Signed {{else}} Processing {{end}}
+                                {{if $app.IsSigned}}Signed{{else}}Processing{{end}}
                             </p>
                             <div class="d-flex flex-wrap justify-content-end">
                                 {{if $app.IsSigned}}
@@ -80,10 +111,37 @@
 <script>
     const fileSelect = document.getElementById("fileSelect")
     const fileElem = document.getElementById("fileElem");
-    fileSelect.addEventListener("click", function (e) {
-        if (fileElem) {
-            fileElem.click();
+    const modalElem = document.getElementById('uploadModal')
+    const modal = new bootstrap.Modal(modalElem)
+    let modalVisible = false
+
+    fileSelect.addEventListener("click", function () {
+        fileElem.click();
+    });
+    modalElem.addEventListener('hidden.bs.modal', function () {
+        // allow change event to hit even if file is re-selected
+        fileElem.value = ""
+    })
+    fileElem.addEventListener("change", function () {
+        if (!modal.visible) {
+            modal.show()
         }
-    }, false);
+    });
+
+    // generic form validation, all inputs should not be empty
+    (function () {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
 </script>
 </html>

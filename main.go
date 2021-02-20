@@ -26,9 +26,9 @@ import (
 )
 
 var (
-	cfg               = config.Current
-	formFileName      = "file"
-	formProfileIdName = "profile_id"
+	cfg             = config.Current
+	formFileName    = "file"
+	formProfileName = "profile_name"
 )
 
 func cleanupApps() error {
@@ -101,7 +101,7 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 
 func profileResolver(handler func(echo.Context, storage.Profile) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		profile, ok := storage.Profiles.Get(c.Param("id"))
+		profile, ok := storage.Profiles.GetById(c.Param("id"))
 		if !ok {
 			return c.NoContent(404)
 		}
@@ -218,10 +218,10 @@ func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) erro
 }
 
 func uploadUnsignedApp(c echo.Context) error {
-	profileId := c.FormValue(formProfileIdName)
-	profile, ok := storage.Profiles.Get(profileId)
+	profileName := c.FormValue(formProfileName)
+	profile, ok := storage.Profiles.GetByName(profileName)
 	if !ok {
-		return errors.New("no profile with id " + profileId)
+		return errors.New("no profile with id " + profileName)
 	}
 	header, err := c.FormFile(formFileName)
 	if err != nil {
@@ -251,7 +251,10 @@ func index(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	data := assets.IndexData{}
+	data := assets.IndexData{
+		FormFileName:    formFileName,
+		FormProfileName: formProfileName,
+	}
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
@@ -274,7 +277,7 @@ func index(c echo.Context) error {
 			log.Println(errors.WithMessage(err, "get profile id"))
 		}
 		var profileName string
-		if profile, ok := storage.Profiles.Get(profileId); ok {
+		if profile, ok := storage.Profiles.GetById(profileId); ok {
 			profileName, err = profile.GetName()
 			if err != nil {
 				log.Println(errors.WithMessage(err, "get profile name"))
