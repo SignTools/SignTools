@@ -99,7 +99,11 @@ func main() {
 
 func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		app, ok := storage.Apps.Get(c.Param("id"))
+		id := c.Param("id")
+		if newId, ok := storage.OneTime.ResolveId(id); ok {
+			id = newId
+		}
+		app, ok := storage.Apps.Get(id)
 		if !ok {
 			return c.NoContent(404)
 		}
@@ -109,7 +113,14 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 
 func profileResolver(handler func(echo.Context, storage.Profile) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
-		profile, ok := storage.Profiles.GetById(c.Param("id"))
+		id := c.Param("id")
+		if newId, ok := storage.OneTime.ResolveId(id); ok {
+			id = newId
+		} else {
+			// deny access to profiles via private id
+			return c.NoContent(404)
+		}
+		profile, ok := storage.Profiles.GetById(id)
 		if !ok {
 			return c.NoContent(404)
 		}
@@ -351,11 +362,11 @@ func triggerWorkflow(app storage.App, profile storage.Profile) (string, error) {
 		github.CreateWorkflowDispatchEventRequest{
 			Ref: cfg.WorkflowRef,
 			Inputs: map[string]interface{}{
-				"download_suffix": path.Join("app", app.GetId(), "unsigned"),
-				"upload_suffix":   path.Join("app", app.GetId(), "signed"),
-				"cert_suffix":     path.Join("profile", profile.GetId(), "cert"),
-				"prov_suffix":     path.Join("profile", profile.GetId(), "prov"),
-				"pass_suffix":     path.Join("profile", profile.GetId(), "pass"),
+				"download_suffix": path.Join("app", storage.OneTime.MakeId(app.GetId()), "unsigned"),
+				"upload_suffix":   path.Join("app", storage.OneTime.MakeId(app.GetId()), "signed"),
+				"cert_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "cert"),
+				"prov_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "prov"),
+				"pass_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "pass"),
 			},
 		}); err != nil {
 		return "", err

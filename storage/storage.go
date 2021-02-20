@@ -27,6 +27,7 @@ var (
 
 var Apps = newAppResolver()
 var Profiles = newProfileResolver()
+var OneTime = newOneTimeResolver()
 
 func init() {
 	requiredPaths := []string{appsPath, profilesPath}
