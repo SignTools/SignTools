@@ -7,6 +7,12 @@ import (
 	"sync"
 )
 
+func newAppResolver() *appResolver {
+	return &appResolver{
+		idToAppMap: map[string]App{},
+	}
+}
+
 type appResolver struct {
 	idToAppMap map[string]App
 	mutex      sync.Mutex

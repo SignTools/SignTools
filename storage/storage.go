@@ -25,8 +25,8 @@ var (
 	profileNamePath = resolveLocationWithId(profilesPath, "name.txt")
 )
 
-var Apps = appResolver{idToAppMap: map[string]App{}}
-var Profiles = profileResolver{idToProfileMap: map[string]Profile{}}
+var Apps = newAppResolver()
+var Profiles = newProfileResolver()
 
 func init() {
 	requiredPaths := []string{appsPath, profilesPath}

@@ -4,6 +4,13 @@ import (
 	"os"
 )
 
+func newProfileResolver() *profileResolver {
+	return &profileResolver{
+		idToProfileMap:   map[string]Profile{},
+		nameToProfileMap: map[string]Profile{},
+	}
+}
+
 type profileResolver struct {
 	idToProfileMap   map[string]Profile
 	nameToProfileMap map[string]Profile
