@@ -59,7 +59,7 @@ var authMiddleware = func(nextHandler echo.HandlerFunc) echo.HandlerFunc {
 		if cfg.SSOHeader != nil && c.Request().Header.Get(*cfg.SSOHeader) != "" {
 			return nextHandler(c)
 		}
-		return c.NoContent(403)
+		return c.NoContent(401)
 	}
 }
 
