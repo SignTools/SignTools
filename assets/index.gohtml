@@ -44,7 +44,7 @@
             <form action="/app" method="post" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Upload App</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button id="btnModalClose" type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -67,7 +67,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <div id="fileSpinner" class="spinner-border text-primary me-3" role="status" style="display: none">
+                    </div>
+                    <button id="fileSubmit" type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </form>
         </div>
@@ -118,14 +120,20 @@
 <script>
     const fileSelect = document.getElementById("fileSelect")
     const fileElem = document.getElementById("fileElem");
+    const fileSubmit = document.getElementById("fileSubmit");
+    const fileSpinner = document.getElementById("fileSpinner");
     const modalElem = document.getElementById('uploadModal')
-    const modal = new bootstrap.Modal(modalElem)
+    const modal = new bootstrap.Modal(modalElem, {
+        backdrop: "static",
+        keyboard: false
+    })
+    const btnModalClose = document.getElementById('btnModalClose')
     let modalVisible = false
 
     fileSelect.addEventListener("click", function () {
         fileElem.click();
     });
-    modalElem.addEventListener('hidden.bs.modal', function () {
+    modalElem.addEventListener("hidden.bs.modal", function () {
         // allow change event to hit even if file is re-selected
         fileElem.value = ""
     })
@@ -133,6 +141,11 @@
         if (!modal.visible) {
             modal.show()
         }
+    });
+    fileSubmit.addEventListener("click", function () {
+        fileSubmit.classList.add("disabled")
+        btnModalClose.classList.add("disabled")
+        fileSpinner.style.display = "inline-block"
     });
 
     // generic form validation, all inputs should not be empty
