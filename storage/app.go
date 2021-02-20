@@ -41,7 +41,7 @@ func loadAppFromId(id string) App {
 
 func newApp(unsignedFile io.ReadSeeker, name string, profile Profile) (App, error) {
 	id := uuid.NewString()
-	app := &app{id: uuid.NewString()}
+	app := &app{id: id}
 	if err := os.MkdirAll(appPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
