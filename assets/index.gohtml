@@ -93,7 +93,7 @@
                                     <a class="btn btn-outline-light ms-0 me-2 mt-2"
                                        href="{{$app.DownloadUrl}}">Download</a>
                                 {{else}}
-                                    <a class="btn btn-outline-light ms-auto me-2 mt-2"
+                                    <a class="btn btn-outline-light ms-auto me-2 mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
                                        target="_blank"
                                        href="{{$app.WorkflowUrl}}">Status</a>
                                 {{end}}
