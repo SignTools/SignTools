@@ -16,7 +16,7 @@ type appResolver struct {
 func (r *appResolver) refresh() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	idDirs, err := os.ReadDir(saveAppsPath)
+	idDirs, err := os.ReadDir(appsPath)
 	if err != nil {
 		return &AppError{"read apps dir", ".", err}
 	}
@@ -53,13 +53,13 @@ func (r *appResolver) New(unsignedFile io.ReadSeeker, name string) (App, error) 
 
 	id := uuid.NewString()
 	app := &app{id: id}
-	if err := os.MkdirAll(saveAppPath(id), 0666); err != nil {
+	if err := os.MkdirAll(appPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
-	if err := ioutil.WriteFile(saveNamePath(id), []byte(name), 0666); err != nil {
+	if err := ioutil.WriteFile(appNamePath(id), []byte(name), 0666); err != nil {
 		return nil, &AppError{"write name file", id, err}
 	}
-	file, err := os.Create(saveUnsignedPath(id))
+	file, err := os.Create(appUnsignedPath(id))
 	if err != nil {
 		return nil, &AppError{"create unsigned", id, err}
 	}

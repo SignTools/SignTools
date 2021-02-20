@@ -38,7 +38,7 @@ func (p *profile) GetId() string {
 }
 
 func (p *profile) GetCert() (io.ReadSeekCloser, error) {
-	file, err := os.Open(profilesCertPath(p.id))
+	file, err := os.Open(profileCertPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesCertPath", p.id, err}
 	}
@@ -46,7 +46,7 @@ func (p *profile) GetCert() (io.ReadSeekCloser, error) {
 }
 
 func (p *profile) GetProv() (io.ReadSeekCloser, error) {
-	file, err := os.Open(profilesProvPath(p.id))
+	file, err := os.Open(profileProvPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesProvPath", p.id, err}
 	}
@@ -54,7 +54,7 @@ func (p *profile) GetProv() (io.ReadSeekCloser, error) {
 }
 
 func (p *profile) GetPassword() (io.ReadSeekCloser, error) {
-	file, err := os.Open(profilesPassPath(p.id))
+	file, err := os.Open(profilePassPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesPassPath", p.id, err}
 	}
@@ -62,7 +62,7 @@ func (p *profile) GetPassword() (io.ReadSeekCloser, error) {
 }
 
 func (p *profile) GetName() (string, error) {
-	bytes, err := ioutil.ReadFile(profilesNamePath(p.id))
+	bytes, err := ioutil.ReadFile(profileNamePath(p.id))
 	if err != nil {
 		return "", &ProfileError{"read file ProfilesNamePath", p.id, err}
 	}

@@ -45,7 +45,7 @@ type app struct {
 func (a *app) GetModTime() (time.Time, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	appDir, err := os.Stat(saveAppPath(a.id))
+	appDir, err := os.Stat(appPath(a.id))
 	if err != nil {
 		return time.Time{}, &AppError{"stat app dir", a.id, err}
 	}
@@ -65,7 +65,7 @@ func (a *app) GetId() string {
 func (a *app) GetSigned() (io.ReadSeekCloser, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return os.Open(saveSignedPath(a.id))
+	return os.Open(appSignedPath(a.id))
 }
 
 func (a *app) SetSigned(seeker io.ReadSeeker) error {
@@ -78,7 +78,7 @@ func (a *app) SetSigned(seeker io.ReadSeeker) error {
 	if exists {
 		return &AppError{"true", a.id, errors.New("already exists")}
 	}
-	file, err := os.Create(saveSignedPath(a.id))
+	file, err := os.Create(appSignedPath(a.id))
 	if err != nil {
 		return &AppError{"create", a.id, err}
 	}
@@ -92,13 +92,13 @@ func (a *app) SetSigned(seeker io.ReadSeeker) error {
 func (a *app) GetUnsigned() (io.ReadSeekCloser, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return os.Open(saveUnsignedPath(a.id))
+	return os.Open(appUnsignedPath(a.id))
 }
 
 func (a *app) GetName() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(saveNamePath(a.id))
+	b, err := ioutil.ReadFile(appNamePath(a.id))
 	if err != nil {
 		return "", &AppError{"read name file", a.id, err}
 	}
@@ -108,7 +108,7 @@ func (a *app) GetName() (string, error) {
 func (a *app) GetWorkflowUrl() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(saveWorkflowUrlPath(a.id))
+	b, err := ioutil.ReadFile(appWorkflowUrlPath(a.id))
 	if err != nil {
 		return "", &AppError{"read workflow url file", a.id, err}
 	}
@@ -118,7 +118,7 @@ func (a *app) GetWorkflowUrl() (string, error) {
 func (a *app) SetWorkflowUrl(url string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := ioutil.WriteFile(saveWorkflowUrlPath(a.id), []byte(url), 0666); err != nil {
+	if err := ioutil.WriteFile(appWorkflowUrlPath(a.id), []byte(url), 0666); err != nil {
 		return &AppError{"set workflow url file", a.id, err}
 	}
 	return nil
@@ -128,14 +128,14 @@ func (a *app) SetWorkflowUrl(url string) error {
 func (a *app) _prune() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := os.RemoveAll(saveAppPath(a.id)); err != nil {
+	if err := os.RemoveAll(appPath(a.id)); err != nil {
 		return &AppError{"remove app dir", a.id, err}
 	}
 	return nil
 }
 
 func (a *app) hasSignedFile() (bool, error) {
-	if _, err := os.Stat(saveSignedPath(a.id)); os.IsNotExist(err) {
+	if _, err := os.Stat(appSignedPath(a.id)); os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
 		return false, &AppError{"stat signed file", a.id, err}
