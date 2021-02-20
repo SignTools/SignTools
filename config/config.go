@@ -5,22 +5,19 @@ import (
 	"github.com/spf13/viper"
 	"ios-signer-service/util"
 	"log"
-	"strings"
 )
 
 type Config struct {
-	GitHubToken         string  `yaml:"github_token"`
-	RepoOwner           string  `yaml:"repo_owner"`
-	RepoName            string  `yaml:"repo_name"`
-	WorkflowFileName    string  `yaml:"workflow_file_name"`
-	WorkflowRef         string  `yaml:"workflow_ref"`
-	ServerURL           string  `yaml:"server_url"`
-	SaveDir             string  `yaml:"save_dir"`
-	Key                 string  `yaml:"key"`
-	SSOHeader           *string `yaml:"sso_header"`
-	CertPass            string  `yaml:"cert_pass"`
-	CleanupMins         uint64  `yaml:"cleanup_mins"`
-	CleanupIntervalMins uint64  `yaml:"cleanup_interval_mins"`
+	GitHubToken         string `yaml:"github_token"`
+	RepoOwner           string `yaml:"repo_owner"`
+	RepoName            string `yaml:"repo_name"`
+	WorkflowFileName    string `yaml:"workflow_file_name"`
+	WorkflowRef         string `yaml:"workflow_ref"`
+	ServerURL           string `yaml:"server_url"`
+	SaveDir             string `yaml:"save_dir"`
+	CertPass            string `yaml:"cert_pass"`
+	CleanupMins         uint64 `yaml:"cleanup_mins"`
+	CleanupIntervalMins uint64 `yaml:"cleanup_interval_mins"`
 }
 
 func createDefaultConfig() *Config {
@@ -32,7 +29,6 @@ func createDefaultConfig() *Config {
 		WorkflowRef:         "master",
 		ServerURL:           "http://localhost:8080",
 		SaveDir:             "data",
-		Key:                 "MY_SUPER_LONG_SECRET_KEY",
 		CleanupMins:         60 * 24,
 		CleanupIntervalMins: 30,
 	}
@@ -49,10 +45,6 @@ func init() {
 	cfg, err := getConfig()
 	if err != nil {
 		log.Fatalln(errors.WithMessage(err, "get config"))
-	}
-
-	if len(strings.TrimSpace(cfg.Key)) < 16 {
-		log.Fatalln("init: bad secret, must be at least 16 characters long")
 	}
 
 	Current = cfg

@@ -51,18 +51,6 @@ func cleanupApps() error {
 	return nil
 }
 
-var authMiddleware = func(nextHandler echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		if c.Request().Header.Get("Authorization") == "Bearer "+cfg.Key {
-			return nextHandler(c)
-		}
-		if cfg.SSOHeader != nil && c.Request().Header.Get(*cfg.SSOHeader) != "" {
-			return nextHandler(c)
-		}
-		return c.NoContent(401)
-	}
-}
-
 func main() {
 	port := flag.Uint64("port", 8080, "Listen port")
 	flag.Parse()
@@ -83,7 +71,6 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Logger())
-	e.Use(authMiddleware)
 
 	e.GET("/", index)
 	e.POST("/app", uploadUnsignedApp)
