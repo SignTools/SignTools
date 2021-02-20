@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"github.com/google/uuid"
 	"io"
 	"os"
 	"sync"
@@ -27,7 +26,7 @@ func (r *appResolver) refresh() error {
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
-		r.idToAppMap[id] = newApp(id)
+		r.idToAppMap[id] = loadAppFromId(id)
 	}
 	return nil
 }
@@ -56,22 +55,12 @@ func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profi
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	id := uuid.NewString()
-	app := &app{id: id}
-	if err := os.MkdirAll(appPath(id), 0666); err != nil {
-		return nil, &AppError{"make app dir", id, err}
-	}
-	if err := app.setName(name); err != nil {
-		return nil, &AppError{"set name", id, err}
-	}
-	if err := app.setProfileId(profile); err != nil {
-		return nil, &AppError{"set profile id", id, err}
-	}
-	if err := app.setUnsigned(unsignedFile); err != nil {
-		return nil, &AppError{"set unsigned", id, err}
+	app, err := newApp(unsignedFile, name, profile)
+	if err != nil {
+		return nil, &AppError{"new app", ".", err}
 	}
 
-	r.idToAppMap[id] = app
+	r.idToAppMap[app.GetId()] = app
 	return app, nil
 }
 

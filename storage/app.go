@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
@@ -34,8 +35,26 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("%s %s: %s", e.Message, e.Id, e.Err)
 }
 
-func newApp(id string) App {
+func loadAppFromId(id string) App {
 	return &app{id: id}
+}
+
+func newApp(unsignedFile io.ReadSeeker, name string, profile Profile) (App, error) {
+	id := uuid.NewString()
+	app := &app{id: uuid.NewString()}
+	if err := os.MkdirAll(appPath(id), 0666); err != nil {
+		return nil, &AppError{"make app dir", id, err}
+	}
+	if err := app.setName(name); err != nil {
+		return nil, &AppError{"set name", id, err}
+	}
+	if err := app.setProfileId(profile); err != nil {
+		return nil, &AppError{"set profile id", id, err}
+	}
+	if err := app.setUnsigned(unsignedFile); err != nil {
+		return nil, &AppError{"set unsigned", id, err}
+	}
+	return app, nil
 }
 
 type app struct {
