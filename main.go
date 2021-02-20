@@ -232,7 +232,7 @@ func uploadUnsignedApp(c echo.Context) error {
 		return err
 	}
 	defer file.Close()
-	app, err := storage.Apps.New(file, header.Filename)
+	app, err := storage.Apps.New(file, header.Filename, profile)
 	if err != nil {
 		return err
 	}
@@ -269,12 +269,28 @@ func index(c echo.Context) error {
 		if err != nil {
 			log.Println(errors.WithMessage(err, "get workflow url"))
 		}
+		profileId, err := app.GetProfileId()
+		if err != nil {
+			log.Println(errors.WithMessage(err, "get profile id"))
+		}
+		var profileName string
+		if profile, ok := storage.Profiles.Get(profileId); ok {
+			profileName, err = profile.GetName()
+			if err != nil {
+				log.Println(errors.WithMessage(err, "get profile name"))
+			}
+		} else {
+			log.Println(errors.WithMessage(err, "get profile"))
+			profileName = "unknown"
+		}
+
 		data.Apps = append(data.Apps, assets.App{
 			Id:          app.GetId(),
 			IsSigned:    isSigned,
 			Name:        name,
 			ModTime:     modTime,
 			WorkflowUrl: workflowUrl,
+			ProfileName: profileName,
 			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "manifest"),
 			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "signed"),
 			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "delete"),

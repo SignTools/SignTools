@@ -20,6 +20,7 @@ type App interface {
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
+	GetProfileId() (string, error)
 	_prune() error
 }
 
@@ -40,6 +41,16 @@ func newApp(id string) App {
 type app struct {
 	mu sync.RWMutex
 	id string
+}
+
+func (a *app) GetProfileId() (string, error) {
+	a.mu.RLock()
+	a.mu.RUnlock()
+	b, err := ioutil.ReadFile(appProfileIdPath(a.id))
+	if err != nil {
+		return "", &AppError{"read profile id file", a.id, err}
+	}
+	return string(b), nil
 }
 
 func (a *app) GetModTime() (time.Time, error) {

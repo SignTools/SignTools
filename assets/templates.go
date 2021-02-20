@@ -11,6 +11,7 @@ type App struct {
 	ManifestUrl string
 	DownloadUrl string
 	DeleteUrl   string
+	ProfileName string
 }
 
 type Profile struct {

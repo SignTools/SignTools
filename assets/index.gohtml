@@ -51,6 +51,8 @@
                         <div class="card-body">
                             <h5 class="card-title">{{$app.Name}}</h5>
                             <p class="card-text mb-2">
+                                Profile: {{ $app.ProfileName }}
+                                <br>
                                 {{if $app.IsSigned}} Signed {{else}} Processing {{end}}
                             </p>
                             <div class="d-flex flex-wrap justify-content-end">

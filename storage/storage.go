@@ -16,6 +16,7 @@ var (
 	appUnsignedPath    = resolveLocationWithId(appsPath, "unsigned")
 	appWorkflowUrlPath = resolveLocationWithId(appsPath, "workflow_url")
 	appNamePath        = resolveLocationWithId(appsPath, "name")
+	appProfileIdPath   = resolveLocationWithId(appsPath, "profile_id")
 
 	profilesPath    = filepath.Join(config.Current.SaveDir, "profiles")
 	profileCertPath = resolveLocationWithId(profilesPath, "cert.p12")

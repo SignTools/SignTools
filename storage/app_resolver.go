@@ -47,7 +47,7 @@ func (r *appResolver) Get(id string) (App, bool) {
 	return app, true
 }
 
-func (r *appResolver) New(unsignedFile io.ReadSeeker, name string) (App, error) {
+func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile) (App, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -58,6 +58,9 @@ func (r *appResolver) New(unsignedFile io.ReadSeeker, name string) (App, error) 
 	}
 	if err := ioutil.WriteFile(appNamePath(id), []byte(name), 0666); err != nil {
 		return nil, &AppError{"write name file", id, err}
+	}
+	if err := ioutil.WriteFile(appProfileIdPath(id), []byte(profile.GetId()), 0666); err != nil {
+		return nil, &AppError{"write profile id file", id, err}
 	}
 	file, err := os.Create(appUnsignedPath(id))
 	if err != nil {
