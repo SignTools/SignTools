@@ -7,11 +7,19 @@ import (
 	"os"
 )
 
-func newProfile(id string) *Profile {
-	return &Profile{id}
+type Profile interface {
+	GetId() string
+	GetCert() (io.ReadSeekCloser, error)
+	GetProv() (io.ReadSeekCloser, error)
+	GetPassword() (io.ReadSeekCloser, error)
+	GetName() (string, error)
 }
 
-type Profile struct {
+func newProfile(id string) *profile {
+	return &profile{id}
+}
+
+type profile struct {
 	id string
 }
 
@@ -25,11 +33,11 @@ func (e *ProfileError) Error() string {
 	return fmt.Sprintf("%s %s: %s", e.Message, e.Id, e.Err)
 }
 
-func (p *Profile) GetId() string {
+func (p *profile) GetId() string {
 	return p.id
 }
 
-func (p *Profile) GetCert() (io.ReadSeekCloser, error) {
+func (p *profile) GetCert() (io.ReadSeekCloser, error) {
 	file, err := os.Open(profilesCertPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesCertPath", p.id, err}
@@ -37,7 +45,7 @@ func (p *Profile) GetCert() (io.ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (p *Profile) GetProv() (io.ReadSeekCloser, error) {
+func (p *profile) GetProv() (io.ReadSeekCloser, error) {
 	file, err := os.Open(profilesProvPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesProvPath", p.id, err}
@@ -45,7 +53,7 @@ func (p *Profile) GetProv() (io.ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (p *Profile) GetPassword() (io.ReadSeekCloser, error) {
+func (p *profile) GetPassword() (io.ReadSeekCloser, error) {
 	file, err := os.Open(profilesPassPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesPassPath", p.id, err}
@@ -53,7 +61,7 @@ func (p *Profile) GetPassword() (io.ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (p *Profile) GetName() (string, error) {
+func (p *profile) GetName() (string, error) {
 	bytes, err := ioutil.ReadFile(profilesNamePath(p.id))
 	if err != nil {
 		return "", &ProfileError{"read file ProfilesNamePath", p.id, err}

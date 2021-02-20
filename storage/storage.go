@@ -25,7 +25,7 @@ var (
 )
 
 var Apps = appResolver{idToAppMap: map[string]App{}}
-var Profiles = profileResolver{idToProfileMap: map[string]*Profile{}}
+var Profiles = profileResolver{idToProfileMap: map[string]Profile{}}
 
 func init() {
 	requiredPaths := []string{saveAppsPath, profilesPath}

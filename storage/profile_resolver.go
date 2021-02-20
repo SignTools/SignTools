@@ -5,7 +5,7 @@ import (
 )
 
 type profileResolver struct {
-	idToProfileMap map[string]*Profile
+	idToProfileMap map[string]Profile
 }
 
 func (r *profileResolver) refresh() error {
@@ -20,15 +20,15 @@ func (r *profileResolver) refresh() error {
 	return nil
 }
 
-func (r *profileResolver) GetAll() ([]*Profile, error) {
-	var profiles []*Profile
+func (r *profileResolver) GetAll() ([]Profile, error) {
+	var profiles []Profile
 	for _, profile := range r.idToProfileMap {
 		profiles = append(profiles, profile)
 	}
 	return profiles, nil
 }
 
-func (r *profileResolver) Get(id string) (*Profile, bool) {
+func (r *profileResolver) Get(id string) (Profile, bool) {
 	profile, ok := r.idToProfileMap[id]
 	if !ok {
 		return nil, false

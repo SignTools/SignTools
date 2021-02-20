@@ -99,7 +99,7 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 	}
 }
 
-func profileResolver(handler func(echo.Context, *storage.Profile) error) func(c echo.Context) error {
+func profileResolver(handler func(echo.Context, storage.Profile) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		profile, ok := storage.Profiles.Get(c.Param("id"))
 		if !ok {
@@ -137,7 +137,7 @@ func getManifest(c echo.Context, app storage.App) error {
 	return c.Blob(200, "text/plain", result.Bytes())
 }
 
-func getProfileFile(c echo.Context, profile *storage.Profile) error {
+func getProfileFile(c echo.Context, profile storage.Profile) error {
 	var file io.ReadSeekCloser
 	var err error
 	switch c.Param("file") {
@@ -309,7 +309,7 @@ func index(c echo.Context) error {
 	return c.HTMLBlob(200, result.Bytes())
 }
 
-func triggerWorkflow(app storage.App, profile *storage.Profile) (string, error) {
+func triggerWorkflow(app storage.App, profile storage.Profile) (string, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHubToken},
