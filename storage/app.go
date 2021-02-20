@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -11,17 +12,15 @@ import (
 
 type App interface {
 	GetId() string
-	ReadSigned(func(io.ReadSeeker) error) error
-	WriteSigned(func(io.WriteSeeker) error) error
+	GetSigned() (io.ReadSeekCloser, error)
+	SetSigned(io.ReadSeeker) error
 	IsSigned() (bool, error)
-	ReadUnsigned(func(io.ReadSeeker) error) error
-	WriteUnsigned(func(io.WriteSeeker) error) error
+	GetUnsigned() (io.ReadSeekCloser, error)
 	GetName() (string, error)
-	SetName(string) error
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
-	prune() error
+	_prune() error
 }
 
 type AppError struct {
@@ -56,52 +55,44 @@ func (a *app) GetModTime() (time.Time, error) {
 func (a *app) IsSigned() (bool, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if _, err := os.Stat(saveSignedPath(a.id)); os.IsNotExist(err) {
-		return false, nil
-	} else if err != nil {
-		return false, &AppError{"stat signed file", a.id, err}
-	}
-	return true, nil
+	return a.hasSignedFile()
 }
 
 func (a *app) GetId() string {
 	return a.id
 }
 
-func (a *app) ReadSigned(f func(io.ReadSeeker) error) error {
+func (a *app) GetSigned() (io.ReadSeekCloser, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if err := a.readFile(f, saveSignedPath(a.id)); err != nil {
-		return err
-	}
-	return nil
+	return os.Open(saveSignedPath(a.id))
 }
 
-func (a *app) WriteSigned(f func(io.WriteSeeker) error) error {
+func (a *app) SetSigned(seeker io.ReadSeeker) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := a.writeFile(f, saveSignedPath(a.id)); err != nil {
-		return err
+	exists, err := a.hasSignedFile()
+	if err != nil {
+		return &AppError{"already exists", a.id, err}
+	}
+	if exists {
+		return &AppError{"true", a.id, errors.New("already exists")}
+	}
+	file, err := os.Create(saveSignedPath(a.id))
+	if err != nil {
+		return &AppError{"create", a.id, err}
+	}
+	defer file.Close()
+	if _, err := io.Copy(file, seeker); err != nil {
+		return &AppError{"write", a.id, err}
 	}
 	return nil
 }
 
-func (a *app) ReadUnsigned(f func(io.ReadSeeker) error) error {
+func (a *app) GetUnsigned() (io.ReadSeekCloser, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if err := a.readFile(f, saveUnsignedPath(a.id)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *app) WriteUnsigned(f func(io.WriteSeeker) error) error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := a.writeFile(f, saveUnsignedPath(a.id)); err != nil {
-		return err
-	}
-	return nil
+	return os.Open(saveUnsignedPath(a.id))
 }
 
 func (a *app) GetName() (string, error) {
@@ -112,15 +103,6 @@ func (a *app) GetName() (string, error) {
 		return "", &AppError{"read name file", a.id, err}
 	}
 	return string(b), nil
-}
-
-func (a *app) SetName(name string) error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := ioutil.WriteFile(saveNamePath(a.id), []byte(name), 0666); err != nil {
-		return &AppError{"write name file", a.id, err}
-	}
-	return nil
 }
 
 func (a *app) GetWorkflowUrl() (string, error) {
@@ -143,7 +125,7 @@ func (a *app) SetWorkflowUrl(url string) error {
 }
 
 // used by appResolver.Delete, must be synchronized
-func (a *app) prune() error {
+func (a *app) _prune() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if err := os.RemoveAll(saveAppPath(a.id)); err != nil {
@@ -152,26 +134,11 @@ func (a *app) prune() error {
 	return nil
 }
 
-func (a *app) readFile(f func(io.ReadSeeker) error, path string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return &AppError{"open file", a.id, err}
+func (a *app) hasSignedFile() (bool, error) {
+	if _, err := os.Stat(saveSignedPath(a.id)); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, &AppError{"stat signed file", a.id, err}
 	}
-	defer file.Close()
-	if err := f(file); err != nil {
-		return &AppError{"user read function", a.id, err}
-	}
-	return nil
-}
-
-func (a *app) writeFile(f func(io.WriteSeeker) error, path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return &AppError{"create file", a.id, err}
-	}
-	defer file.Close()
-	if err := f(file); err != nil {
-		return &AppError{"user write function", a.id, err}
-	}
-	return nil
+	return true, nil
 }

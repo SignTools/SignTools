@@ -172,59 +172,49 @@ func uploadSignedApp(c echo.Context, app storage.App) error {
 		return err
 	}
 	defer file.Close()
-	err = app.WriteSigned(func(dstFile io.WriteSeeker) error {
-		if _, err := io.Copy(dstFile, file); err != nil {
-			return err
-		}
-		return nil
-	})
-	if err != nil {
+	if err := app.SetSigned(file); err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
 func getSignedApp(c echo.Context, app storage.App) error {
-	f, err := writeFileResponse(c, app)
+	file, err := app.GetSigned()
 	if err != nil {
 		return err
 	}
-	if err := app.ReadSigned(f); err != nil {
+	defer file.Close()
+	if err := writeFileResponse(c, file, app); err != nil {
 		return err
 	}
 	return nil
 }
 
 func getUnsignedApp(c echo.Context, app storage.App) error {
-	f, err := writeFileResponse(c, app)
+	file, err := app.GetUnsigned()
 	if err != nil {
 		return err
 	}
-	if err := app.ReadUnsigned(f); err != nil {
+	defer file.Close()
+	if err := writeFileResponse(c, file, app); err != nil {
 		return err
 	}
 	return nil
 }
 
-func writeFileResponse(c echo.Context, app storage.App) (func(io.ReadSeeker) error, error) {
+func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) error {
 	name, err := app.GetName()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	//TODO: Should use the file's mod time, otherwise may tell client to use cached file even though it has changed
 	modTime, err := app.GetModTime()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	writeAttachmentHeader(c, name)
-	return func(file io.ReadSeeker) error {
-		http.ServeContent(c.Response(), c.Request(), name, modTime, file)
-		return nil
-	}, nil
-}
-
-func writeAttachmentHeader(c echo.Context, name string) {
 	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, name))
+	http.ServeContent(c.Response(), c.Request(), name, modTime, file)
+	return nil
 }
 
 func uploadUnsignedApp(c echo.Context) error {
@@ -237,25 +227,13 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	app, err := storage.Apps.New()
-	if err != nil {
-		return err
-	}
 	file, err := header.Open()
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	err = app.WriteUnsigned(func(dstFile io.WriteSeeker) error {
-		if _, err := io.Copy(dstFile, file); err != nil {
-			return err
-		}
-		return nil
-	})
+	app, err := storage.Apps.New(file, header.Filename)
 	if err != nil {
-		return err
-	}
-	if err := app.SetName(header.Filename); err != nil {
 		return err
 	}
 	workflowUrl, err := triggerWorkflow(app, profile)

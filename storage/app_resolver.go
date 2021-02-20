@@ -2,6 +2,8 @@ package storage
 
 import (
 	"github.com/google/uuid"
+	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 )
@@ -45,14 +47,26 @@ func (r *appResolver) Get(id string) (App, bool) {
 	return app, true
 }
 
-func (r *appResolver) New() (App, error) {
+func (r *appResolver) New(unsignedFile io.ReadSeeker, name string) (App, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+
 	id := uuid.NewString()
+	app := &app{id: id}
 	if err := os.MkdirAll(saveAppPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
-	app := newApp(id)
+	if err := ioutil.WriteFile(saveNamePath(id), []byte(name), 0666); err != nil {
+		return nil, &AppError{"write name file", id, err}
+	}
+	file, err := os.Create(saveUnsignedPath(id))
+	if err != nil {
+		return nil, &AppError{"create unsigned", id, err}
+	}
+	if _, err := io.Copy(file, unsignedFile); err != nil {
+		return nil, &AppError{"write unsigned", id, err}
+	}
+
 	r.idToAppMap[id] = app
 	return app, nil
 }
@@ -64,7 +78,7 @@ func (r *appResolver) Delete(id string) error {
 	if !ok {
 		return nil
 	}
-	if err := app.prune(); err != nil {
+	if err := app._prune(); err != nil {
 		return &AppError{"prune app", ".", err}
 	}
 	delete(r.idToAppMap, app.GetId())
