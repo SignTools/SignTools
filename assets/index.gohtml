@@ -67,9 +67,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div id="formFileSpinner" class="spinner-border text-primary me-3" role="status" style="display: none">
-                    </div>
-                    <button id="formSubmit" type="submit" class="btn btn-primary">Submit</button>
+                    <div id="formFileSpinner" class="spinner-border text-primary me-3" role="status"
+                         style="display: none"></div>
+                    <button id="formSubmit" class="btn btn-primary">Submit</button>
+                    <button id="formSubmitReal" type="submit" class="btn btn-primary" style="display: none"></button>
                 </div>
             </form>
         </div>
@@ -121,6 +122,7 @@
     const fileSelect = document.getElementById("fileSelect")
     const formFileSelect = document.getElementById("formFileSelect");
     const formSubmit = document.getElementById("formSubmit");
+    const formSubmitReal = document.getElementById("formSubmitReal");
     const uploadForm = document.getElementById("uploadForm");
     const formFileSpinner = document.getElementById("formFileSpinner");
     const modalElem = document.getElementById('uploadModal')
@@ -143,26 +145,16 @@
             modal.show()
         }
     });
-    uploadForm.addEventListener("submit", function () {
-        formSubmit.classList.add("disabled")
-        btnModalClose.classList.add("disabled")
-        formFileSpinner.style.display = "inline-block"
+    formSubmit.addEventListener("click", function () {
+        if (!uploadForm.checkValidity()) {
+            return
+        }
+        setTimeout(function () {
+            formSubmit.classList.add("disabled")
+            btnModalClose.classList.add("disabled")
+            formFileSpinner.style.display = "inline-block"
+        })
+        formSubmitReal.submit()
     });
-
-    // generic form validation, all inputs should not be empty
-    (function () {
-        'use strict'
-        const forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
 </script>
 </html>
