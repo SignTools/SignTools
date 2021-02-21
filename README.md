@@ -76,7 +76,7 @@ data
 | |____...
 ```
 
-By default, `ios-signer-service` does not offer any kind of authentication. This is a security issue - anybody can download and tamper with your apps and even signing certificates! Instead, run a reverse-proxy, like nginx, and wrap the service with authentication. The only endpoints you must leave non-authenticated (used for OTA and CI) are as follows:
+By default, `ios-signer-service` does not offer any kind of authentication. This is a security issue - anybody can download and tamper with your apps and even signing certificates! Instead, run a reverse-proxy, like nginx, and wrap the service with authentication. The only endpoints you must leave non-authenticated (used for OTA and CI) are as follows (`:id` is a wildcard parameter):
 
 ```
 /app/:id/
