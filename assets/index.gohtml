@@ -49,7 +49,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="formFile" class="form-label">App file</label>
-                        <input class="form-control" type="file" id="fileElem" name="{{.FormFileName}}" required>
+                        <input class="form-control" type="file" id="formFileSelect" name="{{.FormFileName}}" required>
                     </div>
                     <div class="mb-3">
                         <div class="col-md-6">
@@ -67,9 +67,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div id="fileSpinner" class="spinner-border text-primary me-3" role="status" style="display: none">
+                    <div id="formFileSpinner" class="spinner-border text-primary me-3" role="status" style="display: none">
                     </div>
-                    <button id="fileSubmit" type="submit" class="btn btn-primary">Submit</button>
+                    <button id="formSubmit" type="submit" class="btn btn-primary">Submit</button>
                 </div>
             </form>
         </div>
@@ -119,10 +119,10 @@
 
 <script>
     const fileSelect = document.getElementById("fileSelect")
-    const fileElem = document.getElementById("fileElem");
-    const fileSubmit = document.getElementById("fileSubmit");
+    const formFileSelect = document.getElementById("formFileSelect");
+    const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
-    const fileSpinner = document.getElementById("fileSpinner");
+    const formFileSpinner = document.getElementById("formFileSpinner");
     const modalElem = document.getElementById('uploadModal')
     const modal = new bootstrap.Modal(modalElem, {
         backdrop: "static",
@@ -132,21 +132,21 @@
     let modalVisible = false
 
     fileSelect.addEventListener("click", function () {
-        fileElem.click();
+        formFileSelect.click();
     });
     modalElem.addEventListener("hidden.bs.modal", function () {
         // allow change event to hit even if file is re-selected
-        fileElem.value = ""
+        formFileSelect.value = ""
     })
-    fileElem.addEventListener("change", function () {
+    formFileSelect.addEventListener("change", function () {
         if (!modal.visible) {
             modal.show()
         }
     });
     uploadForm.addEventListener("submit", function () {
-        fileSubmit.classList.add("disabled")
+        formSubmit.classList.add("disabled")
         btnModalClose.classList.add("disabled")
-        fileSpinner.style.display = "inline-block"
+        formFileSpinner.style.display = "inline-block"
     });
 
     // generic form validation, all inputs should not be empty
