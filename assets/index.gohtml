@@ -41,7 +41,7 @@
 <div class="modal fade" id="uploadModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="/app" method="post" enctype="multipart/form-data">
+            <form id="uploadForm" action="/app" method="post" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Upload App</h5>
                     <button id="btnModalClose" type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -121,6 +121,7 @@
     const fileSelect = document.getElementById("fileSelect")
     const fileElem = document.getElementById("fileElem");
     const fileSubmit = document.getElementById("fileSubmit");
+    const uploadForm = document.getElementById("uploadForm");
     const fileSpinner = document.getElementById("fileSpinner");
     const modalElem = document.getElementById('uploadModal')
     const modal = new bootstrap.Modal(modalElem, {
@@ -142,7 +143,7 @@
             modal.show()
         }
     });
-    fileSubmit.addEventListener("click", function () {
+    uploadForm.addEventListener("submit", function () {
         fileSubmit.classList.add("disabled")
         btnModalClose.classList.add("disabled")
         fileSpinner.style.display = "inline-block"
