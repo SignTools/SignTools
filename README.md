@@ -4,23 +4,21 @@
 
 ## Introduction
 
-Apple does not allow installing unsigned apps on iOS.
-At the same time, the only allowed app source, the App Store, does not accept each and every app.
-What happens if you want to install an app that is not available on the App Store? Or what if you want to install your own app without having to publish it? Sure, there is free developer signing, but it is riddled with restrictions that make the app unsuitable for daily use.
+Not all apps are allowed to exist on the App Store. You may want to keep your personal apps to yourself. When sideloading is so severely hindered by Apple, you need a better way to get things done.
 
-Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign and install any iOS app on your iOS device.
+Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign iOS apps and effortlessly install them on your device, without a computer.
 
-**NOTICE**: You **MUST** have a valid **signing certificate** and **provisioning profile**, which is usually not free. This project does not help you install apps for free.
+**NOTICE**: You MUST have a valid **signing certificate** and **provisioning profile**. This project does not help you install apps for free.
 
 ## Features
 
-- No macOS system required at any point
-- After set up, no computer ever required
+- No jailbreak required
+- All iOS versions supported
+- No computer required (apart from server to host the service)
 - Minimalistic, mobile-friendly web interface
-- Upload unsigned app and have it signed
-- Download signed app
-- Install signed app straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
-- Support multiple signing profiles
+- Upload unsigned apps, download signed apps
+- Install signed apps straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
+- Choose from multiple signing profiles
 - Periodic old file cleanup
 
 ## Screenshots
@@ -46,11 +44,11 @@ Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign a
 
 ### Requirements
 
-- A valid HTTPS server (self-signed will **NOT** work with OTA)
-- A reverse proxy to protect some of the service's endpoints
-- A GitHub account
-- Signing certificate (.p12 file)
-- Provisioning profile (.mobileprovision file)
+- A server; even a Raspberry Pi will work
+- Reverse proxy with valid HTTPS (self-signed will NOT work with OTA)
+- GitHub account
+- Signing certificate (`.p12` file)
+- Provisioning profile (`.mobileprovision` file)
 
 ### Service
 
@@ -60,19 +58,19 @@ The easiest way to install the service is using the [Docker image](https://hub.d
 
 When you run the program for the first time, it will exit immediately and generate a configuration file. Make sure you set it appropriately.
 
-Inside the `save_dir` directory (`data` by default), you need to add at least one code signing profile. The structure is as follows:
+Inside the `save_dir` directory ("data" by default), you need to add at least one code signing profile. The structure is as follows:
 
 ```
 data
 |____profiles
-| |____PROFILE_ID             # any unique string that you want
-| | |____cert.p12             # the certificate
-| | |____pass.txt             # the certificate's password
-| | |____name.txt             # the profile name to show in the web interface
-| | |____prov.mobileprovision # the provisioning profile
+| |____PROFILE_ID              # any unique string that you want
+| | |____cert.p12              # the signing certificate
+| | |____pass.txt              # the signing certificate's password
+| | |____name.txt              # a name to show in the web interface
+| | |____prov.mobileprovision  # the signing provisioning profile
 | |____OTHER_PROFILE_ID
 | | |____...
-|____apps                     # managed by the service
+|____apps                      # managed by the service
 | |____...
 ```
 
