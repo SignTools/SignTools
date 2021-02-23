@@ -149,12 +149,12 @@
         if (!uploadForm.checkValidity()) {
             return
         }
+        formSubmit.classList.add("disabled")
+        btnModalClose.classList.add("disabled")
+        formFileSpinner.style.display = "inline-block"
         setTimeout(function () {
-            formSubmit.classList.add("disabled")
-            btnModalClose.classList.add("disabled")
-            formFileSpinner.style.display = "inline-block"
-        })
-        formSubmitReal.submit()
+            formSubmitReal.submit()
+        }, 1000)
     });
 </script>
 </html>
