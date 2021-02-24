@@ -62,6 +62,30 @@
                             </select>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Signing options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="formAppDebug"
+                                   name="{{.FormAppDebug}}">
+                            <label class="form-check-label" for="formAppDebug">
+                                Enable app debugging (get-task-allow)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="formAllDevices"
+                                   name="{{.FormAllDevices}}">
+                            <label class="form-check-label" for="formAllDevices">
+                                Force enable support for all devices
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="formFileShare"
+                                   name="{{.FormFileShare}}">
+                            <label class="form-check-label" for="formFileShare">
+                                Force enable file sharing through iTunes
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <div id="formFileSpinner" class="spinner-border text-primary me-3" role="status"

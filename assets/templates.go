@@ -24,6 +24,9 @@ type IndexData struct {
 	Profiles        []Profile
 	FormFileName    string
 	FormProfileName string
+	FormAppDebug    string
+	FormAllDevices  string
+	FormFileShare   string
 }
 
 type ManifestData struct {

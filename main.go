@@ -29,6 +29,9 @@ var (
 	cfg             = config.Current
 	formFileName    = "file"
 	formProfileName = "profile_name"
+	formAllDevices  = "all_devices"
+	formAppDebug    = "app_debug"
+	formFileShare   = "file_share"
 )
 
 func cleanupApps() error {
@@ -242,7 +245,17 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	workflowUrl, err := triggerWorkflow(app, profile)
+	signArgs := ""
+	if c.FormValue(formAllDevices) != "" {
+		signArgs += " -a"
+	}
+	if c.FormValue(formAppDebug) != "" {
+		signArgs += " -d"
+	}
+	if c.FormValue(formFileShare) != "" {
+		signArgs += " -s"
+	}
+	workflowUrl, err := triggerWorkflow(app, profile, signArgs)
 	if err != nil {
 		return err
 	}
@@ -260,6 +273,9 @@ func index(c echo.Context) error {
 	data := assets.IndexData{
 		FormFileName:    formFileName,
 		FormProfileName: formProfileName,
+		FormAllDevices:  formAllDevices,
+		FormAppDebug:    formAppDebug,
+		FormFileShare:   formFileShare,
 	}
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
@@ -334,7 +350,7 @@ func index(c echo.Context) error {
 	return c.HTMLBlob(200, result.Bytes())
 }
 
-func triggerWorkflow(app storage.App, profile storage.Profile) (string, error) {
+func triggerWorkflow(app storage.App, profile storage.Profile, signArgs string) (string, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: cfg.GitHubToken},
@@ -354,6 +370,7 @@ func triggerWorkflow(app storage.App, profile storage.Profile) (string, error) {
 				"cert_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "cert"),
 				"prov_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "prov"),
 				"pass_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "pass"),
+				"sign_args":       signArgs,
 			},
 		}); err != nil {
 		return "", err
