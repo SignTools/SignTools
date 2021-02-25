@@ -98,7 +98,7 @@
 </div>
 <div class="jumbotron vertical-center">
     <div class="container py-4 py-xxl-5 py-xl-5 px-4">
-        <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true }'>
+        <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
             {{range $_, $app := .Apps}}
                 <div class="col-sm-6 col-lg-3 p-2">
                     <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
