@@ -166,6 +166,7 @@
     });
     formSubmit.addEventListener("click", function () {
         if (!uploadForm.checkValidity()) {
+            uploadForm.reportValidity()
             return
         }
         formSubmit.classList.add("disabled")
