@@ -365,7 +365,7 @@ func triggerWorkflow(app storage.App, profile storage.Profile, signArgs string) 
 				"cert_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "cert"),
 				"prov_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "prov"),
 				"pass_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "pass"),
-				"sign_args":       signArgs,
+				"sign_args":       signArgs + " #", // suffix comment to make sure the input is sent to workflow
 			},
 		}); err != nil {
 		return "", err
