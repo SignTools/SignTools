@@ -2,6 +2,7 @@ package storage
 
 import (
 	"os"
+	"sort"
 )
 
 func newProfileResolver() *profileResolver {
@@ -39,6 +40,11 @@ func (r *profileResolver) GetAll() ([]Profile, error) {
 	for _, profile := range r.idToProfileMap {
 		profiles = append(profiles, profile)
 	}
+	sort.Slice(profiles, func(i, j int) bool {
+		name1, _ := profiles[i].GetName()
+		name2, _ := profiles[j].GetName()
+		return name1 < name2
+	})
 	return profiles, nil
 }
 

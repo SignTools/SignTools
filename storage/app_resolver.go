@@ -3,6 +3,7 @@ package storage
 import (
 	"io"
 	"os"
+	"sort"
 	"sync"
 )
 
@@ -38,6 +39,12 @@ func (r *appResolver) GetAll() ([]App, error) {
 	for _, app := range r.idToAppMap {
 		apps = append(apps, app)
 	}
+	// reverse sort
+	sort.Slice(apps, func(i, j int) bool {
+		time1, _ := apps[i].GetModTime()
+		time2, _ := apps[j].GetModTime()
+		return time1.After(time2)
+	})
 	return apps, nil
 }
 

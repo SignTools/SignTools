@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"sort"
 	textTemplate "text/template"
 	"time"
 )
@@ -321,10 +320,6 @@ func index(c echo.Context) error {
 			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "delete"),
 		})
 	}
-	// reverse sort
-	sort.Slice(data.Apps, func(i, j int) bool {
-		return data.Apps[i].ModTime.After(data.Apps[j].ModTime)
-	})
 	profiles, err := storage.Profiles.GetAll()
 	if err != nil {
 		return err
