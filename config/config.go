@@ -29,7 +29,7 @@ func createDefaultConfig() *Config {
 		WorkflowRef:         "master",
 		ServerURL:           "http://localhost:8080",
 		SaveDir:             "data",
-		CleanupMins:         60 * 24,
+		CleanupMins:         60 * 24 * 7,
 		CleanupIntervalMins: 30,
 	}
 }
