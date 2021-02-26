@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"ios-signer-service/util"
 	"log"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,8 +37,8 @@ func createDefaultConfig() *Config {
 
 var Current *Config
 
-func init() {
-	viper.SetConfigName("signer-cfg")
+func Load(fileName string) {
+	viper.SetConfigName(strings.TrimSuffix(fileName, filepath.Ext(fileName)))
 	// toml bug: https://github.com/spf13/viper/issues/488
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")

@@ -22,7 +22,6 @@ import (
 )
 
 var (
-	cfg             = config.Current
 	formFile        = "file"
 	formProfileName = "profile_name"
 	formAllDevices  = "all_devices"
@@ -41,7 +40,7 @@ func cleanupApps() error {
 		if err != nil {
 			return err
 		}
-		if modTime.Add(time.Duration(cfg.CleanupMins) * time.Minute).Before(now) {
+		if modTime.Add(time.Duration(config.Current.CleanupMins) * time.Minute).Before(now) {
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
 				return err
 			}
@@ -52,19 +51,26 @@ func cleanupApps() error {
 
 func main() {
 	port := flag.Uint64("port", 8080, "Listen port")
+	configFile := flag.String("config", "signer-cfg.yaml", "Configuration file")
 	flag.Parse()
 
-	if err := os.MkdirAll(cfg.SaveDir, 0777); err != nil {
+	config.Load(*configFile)
+	storage.Load()
+	serve(*port)
+}
+
+func serve(port uint64) {
+	if err := os.MkdirAll(config.Current.SaveDir, 0777); err != nil {
 		log.Fatalln(err)
 	}
 
-	if cfg.CleanupIntervalMins > 0 && cfg.CleanupMins > 0 {
+	if config.Current.CleanupIntervalMins > 0 && config.Current.CleanupMins > 0 {
 		go func() {
 			for {
 				if err := cleanupApps(); err != nil {
 					log.Println(errors.WithMessage(err, "cleanup apps"))
 				}
-				time.Sleep(time.Duration(cfg.CleanupIntervalMins) * time.Minute)
+				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
 			}
 		}()
 	}
@@ -80,12 +86,12 @@ func main() {
 	e.GET("/apps/:id/delete", appResolver(deleteApp))
 
 	jobs := e.Group("/jobs", middleware.KeyAuth(func(s string, context echo.Context) (bool, error) {
-		return s == cfg.WorkflowKey, nil
+		return s == config.Current.WorkflowKey, nil
 	}))
 	jobs.GET("", getLastJob)
 	jobs.POST("/:id", uploadJobResult)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }
 
 func uploadJobResult(c echo.Context) error {
@@ -221,7 +227,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := triggerWorkflow(); err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(cfg.WorkflowStatusUrl); err != nil {
+	if err := app.SetWorkflowUrl(config.Current.WorkflowStatusUrl); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
@@ -309,11 +315,11 @@ func index(c echo.Context) error {
 }
 
 func triggerWorkflow() error {
-	request, err := http.NewRequest("POST", cfg.WorkflowTriggerUrl, bytes.NewReader([]byte(cfg.WorkflowData)))
+	request, err := http.NewRequest("POST", config.Current.WorkflowTriggerUrl, bytes.NewReader([]byte(config.Current.WorkflowData)))
 	if err != nil {
 		return errors.WithMessage(err, "new request")
 	}
-	request.Header.Set("Authorization", cfg.WorkflowAuthorization)
+	request.Header.Set("Authorization", config.Current.WorkflowAuthorization)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return errors.WithMessage(err, "do request")
