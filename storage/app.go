@@ -13,11 +13,12 @@ import (
 
 type App interface {
 	GetId() string
-	GetSigned() (io.ReadSeekCloser, error)
+	GetSigned() (ReadonlyFile, error)
 	SetSigned(io.ReadSeeker) error
 	IsSigned() (bool, error)
-	GetUnsigned() (io.ReadSeekCloser, error)
+	GetUnsigned() (ReadonlyFile, error)
 	GetName() (string, error)
+	GetSignArgs() (string, error)
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
@@ -39,9 +40,10 @@ func loadAppFromId(id string) App {
 	return &app{id: id}
 }
 
-func newApp(unsignedFile io.ReadSeeker, name string, profile Profile) (App, error) {
+func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string) (App, error) {
 	id := uuid.NewString()
 	app := &app{id: id}
+
 	if err := os.MkdirAll(appPath(id), 0666); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
@@ -54,12 +56,25 @@ func newApp(unsignedFile io.ReadSeeker, name string, profile Profile) (App, erro
 	if err := app.setUnsigned(unsignedFile); err != nil {
 		return nil, &AppError{"set unsigned", id, err}
 	}
+	if err := app.setSignArgs(signArgs); err != nil {
+		return nil, &AppError{"set unsigned", id, err}
+	}
 	return app, nil
 }
 
 type app struct {
 	mu sync.RWMutex
 	id string
+}
+
+func (a *app) GetSignArgs() (string, error) {
+	a.mu.RLock()
+	a.mu.RUnlock()
+	b, err := ioutil.ReadFile(appSignArgsPath(a.id))
+	if err != nil {
+		return "", &AppError{"read sign args file", a.id, err}
+	}
+	return string(b), nil
 }
 
 func (a *app) GetProfileId() (string, error) {
@@ -92,7 +107,7 @@ func (a *app) GetId() string {
 	return a.id
 }
 
-func (a *app) GetSigned() (io.ReadSeekCloser, error) {
+func (a *app) GetSigned() (ReadonlyFile, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return os.Open(appSignedPath(a.id))
@@ -119,7 +134,7 @@ func (a *app) SetSigned(seeker io.ReadSeeker) error {
 	return nil
 }
 
-func (a *app) GetUnsigned() (io.ReadSeekCloser, error) {
+func (a *app) GetUnsigned() (ReadonlyFile, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return os.Open(appUnsignedPath(a.id))
@@ -194,6 +209,13 @@ func (a *app) setProfileId(profile Profile) error {
 func (a *app) setName(name string) error {
 	if err := ioutil.WriteFile(appNamePath(a.id), []byte(name), 0666); err != nil {
 		return &AppError{"write name file", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) setSignArgs(args string) error {
+	if err := ioutil.WriteFile(appSignArgsPath(a.id), []byte(args), 0666); err != nil {
+		return &AppError{"write sign args file", a.id, err}
 	}
 	return nil
 }

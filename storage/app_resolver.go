@@ -58,11 +58,11 @@ func (r *appResolver) Get(id string) (App, bool) {
 	return app, true
 }
 
-func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile) (App, error) {
+func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string) (App, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	app, err := newApp(unsignedFile, name, profile)
+	app, err := newApp(unsignedFile, name, profile, signArgs)
 	if err != nil {
 		return nil, &AppError{"new app", ".", err}
 	}

@@ -2,14 +2,11 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
-	"github.com/google/go-github/v33/github"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/assets"
@@ -17,9 +14,9 @@ import (
 	"ios-signer-service/storage"
 	"ios-signer-service/util"
 	"log"
+	"mime"
 	"net/http"
 	"os"
-	"path"
 	textTemplate "text/template"
 	"time"
 )
@@ -77,23 +74,47 @@ func main() {
 	e.Use(middleware.Logger())
 
 	e.GET("/", index)
-	e.POST("/app", uploadUnsignedApp)
-	e.GET("/app/:id/unsigned", appResolver(getUnsignedApp))
-	e.GET("/app/:id/signed", appResolver(getSignedApp))
-	e.POST("/app/:id/signed", appResolver(uploadSignedApp))
-	e.GET("/app/:id/manifest", appResolver(getManifest))
-	e.GET("/app/:id/delete", appResolver(deleteApp))
-	e.GET("/profile/:id/:file", profileResolver(getProfileFile))
+	e.POST("/apps", uploadUnsignedApp)
+	e.GET("/apps/:id/signed", appResolver(getSignedApp))
+	e.GET("/apps/:id/manifest", appResolver(getManifest))
+	e.GET("/apps/:id/delete", appResolver(deleteApp))
+
+	jobs := e.Group("/jobs", middleware.KeyAuth(func(s string, context echo.Context) (bool, error) {
+		return s == cfg.WorkflowKey, nil
+	}))
+	jobs.GET("", getLastJob)
+	jobs.POST("/:id", uploadJobResult)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", *port)))
+}
+
+func uploadJobResult(c echo.Context) error {
+	appId, ok := storage.Jobs.ResolveReturnJob(c.Param("id"))
+	if !ok {
+		return c.NoContent(404)
+	}
+	app, ok := storage.Apps.Get(appId)
+	if !ok {
+		return errors.New(fmt.Sprintf("return job appid %s not resolved", appId))
+	}
+	header, err := c.FormFile(formFileName)
+	if err != nil {
+		return err
+	}
+	file, err := header.Open()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := app.SetSigned(file); err != nil {
+		return err
+	}
+	return c.NoContent(200)
 }
 
 func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		id := c.Param("id")
-		if newId, ok := storage.OneTime.ResolveId(id); ok {
-			id = newId
-		}
 		app, ok := storage.Apps.Get(id)
 		if !ok {
 			return c.NoContent(404)
@@ -102,21 +123,14 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 	}
 }
 
-func profileResolver(handler func(echo.Context, storage.Profile) error) func(c echo.Context) error {
-	return func(c echo.Context) error {
-		id := c.Param("id")
-		if newId, ok := storage.OneTime.ResolveId(id); ok {
-			id = newId
-		} else {
-			// deny access to profiles via private id
-			return c.NoContent(404)
-		}
-		profile, ok := storage.Profiles.GetById(id)
-		if !ok {
-			return c.NoContent(404)
-		}
-		return handler(c, profile)
+func getLastJob(c echo.Context) error {
+	if err := storage.Jobs.WriteLastJob(c.Response()); errors.Is(err, storage.ErrNotFound) {
+		return c.NoContent(404)
+	} else if err != nil {
+		return err
 	}
+	c.Response().Header().Set("Content-Type", mime.TypeByExtension(".tar"))
+	return c.NoContent(200)
 }
 
 func deleteApp(c echo.Context, app storage.App) error {
@@ -136,7 +150,7 @@ func getManifest(c echo.Context, app storage.App) error {
 		return err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", c.Param("id"), "signed"),
+		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", c.Param("id"), "signed"),
 		BundleId:    "com.foo.bar",
 		Title:       appName,
 	}
@@ -147,61 +161,8 @@ func getManifest(c echo.Context, app storage.App) error {
 	return c.Blob(200, "text/plain", result.Bytes())
 }
 
-func getProfileFile(c echo.Context, profile storage.Profile) error {
-	var file io.ReadSeekCloser
-	var err error
-	switch c.Param("file") {
-	case "cert":
-		file, err = profile.GetCert()
-	case "prov":
-		file, err = profile.GetProv()
-	case "pass":
-		file, err = profile.GetPassword()
-	default:
-		return c.NoContent(404)
-	}
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	name, err := profile.GetName()
-	if err != nil {
-		return err
-	}
-	http.ServeContent(c.Response(), c.Request(), name, time.Now(), file)
-	return nil
-}
-
-func uploadSignedApp(c echo.Context, app storage.App) error {
-	header, err := c.FormFile(formFileName)
-	if err != nil {
-		return err
-	}
-	file, err := header.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	if err := app.SetSigned(file); err != nil {
-		return err
-	}
-	return c.NoContent(200)
-}
-
 func getSignedApp(c echo.Context, app storage.App) error {
 	file, err := app.GetSigned()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	if err := writeFileResponse(c, file, app); err != nil {
-		return err
-	}
-	return nil
-}
-
-func getUnsignedApp(c echo.Context, app storage.App) error {
-	file, err := app.GetUnsigned()
 	if err != nil {
 		return err
 	}
@@ -242,10 +203,6 @@ func uploadUnsignedApp(c echo.Context) error {
 		return err
 	}
 	defer file.Close()
-	app, err := storage.Apps.New(file, header.Filename, profile)
-	if err != nil {
-		return err
-	}
 	signArgs := ""
 	if c.FormValue(formAllDevices) != "" {
 		signArgs += " -a"
@@ -256,11 +213,15 @@ func uploadUnsignedApp(c echo.Context) error {
 	if c.FormValue(formFileShare) != "" {
 		signArgs += " -s"
 	}
-	workflowUrl, err := triggerWorkflow(app, profile, signArgs)
+	app, err := storage.Apps.New(file, header.Filename, profile, signArgs)
 	if err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(workflowUrl); err != nil {
+	storage.Jobs.MakeSignJob(app.GetId(), profile.GetId())
+	if err := triggerWorkflow(); err != nil {
+		return err
+	}
+	if err := app.SetWorkflowUrl(cfg.WorkflowStatusUrl); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
@@ -317,9 +278,9 @@ func index(c echo.Context) error {
 			ModTime:     modTime,
 			WorkflowUrl: workflowUrl,
 			ProfileName: profileName,
-			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "manifest"),
-			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "signed"),
-			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerURL, "app", app.GetId(), "delete"),
+			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
+			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
+			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),
 		})
 	}
 	profiles, err := storage.Profiles.GetAll()
@@ -347,30 +308,18 @@ func index(c echo.Context) error {
 	return c.HTMLBlob(200, result.Bytes())
 }
 
-func triggerWorkflow(app storage.App, profile storage.Profile, signArgs string) (string, error) {
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: cfg.GitHubToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-	if _, err := client.Actions.CreateWorkflowDispatchEventByFileName(
-		ctx,
-		cfg.RepoOwner,
-		cfg.RepoName,
-		cfg.WorkflowFileName,
-		github.CreateWorkflowDispatchEventRequest{
-			Ref: cfg.WorkflowRef,
-			Inputs: map[string]interface{}{
-				"download_suffix": path.Join("app", storage.OneTime.MakeId(app.GetId()), "unsigned"),
-				"upload_suffix":   path.Join("app", storage.OneTime.MakeId(app.GetId()), "signed"),
-				"cert_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "cert"),
-				"prov_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "prov"),
-				"pass_suffix":     path.Join("profile", storage.OneTime.MakeId(profile.GetId()), "pass"),
-				"sign_args":       signArgs + " #", // suffix comment to make sure the input is sent to workflow
-			},
-		}); err != nil {
-		return "", err
+func triggerWorkflow() error {
+	request, err := http.NewRequest("POST", cfg.WorkflowTriggerUrl, bytes.NewReader([]byte(cfg.WorkflowData)))
+	if err != nil {
+		return errors.WithMessage(err, "new request")
 	}
-	return fmt.Sprintf("https://github.com/%s/%s/actions", config.Current.RepoOwner, config.Current.RepoName), nil
+	request.Header.Set("Authorization", cfg.WorkflowAuthorization)
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return errors.WithMessage(err, "do request")
+	}
+	if err := util.Check2xxCode(response.StatusCode); err != nil {
+		return err
+	}
+	return nil
 }

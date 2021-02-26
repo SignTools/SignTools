@@ -5,32 +5,32 @@ import (
 	"github.com/spf13/viper"
 	"ios-signer-service/util"
 	"log"
+	"strings"
 )
 
 type Config struct {
-	GitHubToken         string `yaml:"github_token"`
-	RepoOwner           string `yaml:"repo_owner"`
-	RepoName            string `yaml:"repo_name"`
-	WorkflowFileName    string `yaml:"workflow_file_name"`
-	WorkflowRef         string `yaml:"workflow_ref"`
-	ServerURL           string `yaml:"server_url"`
-	SaveDir             string `yaml:"save_dir"`
-	CertPass            string `yaml:"cert_pass"`
-	CleanupMins         uint64 `yaml:"cleanup_mins"`
-	CleanupIntervalMins uint64 `yaml:"cleanup_interval_mins"`
+	WorkflowTriggerUrl    string `yaml:"workflow_trigger_url"`
+	WorkflowStatusUrl     string `yaml:"workflow_status_url"`
+	WorkflowData          string `yaml:"workflow_data"`
+	WorkflowAuthorization string `yaml:"workflow_authorization"`
+	WorkflowKey           string `yaml:"workflow_key"`
+	ServerUrl             string `yaml:"server_url"`
+	SaveDir               string `yaml:"save_dir"`
+	CleanupMins           uint64 `yaml:"cleanup_mins"`
+	CleanupIntervalMins   uint64 `yaml:"cleanup_interval_mins"`
 }
 
 func createDefaultConfig() *Config {
 	return &Config{
-		GitHubToken:         "MY_GITHUB_TOKEN",
-		RepoOwner:           "foo",
-		RepoName:            "bar",
-		WorkflowFileName:    "sign.yml",
-		WorkflowRef:         "master",
-		ServerURL:           "http://localhost:8080",
-		SaveDir:             "data",
-		CleanupMins:         60 * 24 * 7,
-		CleanupIntervalMins: 30,
+		WorkflowTriggerUrl:    "https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches",
+		WorkflowData:          `{"ref":"master"}`,
+		WorkflowAuthorization: "Token 65eaa9c8ef52460d22a93307fe0aee76289dc675",
+		WorkflowStatusUrl:     "https://github.com/foo/bar/actions/workflows/sign.yml",
+		ServerUrl:             "http://localhost:8080",
+		SaveDir:               "data",
+		WorkflowKey:           "MY_SUPER_LONG_SECRET_KEY",
+		CleanupMins:           60 * 24 * 7,
+		CleanupIntervalMins:   30,
 	}
 }
 
@@ -45,6 +45,10 @@ func init() {
 	cfg, err := getConfig()
 	if err != nil {
 		log.Fatalln(errors.WithMessage(err, "get config"))
+	}
+
+	if len(strings.TrimSpace(cfg.WorkflowKey)) < 16 {
+		log.Fatalln("init: bad workflow key, must be at least 16 characters long")
 	}
 
 	Current = cfg

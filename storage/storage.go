@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/pkg/errors"
+	"io"
 	"ios-signer-service/config"
 	"ios-signer-service/util"
 	"log"
@@ -17,6 +18,7 @@ var (
 	appWorkflowUrlPath = resolveLocationWithId(appsPath, "workflow_url")
 	appNamePath        = resolveLocationWithId(appsPath, "name")
 	appProfileIdPath   = resolveLocationWithId(appsPath, "profile_id")
+	appSignArgsPath    = resolveLocationWithId(appsPath, "sign_args")
 
 	profilesPath    = filepath.Join(config.Current.SaveDir, "profiles")
 	profileCertPath = resolveLocationWithId(profilesPath, "cert.p12")
@@ -25,9 +27,14 @@ var (
 	profileNamePath = resolveLocationWithId(profilesPath, "name.txt")
 )
 
+type ReadonlyFile interface {
+	io.ReadSeekCloser
+	Stat() (os.FileInfo, error)
+}
+
 var Apps = newAppResolver()
 var Profiles = newProfileResolver()
-var OneTime = newOneTimeResolver()
+var Jobs = newJobResolver()
 
 func init() {
 	requiredPaths := []string{appsPath, profilesPath}

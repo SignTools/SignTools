@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"net/url"
@@ -47,4 +48,11 @@ func JoinUrlsParsed(parsedBase *url.URL, relativeUrl ...string) (string, error) 
 		return "", err
 	}
 	return parsedBase.ResolveReference(parsedRelative).String(), nil
+}
+
+func Check2xxCode(code int) error {
+	if code < 200 || code > 299 {
+		return errors.New(fmt.Sprintf("non-2xx code: %d", code))
+	}
+	return nil
 }

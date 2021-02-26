@@ -2,16 +2,15 @@ package storage
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 )
 
 type Profile interface {
 	GetId() string
-	GetCert() (io.ReadSeekCloser, error)
-	GetProv() (io.ReadSeekCloser, error)
-	GetPassword() (io.ReadSeekCloser, error)
+	GetCert() (ReadonlyFile, error)
+	GetProv() (ReadonlyFile, error)
+	GetPassword() (ReadonlyFile, error)
 	GetName() (string, error)
 }
 
@@ -37,7 +36,7 @@ func (p *profile) GetId() string {
 	return p.id
 }
 
-func (p *profile) GetCert() (io.ReadSeekCloser, error) {
+func (p *profile) GetCert() (ReadonlyFile, error) {
 	file, err := os.Open(profileCertPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesCertPath", p.id, err}
@@ -45,7 +44,7 @@ func (p *profile) GetCert() (io.ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (p *profile) GetProv() (io.ReadSeekCloser, error) {
+func (p *profile) GetProv() (ReadonlyFile, error) {
 	file, err := os.Open(profileProvPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesProvPath", p.id, err}
@@ -53,7 +52,7 @@ func (p *profile) GetProv() (io.ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (p *profile) GetPassword() (io.ReadSeekCloser, error) {
+func (p *profile) GetPassword() (ReadonlyFile, error) {
 	file, err := os.Open(profilePassPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesPassPath", p.id, err}
