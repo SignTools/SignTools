@@ -22,7 +22,7 @@ type Profile struct {
 type IndexData struct {
 	Apps            []App
 	Profiles        []Profile
-	FormFileName    string
+	FormFile        string
 	FormProfileName string
 	FormAppDebug    string
 	FormAllDevices  string

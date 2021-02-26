@@ -23,7 +23,7 @@ import (
 
 var (
 	cfg             = config.Current
-	formFileName    = "file"
+	formFile        = "file"
 	formProfileName = "profile_name"
 	formAllDevices  = "all_devices"
 	formAppDebug    = "app_debug"
@@ -97,7 +97,7 @@ func uploadJobResult(c echo.Context) error {
 	if !ok {
 		return errors.New(fmt.Sprintf("return job appid %s not resolved", appId))
 	}
-	header, err := c.FormFile(formFileName)
+	header, err := c.FormFile(formFile)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if !ok {
 		return errors.New("no profile with id " + profileName)
 	}
-	header, err := c.FormFile(formFileName)
+	header, err := c.FormFile(formFile)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func index(c echo.Context) error {
 		return err
 	}
 	data := assets.IndexData{
-		FormFileName:    formFileName,
+		FormFile:        formFile,
 		FormProfileName: formProfileName,
 		FormAllDevices:  formAllDevices,
 		FormAppDebug:    formAppDebug,
