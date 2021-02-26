@@ -61,14 +61,16 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	go func() {
-		for {
-			if err := cleanupApps(); err != nil {
-				log.Println(errors.WithMessage(err, "cleanup apps"))
+	if cfg.CleanupIntervalMins > 0 && cfg.CleanupMins > 0 {
+		go func() {
+			for {
+				if err := cleanupApps(); err != nil {
+					log.Println(errors.WithMessage(err, "cleanup apps"))
+				}
+				time.Sleep(time.Duration(cfg.CleanupIntervalMins) * time.Minute)
 			}
-			time.Sleep(time.Duration(cfg.CleanupIntervalMins) * time.Minute)
-		}
-	}()
+		}()
+	}
 
 	e := echo.New()
 	e.HideBanner = true
