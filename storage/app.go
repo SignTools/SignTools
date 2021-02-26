@@ -193,6 +193,7 @@ func (a *app) setUnsigned(file io.ReadSeeker) error {
 	if err != nil {
 		return &AppError{"create unsigned", a.id, err}
 	}
+	defer dstFile.Close()
 	if _, err := io.Copy(dstFile, file); err != nil {
 		return &AppError{"write unsigned", a.id, err}
 	}
