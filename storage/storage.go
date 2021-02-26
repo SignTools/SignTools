@@ -39,7 +39,7 @@ var Jobs = newJobResolver()
 func init() {
 	requiredPaths := []string{appsPath, profilesPath}
 	for _, path := range requiredPaths {
-		if err := os.MkdirAll(path, 0666); err != nil {
+		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			log.Fatalln(errors.WithMessage(err, "mkdir required path"))
 		}
 	}

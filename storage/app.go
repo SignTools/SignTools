@@ -44,7 +44,7 @@ func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs s
 	id := uuid.NewString()
 	app := &app{id: id}
 
-	if err := os.MkdirAll(appPath(id), 0666); err != nil {
+	if err := os.MkdirAll(appPath(id), os.ModePerm); err != nil {
 		return nil, &AppError{"make app dir", id, err}
 	}
 	if err := app.setName(name); err != nil {
