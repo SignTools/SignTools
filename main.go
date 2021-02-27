@@ -86,7 +86,7 @@ func serve(port uint64) {
 	e.GET("/apps/:id/delete", appResolver(deleteApp))
 
 	jobs := e.Group("/jobs", middleware.KeyAuth(func(s string, context echo.Context) (bool, error) {
-		return s == config.Current.WorkflowKey, nil
+		return s == config.Current.Workflow.Key, nil
 	}))
 	jobs.GET("", getLastJob)
 	jobs.POST("/:id", uploadJobResult)
@@ -227,7 +227,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := triggerWorkflow(); err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(config.Current.WorkflowStatusUrl); err != nil {
+	if err := app.SetWorkflowUrl(config.Current.Workflow.StatusUrl); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
@@ -315,11 +315,14 @@ func index(c echo.Context) error {
 }
 
 func triggerWorkflow() error {
-	request, err := http.NewRequest("POST", config.Current.WorkflowTriggerUrl, bytes.NewReader([]byte(config.Current.WorkflowData)))
+	body := bytes.NewReader([]byte(config.Current.Workflow.Trigger.Body))
+	request, err := http.NewRequest("POST", config.Current.Workflow.Trigger.Url, body)
 	if err != nil {
 		return errors.WithMessage(err, "new request")
 	}
-	request.Header.Set("Authorization", config.Current.WorkflowAuthorization)
+	for key, val := range config.Current.Workflow.Trigger.Headers {
+		request.Header.Set(key, val)
+	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return errors.WithMessage(err, "do request")

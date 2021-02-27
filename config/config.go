@@ -9,29 +9,43 @@ import (
 	"strings"
 )
 
+type Trigger struct {
+	Url     string            `yaml:"url"`
+	Body    string            `yaml:"body"`
+	Headers map[string]string `yaml:"headers"`
+}
+
+type Workflow struct {
+	Trigger   Trigger
+	StatusUrl string `yaml:"status_url"`
+	Key       string `yaml:"key"`
+}
+
 type Config struct {
-	WorkflowTriggerUrl    string `yaml:"workflow_trigger_url"`
-	WorkflowStatusUrl     string `yaml:"workflow_status_url"`
-	WorkflowData          string `yaml:"workflow_data"`
-	WorkflowAuthorization string `yaml:"workflow_authorization"`
-	WorkflowKey           string `yaml:"workflow_key"`
-	ServerUrl             string `yaml:"server_url"`
-	SaveDir               string `yaml:"save_dir"`
-	CleanupMins           uint64 `yaml:"cleanup_mins"`
-	CleanupIntervalMins   uint64 `yaml:"cleanup_interval_mins"`
+	Workflow            Workflow `yaml:"workflow"`
+	ServerUrl           string   `yaml:"server_url"`
+	SaveDir             string   `yaml:"save_dir"`
+	CleanupMins         uint64   `yaml:"cleanup_mins"`
+	CleanupIntervalMins uint64   `yaml:"cleanup_interval_mins"`
 }
 
 func createDefaultConfig() *Config {
 	return &Config{
-		WorkflowTriggerUrl:    "https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches",
-		WorkflowData:          `{"ref":"master"}`,
-		WorkflowAuthorization: "Token 65eaa9c8ef52460d22a93307fe0aee76289dc675",
-		WorkflowStatusUrl:     "https://github.com/foo/bar/actions/workflows/sign.yml",
-		ServerUrl:             "http://localhost:8080",
-		SaveDir:               "data",
-		WorkflowKey:           "MY_SUPER_LONG_SECRET_KEY",
-		CleanupMins:           60 * 24 * 7,
-		CleanupIntervalMins:   30,
+		Workflow: Workflow{
+			Trigger: Trigger{
+				Url:  "https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches",
+				Body: `{"ref":"master"}`,
+				Headers: map[string]string{
+					"Authorization": "Token 65eaa9c8ef52460d22a93307fe0aee76289dc675",
+				},
+			},
+			StatusUrl: "https://github.com/foo/bar/actions/workflows/sign.yml",
+			Key:       "MY_SUPER_LONG_SECRET_KEY",
+		},
+		ServerUrl:           "http://localhost:8080",
+		SaveDir:             "data",
+		CleanupMins:         60 * 24 * 7,
+		CleanupIntervalMins: 30,
 	}
 }
 
@@ -48,7 +62,7 @@ func Load(fileName string) {
 		log.Fatalln(errors.WithMessage(err, "get config"))
 	}
 
-	if len(strings.TrimSpace(cfg.WorkflowKey)) < 16 {
+	if len(strings.TrimSpace(cfg.Workflow.Key)) < 16 {
 		log.Fatalln("init: bad workflow key, must be at least 16 characters long")
 	}
 

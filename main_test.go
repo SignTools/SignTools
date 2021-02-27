@@ -23,16 +23,19 @@ import (
 
 var (
 	workflowData          = uuid.NewString()
-	workflowAuthorization = uuid.NewString()
-	workflowKey           = uuid.NewString()
-	saveDir               = ""
-	profileId             = uuid.NewString()
-	profileCert           = uuid.NewString()
-	profileName           = uuid.NewString()
-	profilePass           = uuid.NewString()
-	profileProv           = uuid.NewString()
-	unsignedData          = uuid.NewString()
-	signedData            = uuid.NewString()
+	workflowAuthorization = map[string]string{
+		uuid.NewString(): uuid.NewString(),
+		uuid.NewString(): uuid.NewString(),
+	}
+	workflowKey  = uuid.NewString()
+	saveDir      = ""
+	profileId    = uuid.NewString()
+	profileCert  = uuid.NewString()
+	profileName  = uuid.NewString()
+	profilePass  = uuid.NewString()
+	profileProv  = uuid.NewString()
+	unsignedData = uuid.NewString()
+	signedData   = uuid.NewString()
 )
 
 func TestMain(m *testing.M) {
@@ -67,15 +70,19 @@ func TestMain(m *testing.M) {
 	workflowPort := uint64(8099)
 
 	config.Current = &config.Config{
-		WorkflowTriggerUrl:    fmt.Sprintf("http://localhost:%d/trigger", workflowPort),
-		WorkflowStatusUrl:     "",
-		WorkflowData:          workflowData,
-		WorkflowAuthorization: workflowAuthorization,
-		WorkflowKey:           workflowKey,
-		ServerUrl:             fmt.Sprintf("http://localhost:%d", servePort),
-		SaveDir:               saveDir,
-		CleanupMins:           0,
-		CleanupIntervalMins:   0,
+		Workflow: config.Workflow{
+			Trigger: config.Trigger{
+				Url:     fmt.Sprintf("http://localhost:%d/trigger", workflowPort),
+				Body:    workflowData,
+				Headers: workflowAuthorization,
+			},
+			StatusUrl: "",
+			Key:       workflowKey,
+		},
+		ServerUrl:           fmt.Sprintf("http://localhost:%d", servePort),
+		SaveDir:             saveDir,
+		CleanupMins:         0,
+		CleanupIntervalMins: 0,
 	}
 
 	storage.Load()
@@ -94,6 +101,11 @@ func startWorkflowServer(port uint64) {
 
 	e.POST("/trigger", func(c echo.Context) error {
 		triggerHit = true
+		for key, val := range config.Current.Workflow.Trigger.Headers {
+			if c.Request().Header.Get(key) != val {
+				log.Fatalln("bad header")
+			}
+		}
 		if c.Request().Body == nil {
 			log.Fatalln("trigger body is nil")
 		}
@@ -101,7 +113,7 @@ func startWorkflowServer(port uint64) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if string(bodyBytes) != config.Current.WorkflowData {
+		if string(bodyBytes) != config.Current.Workflow.Trigger.Body {
 			log.Fatalln("mismatching data")
 		}
 		return c.NoContent(200)
