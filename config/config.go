@@ -3,6 +3,8 @@ package config
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"ios-signer-service/util"
 	"log"
 	"path/filepath"
@@ -52,12 +54,16 @@ func createDefaultConfig() *Config {
 var Current *Config
 
 func Load(fileName string) {
-	viper.SetConfigName(strings.TrimSuffix(fileName, filepath.Ext(fileName)))
 	// toml bug: https://github.com/spf13/viper/issues/488
+	allowedExts := []string{".yml", ".yaml"}
+	if !isAllowedExt(allowedExts, fileName) {
+		log.Fatalf("config extension not allowed: %v\n", allowedExts)
+	}
+	viper.SetConfigName(strings.TrimSuffix(fileName, filepath.Ext(fileName)))
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 
-	cfg, err := getConfig()
+	cfg, err := getConfig(fileName)
 	if err != nil {
 		log.Fatalln(errors.WithMessage(err, "get config"))
 	}
@@ -69,28 +75,38 @@ func Load(fileName string) {
 	Current = cfg
 }
 
-func getConfig() (*Config, error) {
-	cfg := createDefaultConfig()
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, handleNoConfigFile(cfg)
+func isAllowedExt(allowedExts []string, fileName string) bool {
+	fileExt := filepath.Ext(fileName)
+	for _, ext := range allowedExts {
+		if fileExt == ext {
+			return true
+		}
 	}
-	// don't use viper.Unmarshal because it doesn't support nested structs: https://github.com/spf13/viper/issues/488
-	if err := util.Restructure(viper.AllSettings(), cfg); err != nil {
-		return nil, errors.WithMessage(err, "config restructure")
-	}
-	return cfg, nil
+	return false
 }
 
-func handleNoConfigFile(config *Config) error {
-	defaultMap := make(map[string]interface{})
-	if err := util.Restructure(config, &defaultMap); err != nil {
-		return errors.WithMessage(err, "restructure")
+func getConfig(fileName string) (*Config, error) {
+	var lateError error
+	if err := viper.ReadInConfig(); err != nil {
+		lateError = errors.New("no file found, generating one")
 	}
-	if err := viper.MergeConfigMap(defaultMap); err != nil {
-		return errors.WithMessage(err, "merge default config")
+	cfg := createDefaultConfig()
+	// don't use viper.Unmarshal because it doesn't support nested structs: https://github.com/spf13/viper/issues/488
+	if err := util.Restructure(viper.AllSettings(), cfg); err != nil {
+		return nil, errors.WithMessage(err, "restructure")
 	}
-	if err := viper.SafeWriteConfig(); err != nil {
-		return errors.WithMessage(err, "save config")
+	cfgBytes, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, errors.WithMessage(err, "marshal")
 	}
-	return errors.New("file not present, template generated")
+	if err := ioutil.WriteFile(fileName, cfgBytes, 0666); err != nil {
+		return nil, errors.WithMessage(err, "write")
+	}
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, errors.WithMessage(err, "read")
+	}
+	if lateError != nil {
+		return nil, lateError
+	}
+	return cfg, nil
 }
