@@ -51,7 +51,7 @@ func cleanupApps() error {
 
 func main() {
 	port := flag.Uint64("port", 8080, "Listen port")
-	configFile := flag.String("config", "signer-cfg.yaml", "Configuration file")
+	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
 	flag.Parse()
 
 	config.Load(*configFile)
