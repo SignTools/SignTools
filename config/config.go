@@ -2,11 +2,9 @@ package config
 
 import (
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"ios-signer-service/util"
+	"gopkg.in/yaml.v3"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -54,24 +52,17 @@ func createDefaultConfig() *Config {
 var Current *Config
 
 func Load(fileName string) {
-	// toml bug: https://github.com/spf13/viper/issues/488
 	allowedExts := []string{".yml", ".yaml"}
 	if !isAllowedExt(allowedExts, fileName) {
 		log.Fatalf("config extension not allowed: %v\n", allowedExts)
 	}
-	viper.SetConfigName(strings.TrimSuffix(fileName, filepath.Ext(fileName)))
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-
 	cfg, err := getConfig(fileName)
 	if err != nil {
 		log.Fatalln(errors.WithMessage(err, "get config"))
 	}
-
 	if len(strings.TrimSpace(cfg.Workflow.Key)) < 16 {
 		log.Fatalln("init: bad workflow key, must be at least 16 characters long")
 	}
-
 	Current = cfg
 }
 
@@ -86,27 +77,35 @@ func isAllowedExt(allowedExts []string, fileName string) bool {
 }
 
 func getConfig(fileName string) (*Config, error) {
-	var lateError error
-	if err := viper.ReadInConfig(); err != nil {
-		lateError = errors.New("no file found, generating one")
-	}
 	cfg := createDefaultConfig()
-	// don't use viper.Unmarshal because it doesn't support nested structs: https://github.com/spf13/viper/issues/488
-	if err := util.Restructure(viper.AllSettings(), cfg); err != nil {
-		return nil, errors.WithMessage(err, "restructure")
-	}
-	cfgBytes, err := yaml.Marshal(cfg)
+	exists, err := readExisting(fileName, cfg)
 	if err != nil {
-		return nil, errors.WithMessage(err, "marshal")
+		return nil, errors.WithMessage(err, "read existing")
 	}
-	if err := ioutil.WriteFile(fileName, cfgBytes, 0666); err != nil {
+	cfgFile, err := os.Create(fileName)
+	if err != nil {
+		return nil, errors.WithMessage(err, "create")
+	}
+	defer cfgFile.Close()
+	if err := yaml.NewEncoder(cfgFile).Encode(&cfg); err != nil {
 		return nil, errors.WithMessage(err, "write")
 	}
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, errors.WithMessage(err, "read")
-	}
-	if lateError != nil {
-		return nil, lateError
+	if !exists {
+		return nil, errors.New("no file found, generating one")
 	}
 	return cfg, nil
+}
+
+func readExisting(fileName string, cfg *Config) (bool, error) {
+	cfgFile, err := os.Open(fileName)
+	if os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return true, errors.WithMessage(err, "open")
+	}
+	defer cfgFile.Close()
+	if err := yaml.NewDecoder(cfgFile).Decode(cfg); err != nil {
+		return true, errors.WithMessage(err, "decode")
+	}
+	return true, nil
 }
