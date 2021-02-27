@@ -1,24 +1,28 @@
 # iOS Signer Service
 
-> A cross-platform, self-hosted service to sign iOS apps using GitHub CI
+> A self-hosted, cross-platform service to sign iOS apps using any CI as a builder
 
 ## Introduction
 
-Not all apps are allowed to exist on the App Store. You may want to keep your personal apps to yourself. When sideloading is so severely hindered by Apple, you need a better way to get things done.
+There are many reasons to install apps outside the App Store. Unfortunately, this process is severely hindered by Apple and unrealistic for the average user. You need a better way to get things done.
 
-Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign iOS apps and effortlessly install them on your device, without a computer.
+Welcome `ios-signer-service` - a self-hosted, cross-platform service to sign iOS apps and install them on your device, all without a computer.
 
-**NOTICE**: You MUST have a valid **signing certificate** and **provisioning profile**. This project does not help you install apps for free.
+The setup consists of two parts - this web service, which can run on any computer, and a macOS builder, which this service controls to perform the actual signing. The builder integration is minimal, so any (free) API-enabled Continuous Integration (CI), such as GitHub, can be used.
+
+**NOTICE**: You must have a valid **signing certificate** and **provisioning profile**. This project does not circumvent any protections.
 
 ## Features
 
 - No jailbreak required
 - All iOS versions supported
 - No computer required (apart from server to host the service)
+- Works with any CI provider
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
 - Install signed apps straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
 - Choose from multiple signing profiles
+- Configure the signing process
 - Periodic old file cleanup
 
 ## Screenshots
@@ -44,19 +48,20 @@ Enter `ios-signer-service` - a cross-platform, self-hosted web service to sign i
 
 ### Requirements
 
-- A server; even a Raspberry Pi will work
+- Any server; even a Raspberry Pi will work
 - Reverse proxy with valid HTTPS (self-signed will NOT work with OTA)
-- GitHub account
-- Signing certificate (`.p12` file)
-- Provisioning profile (`.mobileprovision` file)
+- Builder system, such as a CI, that:
+  - Runs macOS
+  - Supports workflow triggers via API
+- Valid code signing profile:
+  - Certificate (`.p12` file) and password
+  - Provisioning profile (`.mobileprovision` file)
 
-### Service
+### Web Service
 
-`ios-signer-service` (this project) is a web service that you install on any server. The service exposes a web interface which allows the user to upload "unsigned" app files and have them signed using any of the configured signing profiles.
+`ios-signer-service` (this project) is a web service that you install on any server. The service exposes a web interface which allows the user to upload unsigned app files and have them signed using any of the configured signing profiles. The service offloads the signing process to a dedicate macOS builder, more on which in the next section.
 
-The easiest way to install the service is using the [Docker image](https://hub.docker.com/r/signtools/ios-signer-service).
-
-When you run the program for the first time, it will exit immediately and generate a configuration file. Make sure you set it appropriately.
+The easiest way to install the service is using the [Docker image](https://hub.docker.com/r/signtools/ios-signer-service). When you run the program for the first time, it will exit immediately and generate a configuration file. Make sure you set it appropriately.
 
 Inside the `save_dir` directory ("data" by default), you need to add at least one code signing profile. The structure is as follows:
 
@@ -70,21 +75,22 @@ data
 | | |____prov.mobileprovision  # the signing provisioning profile
 | |____OTHER_PROFILE_ID
 | | |____...
-|____apps                      # managed by the service
-| |____...
 ```
 
-By default, `ios-signer-service` does not offer any kind of authentication. This is a security issue - anybody can download and tamper with your apps and even signing certificates! Instead, run a reverse-proxy, like nginx, and wrap the service with authentication. The only endpoints you must leave non-authenticated (used for OTA and CI) are as follows (`:id` is a wildcard parameter):
+By default, `ios-signer-service` does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will simply not work! To make things work, you need to run a reverse-proxy like nginx, which wraps the service with HTTPS and authentication. You must leave a few endpoints non-authenticated, since they are used by OTA and builder. Don't worry, they are secured by long ids and the workflow key:
 
 ```
-/app/:id/
-/profile/:id/
+/apps/:id/
+/jobs
+/jobs/:id
 ```
 
-When information is passed to the CI, one-time IDs are generated instead of the actual app and profile IDs. When a request to them is processed, the IDs will be destroyed. This mitigates the fact that GitHub's CI will inevitably leak (print) the environment variables passed when the workflow is started, which includes the URL suffixes.
+(where `:id` is a wildcard parameter)
 
-### CI
+When an app is uploaded to the service for signing, a signing job is generated and stored in memory. The service then triggers the builder using the configured workflow trigger API. The builder will query the available jobs from the service using the `/jobs` endpoint from above, and download the most recent job's data. The data is a simple TAR file which contains all the necessary signing files. When the builder is finished, it will upload the signed file to the service using a "return id" found within the archive.
 
-Uploaded "unsigned" app files are sent from `ios-signer-service` to `ios-signer-ci` for signing. This offloading is necessary because signing is only supported on a macOS system. `ios-signer-ci` uses GitHub's CI to sign the file, since it offers a macOS environment, and then sends it back to `ios-signer-service`. Finally, the user is able to download or install the signed app from the same web interface where they uploaded it.
+### Builder
 
-To host your own [ios-signer-ci](https://github.com/SignTools/ios-signer-ci), simply fork the repo and follow its README.
+As mentioned before, `ios-signer-service` offloads the signing process to a dedicated macOS builder. This process is necessary because signing is only officially supported on a macOS system. While third-party cross-platform alternatives exist, they are not as stable or quick to update as the official solution.
+
+A free and easy implementation of a builder can be found in [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). It uses GitHub's Actions CI, as it offers a macOS environment. To host your own, simply fork the repo and follow its README.
