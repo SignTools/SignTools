@@ -36,7 +36,8 @@ func createDefaultConfig() *Config {
 				Url:  "https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches",
 				Body: `{"ref":"master"}`,
 				Headers: map[string]string{
-					"Authorization": "Token 65eaa9c8ef52460d22a93307fe0aee76289dc675",
+					"Authorization": "Token MY_TOKEN",
+					"Content-Type":  "application/json",
 				},
 			},
 			StatusUrl: "https://github.com/foo/bar/actions/workflows/sign.yml",
