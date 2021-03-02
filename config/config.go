@@ -10,9 +10,10 @@ import (
 )
 
 type Trigger struct {
-	Url     string            `yaml:"url"`
-	Body    string            `yaml:"body"`
-	Headers map[string]string `yaml:"headers"`
+	Url          string            `yaml:"url"`
+	Body         string            `yaml:"body"`
+	Headers      map[string]string `yaml:"headers"`
+	AttemptHTTP2 bool              `yaml:"attempt_http2"`
 }
 
 type Workflow struct {
@@ -39,6 +40,7 @@ func createDefaultConfig() *Config {
 					"Authorization": "Token MY_TOKEN",
 					"Content-Type":  "application/json",
 				},
+				AttemptHTTP2: true,
 			},
 			StatusUrl: "https://github.com/foo/bar/actions/workflows/sign.yml",
 			Key:       "MY_SUPER_LONG_SECRET_KEY",

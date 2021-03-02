@@ -15,6 +15,7 @@ import (
 	"ios-signer-service/util"
 	"log"
 	"mime"
+	"net"
 	"net/http"
 	"os"
 	textTemplate "text/template"
@@ -49,6 +50,21 @@ func cleanupApps() error {
 	return nil
 }
 
+var workflowTransport = http.Transport{
+	// Cloned http.DefaultTransport.
+	Proxy: http.ProxyFromEnvironment,
+	DialContext: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}).DialContext,
+	ForceAttemptHTTP2:     true,
+	MaxIdleConns:          100,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
+}
+var workflowClient = http.Client{Transport: &workflowTransport}
+
 func main() {
 	port := flag.Uint64("port", 8080, "Listen port")
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
@@ -73,6 +89,10 @@ func serve(port uint64) {
 				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
 			}
 		}()
+	}
+
+	if !config.Current.Workflow.Trigger.AttemptHTTP2 {
+		workflowTransport.ForceAttemptHTTP2 = false
 	}
 
 	e := echo.New()
@@ -323,7 +343,7 @@ func triggerWorkflow() error {
 	for key, val := range config.Current.Workflow.Trigger.Headers {
 		request.Header.Set(key, val)
 	}
-	response, err := http.DefaultClient.Do(request)
+	response, err := workflowClient.Do(request)
 	if err != nil {
 		return errors.WithMessage(err, "do request")
 	}
