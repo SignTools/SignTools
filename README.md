@@ -10,7 +10,9 @@ Introducing `ios-signer-service` - a self-hosted, cross-platform service to sign
 
 The setup consists of two parts - this web service, which can run on any computer, and a macOS builder, which this service controls to perform the actual signing. The builder integration is minimal, so any API-enabled Continuous Integration (CI) service, such as GitHub, can be used.
 
-**NOTICE**: You must have a valid **signing certificate** and **provisioning profile**. This project does not circumvent any measures in that regard.
+## Legal Disclaimer
+
+This project is self-hosted; there is no public service. It does not provide any alternative catalog of apps. It does not give you free signing certificates, or circumvent any protective measures - you must have a valid **signing certificate** and **provisioning profile**. This project does not provide, promote, or support any form of piracy. This project is aimed solely at people who want to install homebrew apps on their device, much like the popular [AltStore](https://github.com/rileytestut/AltStore).
 
 ## Features
 
