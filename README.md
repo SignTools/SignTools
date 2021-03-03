@@ -55,19 +55,14 @@ This project is self-hosted; there is no public service. It does not provide any
 
 ### Requirements
 
-- Any server with:
-
-  - Publicly accessible HTTPS (port 443)
-  - Reverse proxy, such as nginx, with valid HTTPS. Self-signed certificates will NOT work with OTA installation
-
-  Every major operating system and architecture are supported.
-  Even a Raspberry Pi has been tested and works.
-
-- Builder system, such as a CI, that:
+- Web service server
+  - All operating systems and architectures are supported
+  - Tested on a Raspberry Pi
+- Builder server, such as a CI like GitHub Actions, that:
   - Runs macOS
   - Supports workflow triggers via API
 - Valid code signing profile:
-  - Certificate (`.p12` file) and password
+  - Key+Certificate (`.p12` file)
   - Provisioning profile (`.mobileprovision` file)
 
 ### Web Service
@@ -153,7 +148,12 @@ data
 | | |____...
 ```
 
-By default, `ios-signer-service` does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you need to run a reverse-proxy like nginx, which wraps the service with HTTPS and authentication. You must leave a few endpoints non-authenticated, since they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
+`ios-signer-service` is not designed to be run standalone - it does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you have two options:
+
+- (RECOMMENDED) Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
+- If you are just testing or can't afford the option above, you can get away with using [ngrok](https://ngrok.com). It offers a free service that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's (valid) HTTPS certificate. To put it simply, it will give you a long URL from their domain, which will tunnel to your locally running signer service. Make sure you use the `https://` URL that ngrok gives you, or OTA won't work. Do not use this approach if you care about security.
+
+If you added authentication, you must leave a few endpoints non-authenticated, since they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
 
 ```
 /apps/:id/
@@ -170,6 +170,14 @@ When an app is uploaded to the service for signing, a signing job is generated a
 As mentioned before, `ios-signer-service` offloads the signing process to a dedicated macOS builder. This process is necessary because signing is only officially supported on a macOS system. While third-party cross-platform alternatives exist, they are not as stable or quick to update as the official solution.
 
 A free and simple implementation of a builder can be found in [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). It demonstrates how to use popular CI services for signing. To host your own, simply fork the repo and follow its README.
+
+## Frequently Asked Questions (F.A.Q.)
+
+- Q: How do you export the signing key+certificate?
+
+- A: On your Mac, open the `Keychain` app. There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click and select `Export 2 items...` (3). This will export you the `.p12` file you need.
+
+  ![](img/5.png)
 
 ## License
 
