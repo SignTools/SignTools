@@ -8,9 +8,14 @@ There are many reasons to install apps outside the App Store. Unfortunately, thi
 
 Introducing `ios-signer-service` - a self-hosted, cross-platform service to sign iOS apps and install them on your device, all without a computer.
 
-The setup consists of two parts - this web service, which can run on any computer, and a macOS builder, which this service controls to perform the actual signing. The builder integration is minimal, so any API-enabled Continuous Integration (CI) service, such as GitHub, can be used.
+The setup consists of two parts:
 
-## Legal Disclaimer
+- This web service, which runs on a server with any operating system/architecture, and exposes a website where you can upload apps for signing. The website is the only place a user interacts with.
+- A macOS builder server, which the web service uses to perform the actual signing. The builder requirements are minimal, so any API-enabled Continuous Integration (CI) service, such as GitHub, can be used.
+
+More information can be found in the installation section.
+
+## Disclaimer
 
 This project is self-hosted; there is no public service. It does not provide any alternative catalog of apps. It does not give you free signing certificates, or circumvent any protective measures - you must have a valid **signing certificate** and **provisioning profile**. This project does not provide, promote, or support any form of piracy. This project is aimed solely at people who want to install homebrew apps on their device, much like the popular [AltStore](https://github.com/rileytestut/AltStore).
 
@@ -50,8 +55,14 @@ This project is self-hosted; there is no public service. It does not provide any
 
 ### Requirements
 
-- Any server; even a Raspberry Pi will work
-- Reverse proxy with valid HTTPS (self-signed will NOT work with OTA)
+- Any server with:
+
+  - Publicly accessible HTTPS (port 443)
+  - Reverse proxy, such as nginx, with valid HTTPS. Self-signed certificates will NOT work with OTA installation
+
+  Every major operating system and architecture are supported.
+  Even a Raspberry Pi has been tested and works.
+
 - Builder system, such as a CI, that:
   - Runs macOS
   - Supports workflow triggers via API
