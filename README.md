@@ -74,7 +74,70 @@ This project is self-hosted; there is no public service. It does not provide any
 
 `ios-signer-service` (this project) is a web service that you install on any server. The service exposes a web interface which allows the user to upload unsigned app files and have them signed using any of the configured signing profiles. The service offloads the signing process to a dedicate macOS builder, more on which in the next section.
 
-The easiest way to install the service is using the [Docker image](https://hub.docker.com/r/signtools/ios-signer-service). All major architectures are supported. When you run the program for the first time, it will exit immediately and generate a configuration file. Make sure you set it appropriately. For the `workflow` settings, refer to the `Examples` section below.
+The easiest way to install the service is using the [Docker image](https://hub.docker.com/r/signtools/ios-signer-service). All major architectures are supported. When you run the program for the first time, it will exit immediately and generate a configuration file. Make sure you set it appropriately.
+
+An explanation of the settings:
+
+```yml
+# the builder's signing workflow
+workflow:
+  # an API endpoint that will trigger a run of the signing workflow
+  trigger:
+    # your builder's trigger url
+    url: https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches
+    # data to send with the trigger request
+    body: '{"ref":"master"}'
+    # headers to send with the trigger request
+    headers:
+      # usually you'll add the CI's token here
+      Authorization: Token MY_TOKEN
+      # either json or form
+      Content-Type: application/json
+    # whether to attempt http2 or stick to http1. Set to false if using Semaphore CI
+    attempt_http2: true
+  # a url that will be open when you click on "Status" in the website while a sign job is running
+  status_url: https://github.com/foo/bar/actions/workflows/sign.yml
+  # a key that you make up, which will be used by the builder to communicate with the service. Make sure it is long and secure!
+  key: MY_SUPER_LONG_SECRET_KEY
+# the public address of your server, used to build URLs for the website and builder
+server_url: https://mywebsite.com
+# where to save data such as apps and signing profiles
+save_dir: data
+# apps older than this time will be deleted when a cleanup job is run
+cleanup_mins: 10080
+# how often does the cleanup job run
+cleanup_interval_mins: 30
+```
+
+Depending on your builder provider, the `workflow` section will vary. Here are examples of the most popular CI providers:
+
+#### GitHub Actions
+
+```yml
+workflow:
+  trigger:
+    url: https://api.github.com/repos/YOUR_PROFILE/ios-signer-ci/actions/workflows/sign.yml/dispatches
+    body: '{"ref":"master"}'
+    headers:
+      Authorization: Token YOUR_TOKEN
+      Content-Type: application/json
+    attempt_http2: true
+  status_url: https://github.com/YOUR_PROFILE/ios-signer-ci/actions/workflows/sign.yml
+```
+
+#### Semaphore CI
+
+```yml
+workflow:
+  trigger:
+    url: https://YOUR_PROFILE.semaphoreci.com/api/v1alpha/plumber-workflows
+    body: project_id=YOUR_PROJECT_ID&reference=refs/heads/master
+    headers:
+      Authorization: Token YOUR_TOKEN
+      Content-Type: application/x-www-form-urlencoded
+    attempt_http2: false
+  status_url: https://YOUR_PROFILE.semaphoreci.com/projects/ios-signer-ci
+```
 
 Inside the `save_dir` directory ("data" by default), you need to add at least one code signing profile. The structure is as follows:
 
@@ -107,35 +170,3 @@ When an app is uploaded to the service for signing, a signing job is generated a
 As mentioned before, `ios-signer-service` offloads the signing process to a dedicated macOS builder. This process is necessary because signing is only officially supported on a macOS system. While third-party cross-platform alternatives exist, they are not as stable or quick to update as the official solution.
 
 A free and simple implementation of a builder can be found in [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). It demonstrates how to use popular CI services for signing. To host your own, simply fork the repo and follow its README.
-
-### Examples
-
-As mentioned before, here are example configurations for the `workflow` settings in `ios-signer-service`:
-
-#### GitHub Actions
-
-```yml
-workflow:
-  trigger:
-    url: https://api.github.com/repos/YOUR_PROFILE/ios-signer-ci/actions/workflows/sign.yml/dispatches
-    body: '{"ref":"master"}'
-    headers:
-      Authorization: Token YOUR_TOKEN
-      Content-Type: application/json
-    attempt_http2: true
-  status_url: https://github.com/YOUR_PROFILE/ios-signer-ci/actions/workflows/sign.yml
-```
-
-#### Semaphore CI
-
-```yml
-workflow:
-  trigger:
-    url: https://YOUR_PROFILE.semaphoreci.com/api/v1alpha/plumber-workflows
-    body: project_id=YOUR_PROJECT_ID&reference=refs/heads/master
-    headers:
-      Authorization: Token YOUR_TOKEN
-      Content-Type: application/x-www-form-urlencoded
-    attempt_http2: false
-  status_url: https://YOUR_PROFILE.semaphoreci.com/projects/ios-signer-ci
-```
