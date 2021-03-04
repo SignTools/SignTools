@@ -184,7 +184,7 @@ When an app is uploaded to the service for signing, a signing job is generated a
 
 - Q: How do you export the signing key+certificate?
 
-- A: On your Mac, open the `Keychain` app. There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click and select `Export 2 items...` (3). This will export you the `.p12` file you need.
+- A: On your Mac, open the `Keychain` app. There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click (3) and select `Export 2 items...` (4). This will export you the `.p12` file you need.
 
   ![](img/5.png)
 
