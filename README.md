@@ -241,13 +241,9 @@ When an app is uploaded to the service for signing, a signing job is generated a
     - Can't use special entitlements such as app groups (Apple restriction)
 
   - Explicit, with app id = `TEAM_ID.app1`
-
     - Can properly sign only one app (`TEAM_ID.app1`)
-
     - Can use any entitlement as long as it's in the provisioning profile
-
     - If you properly sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
-
     - It is possible to improperly sign apps with an explicit profile by keeping their original bundle ids even if they don't match the profile's app id. For an example, with an app id `TEAM_ID.app1`, you could sign the apps `TEAM_ID.app2` and `TEAM_ID.app3`. This way, you can have multiple apps installed at the same time, and they will run, but all of their entitlements will be broken, including file importing.
 
 - ### App runs, but malfunctions due to invalid signing/entitlements
