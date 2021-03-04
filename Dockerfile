@@ -13,5 +13,4 @@ WORKDIR /
 COPY --from=builder "/src/bin-release" "/"
 
 ENTRYPOINT ["/bin-release"]
-VOLUME ["/data"]
 EXPOSE 8080
