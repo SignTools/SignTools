@@ -68,10 +68,10 @@
                             <input class="form-check-input" type="checkbox" id="formAppDebug"
                                    name="{{.FormAppDebug}}">
                             <label style="display: inline" class="form-check-label" for="formAppDebug">
-                                Enable app debugging (get-task-allow)
+                                Enable app debugging
                             </label>
                             <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
-                               title="Allows debuggers to read and modify any of the app's data.
+                               title="Enables the get-task-allow entitlement.
                                Required by some emulators and jailbreaks.
                                Your provisioning profile must support this entitlement.">?</a>
                         </div>
@@ -100,7 +100,8 @@
                                 Set bundle ID to provisioning profile's app ID
                             </label>
                             <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
-                               title="Allows the app to use an explicit provisioning profile's entitlements.">?</a>
+                               title="Makes the app match an explicit provisioning profile, allowing entitlements to work.
+                               For each profile, only one app signed this way can be installed at a time.">?</a>
                         </div>
                     </div>
                 </div>
