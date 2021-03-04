@@ -22,12 +22,19 @@ type Workflow struct {
 	Key       string `yaml:"key"`
 }
 
+type BasicAuth struct {
+	Enable   bool   `yaml:"enable"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
 type Config struct {
-	Workflow            Workflow `yaml:"workflow"`
-	ServerUrl           string   `yaml:"server_url"`
-	SaveDir             string   `yaml:"save_dir"`
-	CleanupMins         uint64   `yaml:"cleanup_mins"`
-	CleanupIntervalMins uint64   `yaml:"cleanup_interval_mins"`
+	Workflow            Workflow  `yaml:"workflow"`
+	ServerUrl           string    `yaml:"server_url"`
+	SaveDir             string    `yaml:"save_dir"`
+	CleanupMins         uint64    `yaml:"cleanup_mins"`
+	CleanupIntervalMins uint64    `yaml:"cleanup_interval_mins"`
+	BasicAuth           BasicAuth `yaml:"basic_auth"`
 }
 
 func createDefaultConfig() *Config {

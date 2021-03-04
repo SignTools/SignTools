@@ -84,38 +84,40 @@ The easiest way to get the service is by downloading the pre-compiled binaries f
 You can also use the official [Docker image](https://hub.docker.com/r/signtools/ios-signer-service), but make sure to configure it properly:
 
 - Mount the configuration file to your host, so you can edit it after it's generated. The file's location in the container is just under the root directory: `/signer-cfg.yml`.
-- Mount the directory that you will use for the app's data. By default, the location in the container is: `/data/`. You can set this path using the `save_dir` property in the configuration file.
+- Mount the directory that you will use for the app's data. By default, the location in the container is: `/data`. You can set this path using the `save_dir` property in the configuration file.
 
-The default serving port used by the service is `8080`. You can override this by running the service with an argument `-port 1234`, where "1234" is your desired port. You can see a description of these arguments and more via `-help`.
+The default port used by the service is `8080`. You can override this by running the service with an argument `-port 1234`, where "1234" is your desired port. You can see a description of these arguments and more via `-help`.
 
 `ios-signer-service` is not designed to run by itself - it does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you have two options:
 
 - **Reverse proxy** (recommended)
 
-  Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
+  Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate (self-signed won't work with OTA due to Apple restriction), which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
+
+  You must leave a few endpoints non-authenticated, as they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
+
+  ```
+  /apps/:id/
+  /jobs
+  /jobs/:id
+  ```
+
+  (where `:id` is a wildcard parameter)
 
 - **ngrok**
 
-  If you are just testing or can't afford the option above, you can also use [ngrok](https://ngrok.com). It offers a free plan that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's valid HTTPS certificate. Note that the free plan has a limit of 40 connections per minute, and the URLs change every time you restart ngrok, so you will have to remember to update them. To use ngrok, install the program, then just run the following command:
+  If you are just testing or can't afford the option above, you can also use [ngrok](https://ngrok.com). It offers a free plan that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's valid HTTPS certificate. Note that the free plan has a limit of 40 connections per minute, and the URLs change every time you restart ngrok, so you will have to remember to update them.
+
+  To use ngrok, install the program, then just run the following command:
 
   ```bash
   ngrok http -inspect=false 8080
   ```
 
-  You will get two URLs - make sure to use the one starting with `https://` everywhere, or things will break!
-  Do not use this approach if you care about security.
+  You will get two URLs - make sure to always use the HTTPS one, both when configuring and when using the service.
+  Also, make sure to enable `basic_auth` in the configuration below, or anybody could access your service.
 
-If you added authentication, you must leave a few endpoints non-authenticated, since they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
-
-```
-/apps/:id/
-/jobs
-/jobs/:id
-```
-
-(where `:id` is a wildcard parameter)
-
-When you run the service for the first time, it will exit immediately and generate a configuration file, `signer-cfg.yml`. Set it appropriately, or nothing will work.
+When you run the service for the first time, it will exit immediately and generate a configuration file, `signer-cfg.yml`. Take your time to read through it and set it appropriately - the default's won't work!
 
 An explanation of the settings:
 
@@ -134,7 +136,8 @@ workflow:
       Authorization: Token MY_TOKEN
       # either json or form
       Content-Type: application/json
-    # whether to attempt http2 or stick to http1. Set to false if using Semaphore CI
+    # whether to attempt http2 or stick to http1
+    # set to false if using Semaphore CI
     attempt_http2: true
   # a url that will be open when you click on "Status" in the website while a sign job is running
   status_url: https://github.com/foo/bar/actions/workflows/sign.yml
@@ -144,12 +147,18 @@ workflow:
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or OTA won't work!
 server_url: https://mywebsite.com
-# where to save data such as apps and signing profiles
+# where to save data like apps and signing profiles
 save_dir: data
 # apps older than this time will be deleted when a cleanup job is run
 cleanup_mins: 10080
 # how often does the cleanup job run
 cleanup_interval_mins: 30
+# protects the web ui with a username and password
+# this does not overlap with the "workflow.key" protection
+basic_auth:
+  enable: false
+  username: ""
+  password: ""
 ```
 
 Depending on your builder provider, the `workflow` section will vary. Here are examples of the most popular CI providers:
@@ -229,7 +238,7 @@ When an app is uploaded to the service for signing, a signing job is generated a
   - Wildcard, with app id = `TEAM_ID.*`
 
     - Can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...)
-    - Can't use special entitlements such as app groups (restricted by Apple)
+    - Can't use special entitlements such as app groups (Apple restriction)
 
   - Explicit, with app id = `TEAM_ID.app1`
 
