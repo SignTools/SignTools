@@ -69,7 +69,9 @@ This project is self-hosted; there is no public service. It does not provide any
 
 `ios-signer-service` offloads the signing process to a dedicated macOS builder. This step is necessary because signing is only officially supported on a macOS system. While third-party cross-platform alternatives exist, they are not as stable or quick to update as the official solution.
 
-However, you don't need to own a Mac! In fact, you don't even need to pay anything. [GitHub Actions](https://docs.github.com/en/actions), [Semaphore CI](https://semaphoreci.com/), and some other CI providers give you free monthly allowance to use a macOS VM and build your projects. In this case, you will be using them to sign your apps. An implementation for GitHub Actions and Semaphore CI can be found at [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). To host it, simply fork the repo and follow its README.
+However, you don't need to own a Mac! In fact, you don't even need to pay anything. [GitHub Actions](https://docs.github.com/en/actions), [Semaphore CI](https://semaphoreci.com/), and some other CI providers give you free monthly allowance to use a macOS VM and build your projects. In this case, you will be using them to sign your apps.
+
+An implementation for GitHub Actions and Semaphore CI can be found at [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). To host it, simply fork the repo and follow its README.
 
 You can always use another CI provider, or even your own machine, given it supports remote workflow triggers over API. You will see the requirements in the configuration section below.
 
@@ -77,12 +79,34 @@ You can always use another CI provider, or even your own machine, given it suppo
 
 `ios-signer-service` (this project) is a web service that you install on any server. The service exposes a web interface which allows the user to upload unsigned app files and have them signed using any of the configured signing profiles.
 
-The easiest way to run the service is by downloading the pre-compiled binaries from the [releases](https://github.com/SignTools/ios-signer-service/releases).
+The easiest way to get the service is by downloading the pre-compiled binaries from the [releases](https://github.com/SignTools/ios-signer-service/releases).
 
 You can also use the official [Docker image](https://hub.docker.com/r/signtools/ios-signer-service), but make sure to configure it properly:
 
 - Mount the configuration file to your host, so you can edit it after it's generated. The file's location in the container is just under the root directory: `/signer-cfg.yml`.
-- Mount the `save_dir` directory (set in the configuration, "data" by default) to a named volume. Assuming defaults, the location will be: `/data`.
+- Mount the directory that you will use for the app's data. By default, the location in the container is: `/data/`. You can set this path using the `save_dir` property in the configuration file.
+
+The default serving port used by the service is `8080`. You can override this by running the service with an argument `-port 1234`, where "1234" is your desired port. You can see a description of these arguments and more via `-help`.
+
+`ios-signer-service` is not designed to run by itself - it does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you have two options:
+
+- (RECOMMENDED) Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
+- If you are just testing or can't afford the option above, you can also use [ngrok](https://ngrok.com). It offers a free service that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's valid HTTPS certificate. Install the program, then just run the following command:
+  ```bash
+  ngrok http 8080
+  ```
+  You will get two URLs - make sure to use the one starting with `https://` everywhere, or things will break!
+  Do not use this approach if you care about security.
+
+If you added authentication, you must leave a few endpoints non-authenticated, since they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
+
+```
+/apps/:id/
+/jobs
+/jobs/:id
+```
+
+(where `:id` is a wildcard parameter)
 
 When you run the service for the first time, it will exit immediately and generate a configuration file, `signer-cfg.yml`. Set it appropriately, or nothing will work.
 
@@ -109,7 +133,7 @@ workflow:
   status_url: https://github.com/foo/bar/actions/workflows/sign.yml
   # a key that you make up, which will be used by the builder to communicate with the service. Make sure it is long and secure!
   key: MY_SUPER_LONG_SECRET_KEY
-# the public address of your server, used to build URLs for the website and builder
+# the public address of your server, used to build URLs for the website and builder. Must be valid HTTPS or OTA won't work!
 server_url: https://mywebsite.com
 # where to save data such as apps and signing profiles
 save_dir: data
@@ -149,7 +173,7 @@ workflow:
   status_url: https://YOUR_PROFILE.semaphoreci.com/projects/ios-signer-ci
 ```
 
-Inside the `save_dir` directory ("data" by default), you need to add at least one code signing profile. The structure is as follows:
+Inside the `save_dir` directory from your configuration ("data" by default), you need to add at least one code signing profile. The structure is as follows:
 
 ```
 data
@@ -163,22 +187,7 @@ data
 | | |____...
 ```
 
-`ios-signer-service` is not designed to run by itself - it does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you have two options:
-
-- (RECOMMENDED) Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
-- If you are just testing or can't afford the option above, you can get away with using [ngrok](https://ngrok.com). It offers a free service that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's (valid) HTTPS certificate. To put it simply, it will give you a long URL from their domain, which will tunnel to your locally running signer service. Make sure you use the `https://` URL that ngrok gives you, or OTA won't work. Do not use this approach if you care about security.
-
-If you added authentication, you must leave a few endpoints non-authenticated, since they are used by OTA and the builder. Don't worry, they are secured by long ids and/or the workflow key:
-
-```
-/apps/:id/
-/jobs
-/jobs/:id
-```
-
-(where `:id` is a wildcard parameter)
-
-When an app is uploaded to the service for signing, a signing job is generated and stored in memory. The service then triggers the builder using the configured workflow trigger API. The builder will query the available jobs from the service using the `/jobs` endpoint from above, and download the most recent job's data. The data is a simple TAR file which contains all the necessary signing files. When the builder is finished, it will upload the signed file to the service using a "return id" found within the archive.
+When an app is uploaded to the service for signing, a signing job is generated and stored in memory. The service then triggers the builder using the configured workflow trigger API. The builder will query the available jobs from the service using the `/jobs` endpoint, and download the most recent job's data. This data is a simple TAR file which contains all the necessary signing files. When the builder is finished, it will upload the signed file to the service using a "return id" found within the archive.
 
 ## Frequently Asked Questions (F.A.Q.)
 
