@@ -28,6 +28,7 @@ var (
 	formAllDevices  = "all_devices"
 	formAppDebug    = "app_debug"
 	formFileShare   = "file_share"
+	formAlignAppId  = "align_app_id"
 )
 
 func cleanupApps() error {
@@ -239,6 +240,9 @@ func uploadUnsignedApp(c echo.Context) error {
 	if c.FormValue(formFileShare) != "" {
 		signArgs += " -s"
 	}
+	if c.FormValue(formAlignAppId) != "" {
+		signArgs += " -n"
+	}
 	app, err := storage.Apps.New(file, header.Filename, profile, signArgs)
 	if err != nil {
 		return err
@@ -264,6 +268,7 @@ func index(c echo.Context) error {
 		FormAllDevices:  formAllDevices,
 		FormAppDebug:    formAppDebug,
 		FormFileShare:   formFileShare,
+		FormAlignAppId:  formAlignAppId,
 	}
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()

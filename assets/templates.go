@@ -27,6 +27,7 @@ type IndexData struct {
 	FormAppDebug    string
 	FormAllDevices  string
 	FormFileShare   string
+	FormAlignAppId  string
 }
 
 type ManifestData struct {
