@@ -90,11 +90,18 @@ The default serving port used by the service is `8080`. You can override this by
 
 `ios-signer-service` is not designed to run by itself - it does not offer encryption (HTTPS) or global authentication. This is a huge security issue, and OTA installations will not work! Instead, you have two options:
 
-- (RECOMMENDED) Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
-- If you are just testing or can't afford the option above, you can also use [ngrok](https://ngrok.com). It offers a free service that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's valid HTTPS certificate. Install the program, then just run the following command:
+- **Reverse proxy** (recommended)
+
+  Run a reverse proxy like nginx, which wraps the service with HTTPS and authentication. You will need a valid HTTPS certificate - self-signed does not work with OTA due to Apple restriction - which means that you will also need a domain. While this setup is more involved, it is the industry-standard way to deploy any web application. It is also the most unrestricted, reliable and secure method by far.
+
+- **ngrok**
+
+  If you are just testing or can't afford the option above, you can also use [ngrok](https://ngrok.com). It offers a free plan that allows you to create a publicly accessible tunnel to your service, conveniently wrapped in ngrok's valid HTTPS certificate. Note that the free plan has a limit of 40 connections per minute, and the URLs change every time you restart ngrok, so you will have to remember to update them. To use ngrok, install the program, then just run the following command:
+
   ```bash
-  ngrok http 8080
+  ngrok http -inspect=false 8080
   ```
+
   You will get two URLs - make sure to use the one starting with `https://` everywhere, or things will break!
   Do not use this approach if you care about security.
 
@@ -131,9 +138,11 @@ workflow:
     attempt_http2: true
   # a url that will be open when you click on "Status" in the website while a sign job is running
   status_url: https://github.com/foo/bar/actions/workflows/sign.yml
-  # a key that you make up, which will be used by the builder to communicate with the service. Make sure it is long and secure!
+  # a key that you make up, which will be used by the builder to communicate with the service
+  # make sure it is long and secure!
   key: MY_SUPER_LONG_SECRET_KEY
-# the public address of your server, used to build URLs for the website and builder. Must be valid HTTPS or OTA won't work!
+# the public address of your server, used to build URLs for the website and builder
+# must be valid HTTPS or OTA won't work!
 server_url: https://mywebsite.com
 # where to save data such as apps and signing profiles
 save_dir: data
