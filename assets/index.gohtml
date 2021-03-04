@@ -67,30 +67,40 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="formAppDebug"
                                    name="{{.FormAppDebug}}">
-                            <label class="form-check-label" for="formAppDebug">
+                            <label style="display: inline" class="form-check-label" for="formAppDebug">
                                 Enable app debugging (get-task-allow)
                             </label>
+                            <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                               title="Allows debuggers to read and modify any of the app's data.
+                               Required by some emulators and jailbreaks.
+                               Your provisioning profile must support this entitlement.">?</a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="formAllDevices"
                                    name="{{.FormAllDevices}}">
-                            <label class="form-check-label" for="formAllDevices">
+                            <label style="display: inline" class="form-check-label" for="formAllDevices">
                                 Force enable support for all devices
                             </label>
+                            <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                               title="Removes any iOS version or device model restrictions from the app.">?</a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="formFileShare"
                                    name="{{.FormFileShare}}">
-                            <label class="form-check-label" for="formFileShare">
+                            <label style="display: inline" class="form-check-label" for="formFileShare">
                                 Force enable file sharing through iTunes
                             </label>
+                            <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                               title="Allows you to access the app's data via iTunes and other file managers.">?</a>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="formAlignAppId"
                                    name="{{.FormAlignAppId}}">
-                            <label class="form-check-label" for="formAlignAppId">
+                            <label style="display: inline" class="form-check-label" for="formAlignAppId">
                                 Set bundle ID to provisioning profile's app ID
                             </label>
+                            <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                               title="Allows the app to use an explicit provisioning profile's entitlements.">?</a>
                         </div>
                     </div>
                 </div>
@@ -185,5 +195,11 @@
             uploadForm.submit()
         }, 200)
     });
+
+    // enable all tooltips
+    let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
 </script>
 </html>
