@@ -115,6 +115,7 @@ func serve(port uint64) {
 	})
 
 	e.GET("/", index, basicAuth)
+	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
@@ -123,6 +124,11 @@ func serve(port uint64) {
 	e.POST("/jobs/:id", uploadJobResult, workflowKeyAuth)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+}
+
+func getFavIcon(c echo.Context) error {
+	http.ServeContent(c.Response(), c.Request(), assets.FavIconStat.Name(), assets.FavIconStat.ModTime(), bytes.NewReader(assets.FavIconBytes))
+	return nil
 }
 
 func uploadJobResult(c echo.Context) error {
