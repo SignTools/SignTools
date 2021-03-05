@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -10,7 +9,7 @@ type Profile interface {
 	GetId() string
 	GetCert() (ReadonlyFile, error)
 	GetProv() (ReadonlyFile, error)
-	GetPassword() (ReadonlyFile, error)
+	GetPassword() (string, error)
 	GetName() (string, error)
 }
 
@@ -52,18 +51,18 @@ func (p *profile) GetProv() (ReadonlyFile, error) {
 	return file, nil
 }
 
-func (p *profile) GetPassword() (ReadonlyFile, error) {
-	file, err := os.Open(profilePassPath(p.id))
+func (p *profile) GetPassword() (string, error) {
+	data, err := readTrimSpace(profilePassPath(p.id))
 	if err != nil {
-		return nil, &ProfileError{"open ProfilesPassPath", p.id, err}
+		return "", &ProfileError{"read file ProfilesPassPath", p.id, err}
 	}
-	return file, nil
+	return data, nil
 }
 
 func (p *profile) GetName() (string, error) {
-	bytes, err := ioutil.ReadFile(profileNamePath(p.id))
+	data, err := readTrimSpace(profileNamePath(p.id))
 	if err != nil {
 		return "", &ProfileError{"read file ProfilesNamePath", p.id, err}
 	}
-	return string(bytes), nil
+	return data, nil
 }

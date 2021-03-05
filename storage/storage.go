@@ -3,11 +3,13 @@ package storage
 import (
 	"github.com/pkg/errors"
 	"io"
+	"io/ioutil"
 	"ios-signer-service/config"
 	"ios-signer-service/util"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -70,4 +72,19 @@ var resolveLocationWithId = func(parent string, path string) func(id string) str
 	return func(id string) string {
 		return util.SafeJoin(parent, id, path)
 	}
+}
+
+func readTrimSpace(filePath string) (string, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
+
+func writeTrimSpace(filePath string, data string) error {
+	if err := ioutil.WriteFile(filePath, []byte(strings.TrimSpace(data)), 0666); err != nil {
+		return err
+	}
+	return nil
 }

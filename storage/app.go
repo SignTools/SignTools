@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -70,21 +69,21 @@ type app struct {
 func (a *app) GetSignArgs() (string, error) {
 	a.mu.RLock()
 	a.mu.RUnlock()
-	b, err := ioutil.ReadFile(appSignArgsPath(a.id))
+	data, err := readTrimSpace(appSignArgsPath(a.id))
 	if err != nil {
 		return "", &AppError{"read sign args file", a.id, err}
 	}
-	return string(b), nil
+	return data, nil
 }
 
 func (a *app) GetProfileId() (string, error) {
 	a.mu.RLock()
 	a.mu.RUnlock()
-	b, err := ioutil.ReadFile(appProfileIdPath(a.id))
+	data, err := readTrimSpace(appProfileIdPath(a.id))
 	if err != nil {
 		return "", &AppError{"read profile id file", a.id, err}
 	}
-	return string(b), nil
+	return data, nil
 }
 
 func (a *app) GetModTime() (time.Time, error) {
@@ -143,27 +142,27 @@ func (a *app) GetUnsigned() (ReadonlyFile, error) {
 func (a *app) GetName() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(appNamePath(a.id))
+	data, err := readTrimSpace(appNamePath(a.id))
 	if err != nil {
 		return "", &AppError{"read name file", a.id, err}
 	}
-	return string(b), nil
+	return data, nil
 }
 
 func (a *app) GetWorkflowUrl() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	b, err := ioutil.ReadFile(appWorkflowUrlPath(a.id))
+	data, err := readTrimSpace(appWorkflowUrlPath(a.id))
 	if err != nil {
 		return "", &AppError{"read workflow url file", a.id, err}
 	}
-	return string(b), nil
+	return data, nil
 }
 
 func (a *app) SetWorkflowUrl(url string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := ioutil.WriteFile(appWorkflowUrlPath(a.id), []byte(url), 0666); err != nil {
+	if err := writeTrimSpace(appWorkflowUrlPath(a.id), url); err != nil {
 		return &AppError{"set workflow url file", a.id, err}
 	}
 	return nil
@@ -201,21 +200,21 @@ func (a *app) setUnsigned(file io.ReadSeeker) error {
 }
 
 func (a *app) setProfileId(profile Profile) error {
-	if err := ioutil.WriteFile(appProfileIdPath(a.id), []byte(profile.GetId()), 0666); err != nil {
+	if err := writeTrimSpace(appProfileIdPath(a.id), profile.GetId()); err != nil {
 		return &AppError{"write profile id file", a.id, err}
 	}
 	return nil
 }
 
 func (a *app) setName(name string) error {
-	if err := ioutil.WriteFile(appNamePath(a.id), []byte(name), 0666); err != nil {
+	if err := writeTrimSpace(appNamePath(a.id), name); err != nil {
 		return &AppError{"write name file", a.id, err}
 	}
 	return nil
 }
 
 func (a *app) setSignArgs(args string) error {
-	if err := ioutil.WriteFile(appSignArgsPath(a.id), []byte(args), 0666); err != nil {
+	if err := writeTrimSpace(appSignArgsPath(a.id), args); err != nil {
 		return &AppError{"write sign args file", a.id, err}
 	}
 	return nil
