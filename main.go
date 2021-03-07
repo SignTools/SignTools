@@ -67,16 +67,17 @@ var workflowTransport = http.Transport{
 var workflowClient = http.Client{Transport: &workflowTransport}
 
 func main() {
+	host := flag.String("host", "", "Listen host, empty for all")
 	port := flag.Uint64("port", 8080, "Listen port")
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
 	flag.Parse()
 
 	config.Load(*configFile)
 	storage.Load()
-	serve(*port)
+	serve(*host, *port)
 }
 
-func serve(port uint64) {
+func serve(host string, port uint64) {
 	if err := os.MkdirAll(config.Current.SaveDir, 0777); err != nil {
 		log.Fatalln(err)
 	}
@@ -123,7 +124,7 @@ func serve(port uint64) {
 	e.GET("/jobs", getLastJob, workflowKeyAuth)
 	e.POST("/jobs/:id", uploadJobResult, workflowKeyAuth)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", host, port)))
 }
 
 func getFavIcon(c echo.Context) error {

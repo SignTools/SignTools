@@ -66,6 +66,7 @@ func TestMain(m *testing.M) {
 		}
 	}
 
+	serveHost := "127.0.0.1"
 	servePort := uint64(8098)
 	workflowPort := uint64(8099)
 
@@ -86,7 +87,7 @@ func TestMain(m *testing.M) {
 	}
 
 	storage.Load()
-	go serve(servePort)
+	go serve(serveHost, servePort)
 	go startWorkflowServer(workflowPort)
 
 	m.Run()
