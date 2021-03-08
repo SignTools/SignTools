@@ -11,6 +11,7 @@ import (
 	"io"
 	"ios-signer-service/assets"
 	"ios-signer-service/config"
+	"ios-signer-service/ngrok"
 	"ios-signer-service/storage"
 	"ios-signer-service/util"
 	"log"
@@ -70,10 +71,21 @@ func main() {
 	host := flag.String("host", "", "Listen host, empty for all")
 	port := flag.Uint64("port", 8080, "Listen port")
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
+	ngrokPort := flag.Uint64("ngrokPort", 0, "Ngrok web interface port. "+
+		"Used to automatically parse the server_url")
 	flag.Parse()
 
 	config.Load(*configFile)
 	storage.Load()
+	if *ngrokPort != 0 {
+		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		log.Println("ngrok public URL: " + publicUrl)
+		config.Current.ServerUrl = publicUrl
+	}
+
 	serve(*host, *port)
 }
 
