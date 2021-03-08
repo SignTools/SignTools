@@ -1,26 +1,15 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
+	"ios-signer-service/builders"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 )
-
-type Trigger struct {
-	Url          string            `yaml:"url"`
-	Body         string            `yaml:"body"`
-	Headers      map[string]string `yaml:"headers"`
-	AttemptHTTP2 bool              `yaml:"attempt_http2"`
-}
-
-type Workflow struct {
-	Trigger   Trigger
-	StatusUrl string `yaml:"status_url"`
-	Key       string `yaml:"key"`
-}
 
 type BasicAuth struct {
 	Enable   bool   `yaml:"enable"`
@@ -28,8 +17,27 @@ type BasicAuth struct {
 	Password string `yaml:"password"`
 }
 
-type Config struct {
-	Workflow            Workflow  `yaml:"workflow"`
+type Builder struct {
+	GitHub    builders.GitHubData    `yaml:"github"`
+	Semaphore builders.SemaphoreData `yaml:"semaphore"`
+	Generic   builders.GenericData   `yaml:"generic"`
+}
+
+func (b *Builder) MakeFirstEnabled() builders.Builder {
+	if b.GitHub.Enabled {
+		return builders.MakeGitHub(&b.GitHub)
+	}
+	if b.Semaphore.Enabled {
+		return builders.MakeSemaphore(&b.Semaphore)
+	}
+	if b.Generic.Enabled {
+		return builders.MakeGeneric(&b.Generic)
+	}
+	return nil
+}
+
+type File struct {
+	Builder             Builder   `yaml:"builder"`
 	ServerUrl           string    `yaml:"server_url"`
 	SaveDir             string    `yaml:"save_dir"`
 	CleanupMins         uint64    `yaml:"cleanup_mins"`
@@ -37,43 +45,79 @@ type Config struct {
 	BasicAuth           BasicAuth `yaml:"basic_auth"`
 }
 
-func createDefaultConfig() *Config {
-	return &Config{
-		Workflow: Workflow{
-			Trigger: Trigger{
-				Url:  "https://api.github.com/repos/foo/bar/actions/workflows/sign.yml/dispatches",
-				Body: `{"ref":"master"}`,
+func createDefaultFile() *File {
+	return &File{
+		Builder: Builder{
+			GitHub: builders.GitHubData{
+				Enabled:          false,
+				RepoName:         "ios-signer-ci",
+				OrgName:          "YOUR_PROFILE_NAME",
+				WorkflowFileName: "sign.yml",
+				Token:            "YOUR_TOKEN",
+				Ref:              "master",
+			},
+			Semaphore: builders.SemaphoreData{
+				Enabled:    false,
+				ProjectId:  "YOUR_PROJECT_ID",
+				OrgName:    "YOUR_ORG_NAME",
+				Token:      "YOUR_TOKEN",
+				Ref:        "refs/heads/master",
+				SecretName: "ios-signer",
+			},
+			Generic: builders.GenericData{
+				Enabled:     false,
+				StatusUrl:   "http://localhost:1234/status",
+				TriggerUrl:  "http://localhost:1234/trigger",
+				SecretsUrl:  "http://localhost:1234/secrets",
+				TriggerBody: "hello",
 				Headers: map[string]string{
-					"Authorization": "Token MY_TOKEN",
-					"Content-Type":  "application/json",
+					"Authroziation": "Token YOUR_TOKEN",
 				},
 				AttemptHTTP2: true,
 			},
-			StatusUrl: "https://github.com/foo/bar/actions/workflows/sign.yml",
-			Key:       "MY_SUPER_LONG_SECRET_KEY",
 		},
 		ServerUrl:           "http://localhost:8080",
 		SaveDir:             "data",
 		CleanupMins:         60 * 24 * 7,
 		CleanupIntervalMins: 30,
+		BasicAuth: BasicAuth{
+			Enable:   false,
+			Username: "admin",
+			Password: "admin",
+		},
 	}
 }
 
-var Current *Config
+type Config struct {
+	Builder    builders.Builder
+	BuilderKey string
+	*File
+}
+
+var Current Config
 
 func Load(fileName string) {
 	allowedExts := []string{".yml", ".yaml"}
 	if !isAllowedExt(allowedExts, fileName) {
 		log.Fatalf("config extension not allowed: %v\n", allowedExts)
 	}
-	cfg, err := getConfig(fileName)
+	fileConfig, err := getFile(fileName)
 	if err != nil {
 		log.Fatalln(errors.WithMessage(err, "get config"))
 	}
-	if len(strings.TrimSpace(cfg.Workflow.Key)) < 16 {
-		log.Fatalln("init: bad workflow key, must be at least 16 characters long")
+	builder := fileConfig.Builder.MakeFirstEnabled()
+	if builder == nil {
+		log.Fatalln("init: no builder defined")
 	}
-	Current = cfg
+	builderKey := make([]byte, 32)
+	if _, err := rand.Read(builderKey); err != nil {
+		log.Fatalln("init: error generating builder key: " + err.Error())
+	}
+	Current = Config{
+		Builder:    builder,
+		BuilderKey: hex.EncodeToString(builderKey),
+		File:       fileConfig,
+	}
 }
 
 func isAllowedExt(allowedExts []string, fileName string) bool {
@@ -86,35 +130,35 @@ func isAllowedExt(allowedExts []string, fileName string) bool {
 	return false
 }
 
-func getConfig(fileName string) (*Config, error) {
-	cfg := createDefaultConfig()
-	exists, err := readExisting(fileName, cfg)
+func getFile(fileName string) (*File, error) {
+	fileConfig := createDefaultFile()
+	exists, err := readExistingFile(fileName, fileConfig)
 	if err != nil {
 		return nil, errors.WithMessage(err, "read existing")
 	}
-	cfgFile, err := os.Create(fileName)
+	file, err := os.Create(fileName)
 	if err != nil {
 		return nil, errors.WithMessage(err, "create")
 	}
-	defer cfgFile.Close()
-	if err := yaml.NewEncoder(cfgFile).Encode(&cfg); err != nil {
+	defer file.Close()
+	if err := yaml.NewEncoder(file).Encode(&fileConfig); err != nil {
 		return nil, errors.WithMessage(err, "write")
 	}
 	if !exists {
 		return nil, errors.New("no file found, generating one")
 	}
-	return cfg, nil
+	return fileConfig, nil
 }
 
-func readExisting(fileName string, cfg *Config) (bool, error) {
-	cfgFile, err := os.Open(fileName)
+func readExistingFile(fileName string, fileConfig *File) (bool, error) {
+	file, err := os.Open(fileName)
 	if os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
 		return true, errors.WithMessage(err, "open")
 	}
-	defer cfgFile.Close()
-	if err := yaml.NewDecoder(cfgFile).Decode(cfg); err != nil {
+	defer file.Close()
+	if err := yaml.NewDecoder(file).Decode(fileConfig); err != nil {
 		return true, errors.WithMessage(err, "decode")
 	}
 	return true, nil

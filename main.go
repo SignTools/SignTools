@@ -16,7 +16,6 @@ import (
 	"ios-signer-service/util"
 	"log"
 	"mime"
-	"net"
 	"net/http"
 	"os"
 	textTemplate "text/template"
@@ -52,26 +51,11 @@ func cleanupApps() error {
 	return nil
 }
 
-var workflowTransport = http.Transport{
-	// Cloned http.DefaultTransport.
-	Proxy: http.ProxyFromEnvironment,
-	DialContext: (&net.Dialer{
-		Timeout:   30 * time.Second,
-		KeepAlive: 30 * time.Second,
-	}).DialContext,
-	ForceAttemptHTTP2:     true,
-	MaxIdleConns:          100,
-	IdleConnTimeout:       90 * time.Second,
-	TLSHandshakeTimeout:   10 * time.Second,
-	ExpectContinueTimeout: 1 * time.Second,
-}
-var workflowClient = http.Client{Transport: &workflowTransport}
-
 func main() {
 	host := flag.String("host", "", "Listen host, empty for all")
 	port := flag.Uint64("port", 8080, "Listen port")
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
-	ngrokPort := flag.Uint64("ngrokPort", 0, "Ngrok web interface port. "+
+	ngrokPort := flag.Uint64("ngrok-port", 0, "Ngrok web interface port. "+
 		"Used to automatically parse the server_url")
 	flag.Parse()
 
@@ -105,8 +89,11 @@ func serve(host string, port uint64) {
 		}()
 	}
 
-	if !config.Current.Workflow.Trigger.AttemptHTTP2 {
-		workflowTransport.ForceAttemptHTTP2 = false
+	if err := config.Current.Builder.SetSecrets(map[string]string{
+		"SECRET_KEY": config.Current.BuilderKey,
+		"SECRET_URL": config.Current.ServerUrl,
+	}); err != nil {
+		log.Fatalln(err)
 	}
 
 	e := echo.New()
@@ -124,7 +111,7 @@ func serve(host string, port uint64) {
 		}
 	}
 	workflowKeyAuth := middleware.KeyAuth(func(s string, c echo.Context) (bool, error) {
-		return s == config.Current.Workflow.Key, nil
+		return s == config.Current.BuilderKey, nil
 	})
 
 	e.GET("/", index, basicAuth)
@@ -277,10 +264,10 @@ func uploadUnsignedApp(c echo.Context) error {
 		return err
 	}
 	storage.Jobs.MakeSignJob(app.GetId(), profile.GetId())
-	if err := triggerWorkflow(); err != nil {
+	if err := config.Current.Builder.Trigger(); err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(config.Current.Workflow.StatusUrl); err != nil {
+	if err := app.SetWorkflowUrl(config.Current.Builder.GetStatusUrl()); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
@@ -366,23 +353,4 @@ func index(c echo.Context) error {
 		return err
 	}
 	return c.HTMLBlob(200, result.Bytes())
-}
-
-func triggerWorkflow() error {
-	body := bytes.NewReader([]byte(config.Current.Workflow.Trigger.Body))
-	request, err := http.NewRequest("POST", config.Current.Workflow.Trigger.Url, body)
-	if err != nil {
-		return errors.WithMessage(err, "new request")
-	}
-	for key, val := range config.Current.Workflow.Trigger.Headers {
-		request.Header.Set(key, val)
-	}
-	response, err := workflowClient.Do(request)
-	if err != nil {
-		return errors.WithMessage(err, "do request")
-	}
-	if err := util.Check2xxCode(response.StatusCode); err != nil {
-		return err
-	}
-	return nil
 }

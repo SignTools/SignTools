@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
+	"ios-signer-service/builders"
 	"ios-signer-service/config"
 	"ios-signer-service/storage"
 	"ios-signer-service/util"
@@ -27,7 +28,7 @@ var (
 		uuid.NewString(): uuid.NewString(),
 		uuid.NewString(): uuid.NewString(),
 	}
-	workflowKey  = uuid.NewString()
+	builderKey   = uuid.NewString()
 	saveDir      = ""
 	profileId    = uuid.NewString()
 	profileCert  = uuid.NewString()
@@ -66,24 +67,26 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	serveHost := "127.0.0.1"
+	serveHost := "localhost"
 	servePort := uint64(8098)
 	workflowPort := uint64(8099)
 
-	config.Current = &config.Config{
-		Workflow: config.Workflow{
-			Trigger: config.Trigger{
-				Url:     fmt.Sprintf("http://localhost:%d/trigger", workflowPort),
-				Body:    workflowData,
-				Headers: workflowAuthorization,
-			},
-			StatusUrl: "",
-			Key:       workflowKey,
+	config.Current = config.Config{
+		Builder: builders.MakeGeneric(&builders.GenericData{
+			StatusUrl:    "",
+			TriggerUrl:   fmt.Sprintf("http://localhost:%d/trigger", workflowPort),
+			SecretsUrl:   fmt.Sprintf("http://localhost:%d/secrets", workflowPort),
+			TriggerBody:  workflowData,
+			Headers:      workflowAuthorization,
+			AttemptHTTP2: true,
+		}),
+		File: &config.File{
+			ServerUrl:           fmt.Sprintf("http://localhost:%d", servePort),
+			SaveDir:             saveDir,
+			CleanupMins:         0,
+			CleanupIntervalMins: 0,
 		},
-		ServerUrl:           fmt.Sprintf("http://localhost:%d", servePort),
-		SaveDir:             saveDir,
-		CleanupMins:         0,
-		CleanupIntervalMins: 0,
+		BuilderKey: builderKey,
 	}
 
 	storage.Load()
@@ -94,15 +97,40 @@ func TestMain(m *testing.M) {
 }
 
 var triggerHit = false
+var secretsHit = false
 
 func startWorkflowServer(port uint64) {
 	e := echo.New()
 	e.HideBanner = true
 	e.Use(middleware.Logger())
 
+	e.POST("/secrets", func(c echo.Context) error {
+		secretsHit = true
+		params, err := c.FormParams()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for key, val := range params {
+			switch key {
+			case "SECRET_KEY":
+				if val[0] != builderKey {
+					log.Fatalln("bad key")
+				}
+			case "SECRET_URL":
+				if val[0] != config.Current.File.ServerUrl {
+					log.Fatalln("bad url")
+				}
+			default:
+				log.Fatalln("unknown secret")
+			}
+		}
+		return c.NoContent(200)
+	})
+
 	e.POST("/trigger", func(c echo.Context) error {
 		triggerHit = true
-		for key, val := range config.Current.Workflow.Trigger.Headers {
+		builder := config.Current.Builder.(*builders.Generic)
+		for key, val := range builder.Headers {
 			if c.Request().Header.Get(key) != val {
 				log.Fatalln("bad header")
 			}
@@ -114,7 +142,7 @@ func startWorkflowServer(port uint64) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		if string(bodyBytes) != config.Current.Workflow.Trigger.Body {
+		if string(bodyBytes) != builder.TriggerBody {
 			log.Fatalln("mismatching data")
 		}
 		return c.NoContent(200)
@@ -125,9 +153,8 @@ func startWorkflowServer(port uint64) {
 
 func TestIntegration(t *testing.T) {
 	uploadUnsigned(t)
-	if !triggerHit {
-		t.Error("trigger not hit")
-	}
+	assert.True(t, triggerHit)
+	assert.True(t, secretsHit)
 	validateFile(t, unsignedData, func(app storage.App) (storage.ReadonlyFile, error) {
 		return app.GetUnsigned()
 	})
@@ -159,7 +186,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 	w.Close()
 	req, err := http.NewRequest("POST", config.Current.ServerUrl+"/jobs/"+returnId, &b)
 	assert.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+workflowKey)
+	req.Header.Set("Authorization", "Bearer "+builderKey)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
@@ -169,7 +196,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 func takeJob(t *testing.T) string {
 	req, err := http.NewRequest("GET", config.Current.ServerUrl+"/jobs", nil)
 	assert.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+workflowKey)
+	req.Header.Set("Authorization", "Bearer "+builderKey)
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.NoError(t, util.Check2xxCode(resp.StatusCode))
