@@ -7,9 +7,9 @@ assignees: ''
 
 ---
 
-**First aid checklist**
-- [ ] Updated the web service **and** the builder CI (if applicable) to the latest version
-- [ ] Read through the [F.A.Q.](https://github.com/SignTools/ios-signer-service#frequently-asked-questions-faq)
+**I tried basic troubleshooting first**
+- [ ] Updated the web service **and** the builder to the latest version
+- [ ] Read through the FAQ: https://github.com/SignTools/ios-signer-service#frequently-asked-questions-faq
 
 **Describe the bug**
 A clear and concise description of what the bug is.
