@@ -26,7 +26,7 @@ echo "Starting service..."
 ./ngrok http -inspect=false 8080 &
 ./ios-signer-service -host localhost -ngrok-port 4040 &
 cat /dev/location > /dev/null &
-sleep 1
+sleep 5
 echo "Press Ctrl+C / ^+C to stop..."
 sleep infinity
 EOF
