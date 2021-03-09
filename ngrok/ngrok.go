@@ -6,11 +6,16 @@ import (
 	"github.com/pkg/errors"
 	"ios-signer-service/util"
 	"strings"
+	"time"
 )
 
 func GetPublicUrl(ngrokPort uint64, proto string) (string, error) {
+	ngrokUrl := fmt.Sprintf("http://localhost:%d/api/tunnels", ngrokPort)
+	if err := util.WaitForServer(ngrokUrl, 10*time.Second); err != nil {
+		return "", errors.WithMessage(err, "connecting to ngrok")
+	}
 	var tunnels Tunnels
-	response, err := sling.New().Get(fmt.Sprintf("http://localhost:%d/api/tunnels", ngrokPort)).ReceiveSuccess(&tunnels)
+	response, err := sling.New().Get(ngrokUrl).ReceiveSuccess(&tunnels)
 	if err != nil {
 		return "", err
 	}

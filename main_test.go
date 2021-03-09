@@ -3,12 +3,10 @@ package main
 import (
 	"archive/tar"
 	"bytes"
-	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
@@ -94,31 +92,15 @@ func TestMain(m *testing.M) {
 	storage.Load()
 
 	go startWorkflowServer(workflowPort)
-	if err := waitForServer(fmt.Sprintf("http://localhost:%d", workflowPort), 5*time.Second); err != nil {
+	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", workflowPort), 5*time.Second); err != nil {
 		log.Fatalln(err)
 	}
 
 	go serve(serveHost, servePort)
-	if err := waitForServer(fmt.Sprintf("http://localhost:%d", servePort), 5*time.Second); err != nil {
+	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", servePort), 5*time.Second); err != nil {
 		log.Fatalln(err)
 	}
 	m.Run()
-}
-
-func waitForServer(url string, timeout time.Duration) error {
-	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
-	defer cancelFunc()
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("internet check timed out")
-		default:
-			if _, err := http.Get(url); err == nil {
-				return nil
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}
 }
 
 var triggerHit = false

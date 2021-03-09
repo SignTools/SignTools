@@ -1,11 +1,14 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"net/http"
 	"net/url"
 	"path"
 	"path/filepath"
+	"time"
 )
 
 func SafeJoin(basePath string, unsafePath ...string) string {
@@ -41,4 +44,20 @@ func Check2xxCode(code int) error {
 		return errors.New(fmt.Sprintf("non-2xx code: %d", code))
 	}
 	return nil
+}
+
+func WaitForServer(url string, timeout time.Duration) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
+	defer cancelFunc()
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("reaching server timed out: " + url)
+		default:
+			if _, err := http.Get(url); err == nil {
+				return nil
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 }
