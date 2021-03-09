@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="256" heigth="256" src="logo.png">
+    <img width="256" heigth="256" src="img/logo.png">
     <h1 align="center">iOS Signer Service</h1>
     <p align="center">
         A self-hosted, cross-platform service to sign and install iOS apps, all <b>without a computer</b>.

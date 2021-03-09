@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/oauth2"
-	"ios-signer-service/util"
+	"ios-signer-service/src/util"
 )
 
 type GitHubData struct {

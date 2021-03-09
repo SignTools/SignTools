@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/ViRb3/sling/v2"
 	"github.com/pkg/errors"
-	"ios-signer-service/util"
+	"ios-signer-service/src/util"
 )
 
 type SemaphoreData struct {

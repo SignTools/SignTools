@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
-	"ios-signer-service/builders"
+	"ios-signer-service/src/builders"
 	"log"
 	"os"
 	"path/filepath"
