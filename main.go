@@ -62,7 +62,7 @@ func main() {
 	config.Load(*configFile)
 	storage.Load()
 	if *ngrokPort != 0 {
-		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https")
+		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https", 10*time.Second)
 		if err != nil {
 			log.Fatalln(err)
 		}
