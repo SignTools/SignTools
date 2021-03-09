@@ -172,9 +172,7 @@ Default arguments:
 
 The web service cannot work by itself. You have two options:
 
-**Reverse proxy**
-
-Secure and reliable, but harder to set up
+**Reverse proxy** - secure and reliable, but harder to set up
 
 - Requires publicly accessible port 443 (HTTPS)
 - Requires domain with valid certificate
@@ -187,9 +185,7 @@ Secure and reliable, but harder to set up
   ```
   where `:id` is a wildcard parameter.
 
-**ngrok**
-
-Less secure (unless you trust ngrok), but quick and easy to set up
+**ngrok** - less secure (unless you trust ngrok), but quick and easy to set up
 
 1. Register for [ngrok](https://ngrok.com/)
 2. Install ngrok and connect your account as instructed on the dashboard
