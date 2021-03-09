@@ -1,6 +1,6 @@
 /data/
 /certs/
-/signer-cfg.yml
+/signer-cfg*.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/go,intellij+all,vscode
 # Edit at https://www.toptal.com/developers/gitignore?templates=go,intellij+all,vscode
