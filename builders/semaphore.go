@@ -21,7 +21,7 @@ type SemaphoreData struct {
 func MakeSemaphore(data *SemaphoreData) *Semaphore {
 	return &Semaphore{
 		data: data,
-		client: sling.New().Client(MakeClient(true)).
+		client: sling.New().Client(MakeClient(false)).
 			SetMany(map[string]string{
 				"Authorization": "Token " + data.Token,
 			}),
