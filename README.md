@@ -59,7 +59,7 @@ But more on that later. In all cases, you first need a builder.
 
 `ios-signer-service` offloads the signing process to a dedicated macOS builder. This step is necessary because signing is only officially supported on a macOS system. While third-party cross-platform alternatives exist, they are in gray legal grounds and constantly break due to Apple changes.
 
-As mentioned before, you don't need to own a Mac to get a builder. In fact, you don't even need to pay anything. Official support is included for free CI providers such as [GitHub Actions](https://docs.github.com/en/actions) and [Semaphore CI](https://semaphoreci.com/). To get started, head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci). Fork the repo and follow its README. At the end, you will have made your very own macOS builder. Congratulations!
+As mentioned before, you don't need to own a Mac to get a builder. In fact, you don't even need to pay anything. Official support is included for free CI providers such as [GitHub Actions](https://docs.github.com/en/actions) and [Semaphore CI](https://semaphoreci.com/). To get started, head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow its README. At the end, you will have made your very own macOS builder. Easy!
 
 You can always use another CI provider, or even your own machine, given they implement the generic builder requirements. Read on for more information.
 
@@ -157,7 +157,7 @@ In the Files app again, browse the files you just copied from your computer. Mov
 Open the iSH app. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in. Now, type the following command and press enter:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/SignTools/ios-signer-service/master/install-ish.sh | sh
+curl -sL git.io/ios-signer-ish | sh
 ```
 
 This will download and install ngrok and `ios-signer-service`. Don't forget to connect your ngrok account if you haven't already:
@@ -172,7 +172,7 @@ To start the service, type `./start-signer.sh` and press enter. When the service
 2021/03/08 20:50:02 ngrok public URL: https://2a25cbf1a2d4.ngrok.io
 ```
 
-`https://*.ngrok.io` is the public URL of your service. You can now minimize iSH and open the link in your browser. Congratulations!
+`https://xxxxxxxxxxxx.ngrok.io` is the public URL of your service. You can now minimize iSH and open the link in your browser. Congratulations!
 
 Every next time that you want to start the service, just run `./start-signer.sh` again. If you want to update, run the install command again.
 
@@ -227,7 +227,7 @@ The service will listen on port 8080. You can override this by running the servi
   2021/03/08 20:50:02 ngrok public URL: https://2a25cbf1a2d4.ngrok.io
   ```
 
-  `https://*.ngrok.io` is the public URL of your service. You can now open it in your browser. Congratulations!
+  `https://xxxxxxxxxxxx.ngrok.io` is the public URL of your service. You can now open it in your browser. Congratulations!
 
 ## Frequently Asked Questions (F.A.Q.)
 
