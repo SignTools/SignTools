@@ -9,7 +9,7 @@ assignees: ''
 
 **I tried basic troubleshooting first**
 - [ ] Updated the web service **and** the builder to the latest version
-- [ ] Read through the FAQ: https://github.com/SignTools/ios-signer-service#frequently-asked-questions-faq
+- [ ] Read through the FAQ: https://github.com/SignTools/ios-signer-service/blob/master/FAQ.md
 
 **Describe the bug**
 A clear and concise description of what the bug is.
