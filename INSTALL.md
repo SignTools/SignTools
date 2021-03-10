@@ -108,14 +108,15 @@ You can install the web service on your computer, or you can install it on your 
 #### 3.1.1. Preparing
 
 1. Register for [ngrok](https://ngrok.com/)
-1. Get the [iSH](https://ish.app/) app on your phone
-1. Move the configuration files from sections `2.1.` and `2.2.` to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone
-1. Open the Files app on your phone
-1. In the top-right corner, click on the three dots and select `Edit`
-1. Enable (toggle) the `iSH` entry under `Locations`
-1. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the directory `root`
-1. Open the `iSH` app on your phone. It may take some time before text shows up.
-1. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in
+2. Get the [iSH](https://ish.app/) app on your phone
+3. Move the configuration files from sections `2.1.` and `2.2.` to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone
+4. Open the Files app on your phone
+5. In the top-right corner, click on the three dots and select `Edit`
+6. Enable (toggle) the `iSH` entry under `Locations`
+7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the directory `root`
+8. Open the `iSH` app on your phone. It may take some time before text shows up.
+9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in
+10. Type `apk add curl` and press enter
 
 #### 3.1.2. Installing
 
