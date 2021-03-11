@@ -1,26 +1,57 @@
 # Frequently Asked Questions (F.A.Q.)
 
-- ### How do you export the certificate and key?
+- ### Free developer account limitations
 
-  On your Mac, open the `Keychain` app. There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click (3) and select `Export 2 items...` (4). This will export you the `.p12` file you need.
+  1. You must manually register your device(s) to the developer account
 
-  ![](img/5.png)
+     For each device where you want to sideload apps, you need to have installed any app signed with your developer account at least once manually before using this service. Doing so will register your device's identifier (UDID) with the developer account, something the builder cannot do without physical connection with your device.
 
-- ### How can I debug a failing builder?
+     First, follow the `How do I get the certificate?` section below.
 
-  Edit the `sign.sh` file in your builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so:
+     **On macOS**: You can just build a blank new app or [SimpleApp](https://github.com/SignTools/ios-signer-ci/tree/master/SimpleApp) and run it on your phone. That will take care of UDID registration.
 
-  ```bash
-  ./xresign.sh ...  >/dev/null 2>&1
-  ```
+     **On all other platforms**: You can install any app with a third-party signing tool like [AltStore](https://altstore.io/). That will take care of UDID registration.
 
-  Becomes:
+  2. Two-factor authentication (2FA)
 
-  ```bash
-  ./xresign.sh ...
-  ```
+     Upon submitting an app for signing, the web service will ask you for a 2FA code. It will be used by the builder to log into your account and perform the signing.
 
-  Next time you run a build, the logs will give you full details that you can use to resolve your issue. The reason that the output suppression is there in the first place is to prevent leaks of potentially sensitive information about your certificates and apps.
+     If you use one of the CI builders, each time you sign an app a new computer will be added as "signed in" to your account. Currently, there is no way to automatically sign out a builder after it's done. You can always remove these computers manually, either from your Apple device or [appleid.apple.com](https://appleid.apple.com/). If you are uncomfortable with this, use a separate Apple account.
+
+  3. Apps cannot be installed Over the Air (OTA)
+
+     Aka "Install button doesn't work". Open the signer service page on your computer, click "Download", then sideload the app manually. This is a deliberate restriction by Apple, not a bug.
+
+  4. Each signed app will expire in 7 days
+
+     Re-sign it and you will get another 7 days.
+
+  5. A maximum of 10 app ids can be registered per 7 days
+
+     Re-use an existing app's bundle id if you hit the limit. Note that the old app will be replaced with the new one when you install it. Otherwise, wait for an app id to expire.
+
+  6. You cannot use an existing app's bundle id
+
+     Say you were feeling adventurous and wanted to sign an app with the same bundle id as YouTube. You can't do that with a free developer account. Apple checks if the bundle id is already registered anywhere else before providing you with a provisioning profile for that id.
+
+- ### How do I get a certificate?
+
+  **On macOS:** Install [Xcode](https://developer.apple.com/xcode/) sign into your account (A-1). Select your account (A-2) and click on `Manage Certificates...` (A-3). On the new window, click the plus button (B-1) and `Apple Development` (B-2). Click `Done` (B-3). Now open the `Keychain` app. There you will find your certificate (C-1) and private key (C-2). Select them by holding `Command`, then right-click (C-3) and select `Export 2 items...` (C-4). This will export you the `.p12` file you need.
+
+    <table>
+    <tr>
+        <th>A</th>
+        <th>B</th>
+        <th>C</th>
+    </tr>
+    <tr>
+        <td><img src="img/6.png"/></td>
+        <td><img src="img/7.png"/></td>
+        <td><img src="img/5.png"/></td>
+    </tr>
+    </table>
+
+  **On all other platforms:** There is no official way to do this. You should be able to use a third-party signing tool like [AltStore](https://altstore.io/) and then extract the certificate from its app data, but this has not been tested.
 
 - ### What kind of certificates/provisioning profiles are supported?
 
@@ -35,7 +66,7 @@
     - Can properly sign only one app (`TEAM_ID.app1`)
     - Can use any entitlement as long as it's in the provisioning profile
     - If you properly sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
-    - It is possible to improperly sign apps with an explicit profile by keeping their original bundle ids even if they don't match the profile's app id. For an example, with an app id `TEAM_ID.app1`, you could sign the apps `TEAM_ID.app2` and `TEAM_ID.app3`. This way, you can have multiple apps installed at the same time, and they will run, but all of their entitlements will be broken, including file importing.
+    - It appears possible, at least on iOS 14.4, to improperly sign apps by mismatching their bundle id and profile app id, and the apps will still run. For an example, with an app id `TEAM_ID.app1`, you could sign the apps `TEAM_ID.app2` and `TEAM_ID.app3`. This way you can have multiple apps installed at the same time, but all of their entitlements will be broken, including file importing. Does not work with free developer accounts.
 
 - ### App runs, but malfunctions due to invalid signing/entitlements
 
@@ -52,3 +83,25 @@
   ```
 
   You can also use `-u YOUR_UDID -n` to run this command over the network. When the installation finishes, you should see a more detailed error. Please create an issue here on GitHub and upload the unsigned app along with the detailed error from above so this can be fixed.
+
+- ### "Unable To Install 'Something.ipa'"
+
+  Are you trying to OTA install an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
+
+  Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the `This app cannot be installed because its integrity could not be verified` section above.
+
+- ### How can I debug a failing builder?
+
+  Edit the `sign.sh` file in your builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so:
+
+  ```bash
+  ./xresign.sh ...  >/dev/null 2>&1
+  ```
+
+  Becomes:
+
+  ```bash
+  ./xresign.sh ...
+  ```
+
+  Next time you run a build, the logs will give you full details that you can use to resolve your issue. The reason that the output suppression is there in the first place is to prevent leaks of potentially sensitive information about your certificates and apps.

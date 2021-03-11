@@ -22,9 +22,13 @@ What's the catch? The workflow uses a separate macOS machine, called a "builder"
 
 More information and examples can be found in the installation section.
 
+## :rocket: Free developer accounts
+
+As of v2.0.0 this service now supports **free developer accounts**! Although with [some limitations](FAQ.md), this is a huge milestone not only for the project but for the sideloading community as a whole. The signing process is achieved **without any** reverse engineering or third-party tools - only Apple's very own operating system and developer tools are used, just in a clever way.
+
 ## Disclaimer
 
-This project is self-hosted; there is no public service. It does not provide any alternative catalog of apps. It does not give you free signing certificates, or circumvent any protective measures - **you must have a valid signing certificate and provisioning profile**. This project does not provide, promote, or support any form of piracy. This project is aimed solely at people who want to install homebrew apps on their device, much like the popular [AltStore](https://github.com/rileytestut/AltStore).
+This project is self-hosted; there is no public service. It does not provide any alternative catalog of apps. This project does not provide, promote, or support any form of piracy. This project is aimed solely at people who want to install homebrew apps on their device, much like the popular [AltStore](https://github.com/rileytestut/AltStore). We (all collaborators) cannot be held liable for anything that happens by you using this project.
 
 ## Features
 
@@ -34,8 +38,8 @@ This project is self-hosted; there is no public service. It does not provide any
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
-- Choose from multiple signing profiles
-- Configure various properties of the signing process
+- Choose from multiple signing profiles or free developer accounts
+- Configure various aspects of the signing process
 - Periodic old file cleanup
 
 ## Screenshots
