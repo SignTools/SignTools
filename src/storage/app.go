@@ -13,11 +13,12 @@ import (
 type App interface {
 	GetId() string
 	GetSigned() (ReadonlyFile, error)
-	SetSigned(io.ReadSeeker) error
+	SetSigned(reader io.ReadSeeker, bundleId string) error
 	IsSigned() (bool, error)
 	GetUnsigned() (ReadonlyFile, error)
 	GetName() (string, error)
 	GetSignArgs() (string, error)
+	GetBundleId() (string, error)
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
@@ -76,6 +77,16 @@ func (a *app) GetSignArgs() (string, error) {
 	return data, nil
 }
 
+func (a *app) GetBundleId() (string, error) {
+	a.mu.RLock()
+	a.mu.RUnlock()
+	data, err := readTrimSpace(appBundleIdPath(a.id))
+	if err != nil {
+		return "", &AppError{"read bundle id file", a.id, err}
+	}
+	return data, nil
+}
+
 func (a *app) GetProfileId() (string, error) {
 	a.mu.RLock()
 	a.mu.RUnlock()
@@ -112,7 +123,7 @@ func (a *app) GetSigned() (ReadonlyFile, error) {
 	return os.Open(appSignedPath(a.id))
 }
 
-func (a *app) SetSigned(seeker io.ReadSeeker) error {
+func (a *app) SetSigned(reader io.ReadSeeker, bundleId string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	exists, err := a.hasSignedFile()
@@ -127,8 +138,11 @@ func (a *app) SetSigned(seeker io.ReadSeeker) error {
 		return &AppError{"create", a.id, err}
 	}
 	defer file.Close()
-	if _, err := io.Copy(file, seeker); err != nil {
+	if _, err := io.Copy(file, reader); err != nil {
 		return &AppError{"write", a.id, err}
+	}
+	if err := a.setBundleId(bundleId); err != nil {
+		return err
 	}
 	return nil
 }
@@ -216,6 +230,13 @@ func (a *app) setName(name string) error {
 func (a *app) setSignArgs(args string) error {
 	if err := writeTrimSpace(appSignArgsPath(a.id), args); err != nil {
 		return &AppError{"write sign args file", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) setBundleId(id string) error {
+	if err := writeTrimSpace(appBundleIdPath(a.id), id); err != nil {
+		return &AppError{"write bundle id file", a.id, err}
 	}
 	return nil
 }

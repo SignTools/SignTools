@@ -34,6 +34,7 @@ var formNames = assets.FormNames{
 	FormIdProv:       "id_prov",
 	FormIdCustom:     "id_custom",
 	FormIdCustomText: "id_custom_text",
+	FormBundleId:     "bundle_id",
 }
 
 func cleanupApps() error {
@@ -156,7 +157,7 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 		return err
 	}
 	defer file.Close()
-	if err := app.SetSigned(file); err != nil {
+	if err := app.SetSigned(file, c.FormValue(formNames.FormBundleId)); err != nil {
 		return err
 	}
 	return c.NoContent(200)
@@ -350,6 +351,7 @@ func renderIndex(c echo.Context) error {
 		if err != nil {
 			log.Println(errors.WithMessage(err, "get workflow url"))
 		}
+		bundleId, _ := app.GetBundleId()
 		profileId, err := app.GetProfileId()
 		if err != nil {
 			log.Println(errors.WithMessage(err, "get profile id"))
@@ -372,6 +374,7 @@ func renderIndex(c echo.Context) error {
 			ModTime:     modTime.Format(time.RFC822),
 			WorkflowUrl: workflowUrl,
 			ProfileName: profileName,
+			BundleId:    bundleId,
 			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
 			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
 			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),

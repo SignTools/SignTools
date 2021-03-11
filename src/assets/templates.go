@@ -10,6 +10,7 @@ type App struct {
 	DownloadUrl string
 	DeleteUrl   string
 	ProfileName string
+	BundleId    string
 }
 
 type Profile struct {
@@ -30,6 +31,7 @@ type FormNames struct {
 	FormIdProv       string
 	FormIdCustom     string
 	FormIdCustomText string
+	FormBundleId     string
 }
 
 type IndexData struct {
