@@ -369,7 +369,7 @@ func renderIndex(c echo.Context) error {
 			Id:          app.GetId(),
 			IsSigned:    isSigned,
 			Name:        name,
-			ModTime:     modTime,
+			ModTime:     modTime.Format(time.RFC822),
 			WorkflowUrl: workflowUrl,
 			ProfileName: profileName,
 			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
