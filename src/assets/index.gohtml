@@ -144,17 +144,10 @@
                             </div>
                         </div>
                         <p class="card-text mb-2">
+                            {{if $app.IsSigned}} {{$app.BundleId}} <br> {{end}}
+                            {{$app.ProfileName}} <br>
+                            {{if $app.IsSigned}} Signed {{else}} Processing {{end}} <br>
                             {{$app.ModTime}}
-                            <br>
-                            Profile: {{$app.ProfileName}}
-                            <br>
-                            {{if $app.IsSigned}}
-                                BundleId: {{$app.BundleId}}
-                                <br>
-                                Signed
-                            {{else}}
-                                Processing
-                            {{end}}
                         </p>
                         <div class="row justify-content-end">
                             <div class="col-auto">
