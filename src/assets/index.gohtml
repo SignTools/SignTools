@@ -50,9 +50,41 @@
                             <select class="form-select" id="formProfile" name="{{.FormProfileId}}" required>
                                 <option selected disabled value="">Choose...</option>
                                 {{range $_, $profile := .Profiles}}
-                                    <option value="{{$profile.Id}}">{{$profile.Name}}</option>
+                                    <option value="{{$profile.Id}}"
+                                            account="{{$profile.IsAccount}}">{{$profile.Name}}</option>
                                 {{end}}
                             </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="col-md-9">
+                            <label class="form-label">Bundle identifier</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="formIdOriginal" name="{{.FormId}}"
+                                       value="{{.FormIdOriginal}}" checked>
+                                <label style="display: inline" class="form-check-label" for="formIdOriginal">
+                                    Use the app's original bundle ID
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="formIdProv" name="{{.FormId}}"
+                                       value="{{.FormIdProv}}">
+                                <label style="display: inline" class="form-check-label" for="formIdProv">
+                                    Use provisioning profile's application ID
+                                </label>
+                                <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="Fixes entitlements on explicit provisioning profiles.
+                                    For each profile, only one app signed this way can be installed at a time.">?</a>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" id="formIdCustom" name="{{.FormId}}"
+                                       value="{{.FormIdCustom}}">
+                                <label style="display: inline" class="form-check-label" for="formIdCustom">
+                                    Use custom:
+                                </label>
+                                <input type="text" class="form-control" name="{{.FormIdCustomText}}" disabled
+                                       id="formIdCustomText" placeholder="com.custom.app" required/>
+                            </div>
                         </div>
                     </div>
                     <div class="mb-0">
@@ -85,16 +117,6 @@
                             </label>
                             <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
                                title="Allows you to access the app's data via iTunes and other file managers.">?</a>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="formAlignAppId"
-                                   name="{{.FormAlignAppId}}">
-                            <label style="display: inline" class="form-check-label" for="formAlignAppId">
-                                Set bundle ID to provisioning profile's app ID
-                            </label>
-                            <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
-                               title="Makes the app match an explicit provisioning profile, allowing entitlements to work.
-                               For each profile, only one app signed this way can be installed at a time.">?</a>
                         </div>
                     </div>
                 </div>
@@ -159,6 +181,11 @@
         keyboard: false
     })
     const btnModalClose = document.getElementById('btnModalClose')
+    const formProfile = document.getElementById('formProfile')
+    const formIdOriginal = document.getElementById('formIdOriginal')
+    const formIdProv = document.getElementById('formIdProv')
+    const formIdCustom = document.getElementById('formIdCustom')
+    const formIdCustomText = document.getElementById('formIdCustomText')
     let modalVisible = false
 
     fileSelect.addEventListener("click", function () {
@@ -187,6 +214,26 @@
             uploadForm.submit()
         }, 200)
     });
+    formProfile.addEventListener("change", function () {
+        const selectedOption = formProfile.options[formProfile.selectedIndex]
+        if (selectedOption.getAttribute('account') === 'true') {
+            if (formIdProv.checked) {
+                formIdOriginal.checked = true
+            }
+            formIdProv.setAttribute('disabled', 'true')
+        } else {
+            formIdProv.removeAttribute('disabled')
+        }
+    })
+    document.querySelectorAll('input[name="{{.FormId}}"]').forEach(function (a) {
+        a.addEventListener("change", function () {
+            if (formIdCustom.checked) {
+                formIdCustomText.removeAttribute('disabled')
+            } else {
+                formIdCustomText.setAttribute('disabled', 'true')
+            }
+        })
+    })
 
     // enable all tooltips
     let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))

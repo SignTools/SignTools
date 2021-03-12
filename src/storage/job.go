@@ -11,9 +11,10 @@ import (
 )
 
 type signJob struct {
-	ts        time.Time
-	appId     string
-	profileId string
+	ts           time.Time
+	appId        string
+	userBundleId string
+	profileId    string
 }
 
 type ReturnJob struct {
@@ -47,6 +48,7 @@ func (j *signJob) writeArchive(writer io.Writer) (string, error) {
 		{name: "unsigned.ipa", f1: app.GetUnsigned},
 		{name: "id.txt", f2: func() (string, error) { return id, nil }},
 		{name: "args.txt", f2: func() (string, error) { return args, nil }},
+		{name: "user_bundle_id.txt", f2: func() (string, error) { return j.userBundleId, nil }},
 	}...)
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {

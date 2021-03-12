@@ -22,14 +22,19 @@ import (
 	"time"
 )
 
-var (
-	formFile       = "file"
-	formProfileId  = "profile_id"
-	formAllDevices = "all_devices"
-	formAppDebug   = "app_debug"
-	formFileShare  = "file_share"
-	formAlignAppId = "align_app_id"
-)
+var formNames = assets.FormNames{
+	FormFile:         "file",
+	FormProfileId:    "profile_id",
+	FormAppDebug:     "all_devices",
+	FormAllDevices:   "app_debug",
+	FormFileShare:    "file_share",
+	FormToken:        "align_app_id",
+	FormId:           "id",
+	FormIdOriginal:   "id_original",
+	FormIdProv:       "id_prov",
+	FormIdCustom:     "id_custom",
+	FormIdCustomText: "id_custom_text",
+}
 
 func cleanupApps() error {
 	apps, err := storage.Apps.GetAll()
@@ -142,7 +147,7 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 	if !ok {
 		return errors.New(fmt.Sprintf("return job %s appid %s not resolved", job.Id, job.AppId))
 	}
-	header, err := c.FormFile(formFile)
+	header, err := c.FormFile(formNames.FormFile)
 	if err != nil {
 		return err
 	}
@@ -267,12 +272,12 @@ func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) erro
 }
 
 func uploadUnsignedApp(c echo.Context) error {
-	profileId := c.FormValue(formProfileId)
+	profileId := c.FormValue(formNames.FormProfileId)
 	profile, ok := storage.Profiles.GetById(profileId)
 	if !ok {
 		return errors.New("no profile with id " + profileId)
 	}
-	header, err := c.FormFile(formFile)
+	header, err := c.FormFile(formNames.FormFile)
 	if err != nil {
 		return err
 	}
@@ -282,23 +287,27 @@ func uploadUnsignedApp(c echo.Context) error {
 	}
 	defer file.Close()
 	signArgs := ""
-	if c.FormValue(formAllDevices) != "" {
+	if c.FormValue(formNames.FormAllDevices) != "" {
 		signArgs += " -a"
 	}
-	if c.FormValue(formAppDebug) != "" {
+	if c.FormValue(formNames.FormAppDebug) != "" {
 		signArgs += " -d"
 	}
-	if c.FormValue(formFileShare) != "" {
+	if c.FormValue(formNames.FormFileShare) != "" {
 		signArgs += " -s"
 	}
-	if c.FormValue(formAlignAppId) != "" {
+	idType := c.FormValue(formNames.FormId)
+	userBundleId := c.FormValue(formNames.FormIdCustomText)
+	if idType == formNames.FormIdProv {
 		signArgs += " -n"
+	} else if idType == formNames.FormIdCustom {
+		signArgs += " -b " + userBundleId
 	}
 	app, err := storage.Apps.New(file, header.Filename, profile, signArgs)
 	if err != nil {
 		return err
 	}
-	storage.Jobs.MakeSignJob(app.GetId(), profile.GetId())
+	storage.Jobs.MakeSignJob(app.GetId(), userBundleId, profile.GetId())
 	if err := config.Current.Builder.Trigger(); err != nil {
 		return err
 	}
@@ -322,12 +331,7 @@ func renderIndex(c echo.Context) error {
 		return err
 	}
 	data := assets.IndexData{
-		FormFile:       formFile,
-		FormProfileId:  formProfileId,
-		FormAllDevices: formAllDevices,
-		FormAppDebug:   formAppDebug,
-		FormFileShare:  formFileShare,
-		FormAlignAppId: formAlignAppId,
+		FormNames: formNames,
 	}
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
@@ -382,9 +386,14 @@ func renderIndex(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+		isAccount, err := profile.IsAccount()
+		if err != nil {
+			return err
+		}
 		data.Profiles = append(data.Profiles, assets.Profile{
-			Id:   profile.GetId(),
-			Name: name,
+			Id:        profile.GetId(),
+			Name:      name,
+			IsAccount: isAccount,
 		})
 	}
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)

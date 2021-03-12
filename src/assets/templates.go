@@ -15,19 +15,29 @@ type App struct {
 }
 
 type Profile struct {
-	Id   string
-	Name string
+	Id        string
+	Name      string
+	IsAccount bool
+}
+
+type FormNames struct {
+	FormFile         string
+	FormProfileId    string
+	FormAppDebug     string
+	FormAllDevices   string
+	FormFileShare    string
+	FormToken        string
+	FormId           string
+	FormIdOriginal   string
+	FormIdProv       string
+	FormIdCustom     string
+	FormIdCustomText string
 }
 
 type IndexData struct {
-	Apps           []App
-	Profiles       []Profile
-	FormFile       string
-	FormProfileId  string
-	FormAppDebug   string
-	FormAllDevices string
-	FormFileShare  string
-	FormAlignAppId string
+	Apps     []App
+	Profiles []Profile
+	FormNames
 }
 
 type ManifestData struct {

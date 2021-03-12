@@ -246,11 +246,11 @@ func uploadUnsigned(t *testing.T) {
 	w := multipart.NewWriter(&b)
 
 	formData := map[string][]string{
-		"file":        {"file.ipa", unsignedData},
-		"profile_id":  {profileId},
-		"all_devices": {"true"},
-		"app_debug":   {"true"},
-		"file_share":  {"true"},
+		formNames.FormFile:       {"file.ipa", unsignedData},
+		formNames.FormProfileId:  {profileId},
+		formNames.FormAllDevices: {"true"},
+		formNames.FormAppDebug:   {"true"},
+		formNames.FormFileShare:  {"true"},
 	}
 	for key, val := range formData {
 		var field io.Writer
