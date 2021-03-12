@@ -72,7 +72,7 @@ func createDefaultFile() *File {
 				SecretsUrl:  "http://localhost:1234/secrets",
 				TriggerBody: "hello",
 				Headers: map[string]string{
-					"Authroziation": "Token YOUR_TOKEN",
+					"Authorization": "Token YOUR_TOKEN",
 				},
 				AttemptHTTP2: true,
 			},

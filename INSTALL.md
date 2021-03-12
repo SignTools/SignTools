@@ -50,7 +50,7 @@ builder:
     secrets_url: http://localhost:1234/secrets
     trigger_body: hello
     headers:
-      Authroziation: Token YOUR_TOKEN
+      Authorization: Token YOUR_TOKEN
     attempt_http2: true
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or OTA won't work!
