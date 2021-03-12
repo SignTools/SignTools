@@ -133,7 +133,11 @@
     <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
         {{range $_, $app := .Apps}}
             <div class="col-sm-6 col-lg-3 p-2">
-                <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
+                <div class="card text-white
+                    {{if eq $app.Status 0 }} bg-primary
+                    {{else if eq $app.Status 1 }} bg-success
+                    {{else if eq $app.Status 2 }} bg-danger
+                    {{end}}">
                     <div class="card-body">
                         <div class="row">
                             <div class="col">
@@ -144,14 +148,18 @@
                             </div>
                         </div>
                         <p class="card-text mb-2">
-                            {{if $app.IsSigned}} {{$app.BundleId}} <br> {{end}}
+                            {{if eq $app.Status 1 }} {{$app.BundleId}} <br> {{end}}
                             {{$app.ProfileName}} <br>
-                            {{if $app.IsSigned}} Signed {{else}} Processing {{end}} <br>
+                            {{if eq $app.Status 0 }} Processing
+                            {{else if eq $app.Status 1 }} Signed
+                            {{else if eq $app.Status 2 }} Failed
+                            {{end}}
+                            <br>
                             {{$app.ModTime}}
                         </p>
                         <div class="row justify-content-end">
                             <div class="col-auto">
-                                {{if $app.IsSigned}}
+                                {{if eq $app.Status 1 }}
                                     <a class="btn btn-outline-light ms-auto me-2 mt-2"
                                        href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
                                     <a class="btn btn-outline-light ms-0 mt-2"

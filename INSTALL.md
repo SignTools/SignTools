@@ -62,6 +62,9 @@ save_dir: data
 cleanup_mins: 10080
 # how often does the cleanup job run
 cleanup_interval_mins: 30
+# apps older than this time will be marked as failed
+# should match the job timeout in the builder
+sign_timeout_mins: 10
 # protects the web ui with a username and password
 # definitely enable if you left "server_url" empty and are using ngrok
 basic_auth:

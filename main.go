@@ -366,10 +366,17 @@ func renderIndex(c echo.Context) error {
 			log.Println(errors.WithMessage(err, "get profile"))
 			profileName = "unknown"
 		}
+		appTimeoutTime := modTime.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute)
+		status := assets.AppStatusFailed
+		if isSigned {
+			status = assets.AppStatusSigned
+		} else if time.Now().Before(appTimeoutTime) {
+			status = assets.AppStatusProcessing
+		}
 
 		data.Apps = append(data.Apps, assets.App{
 			Id:          app.GetId(),
-			IsSigned:    isSigned,
+			Status:      status,
 			Name:        name,
 			ModTime:     modTime.Format(time.RFC822),
 			WorkflowUrl: workflowUrl,

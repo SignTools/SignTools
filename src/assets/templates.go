@@ -2,7 +2,7 @@ package assets
 
 type App struct {
 	Id          string
-	IsSigned    bool
+	Status      int
 	Name        string
 	ModTime     string
 	WorkflowUrl string
@@ -12,6 +12,12 @@ type App struct {
 	ProfileName string
 	BundleId    string
 }
+
+const (
+	AppStatusProcessing = 0
+	AppStatusSigned     = 1
+	AppStatusFailed     = 2
+)
 
 type Profile struct {
 	Id        string
