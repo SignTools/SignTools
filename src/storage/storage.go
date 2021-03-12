@@ -22,11 +22,13 @@ var (
 	appProfileIdPath   func(id string) string
 	appSignArgsPath    func(id string) string
 
-	profilesPath    string
-	profileCertPath func(id string) string
-	profilePassPath func(id string) string
-	profileProvPath func(id string) string
-	profileNamePath func(id string) string
+	profilesPath           string
+	profileCertPath        func(id string) string
+	profileCertPassPath    func(id string) string
+	profileProvPath        func(id string) string
+	profileNamePath        func(id string) string
+	profileAccountNamePath func(id string) string
+	profileAccountPassPath func(id string) string
 )
 
 type ReadonlyFile interface {
@@ -50,9 +52,11 @@ func Load() {
 
 	profilesPath = filepath.Join(config.Current.SaveDir, "profiles")
 	profileCertPath = resolveLocationWithId(profilesPath, "cert.p12")
-	profilePassPath = resolveLocationWithId(profilesPath, "pass.txt")
+	profileCertPassPath = resolveLocationWithId(profilesPath, "cert_pass.txt")
 	profileProvPath = resolveLocationWithId(profilesPath, "prov.mobileprovision")
 	profileNamePath = resolveLocationWithId(profilesPath, "name.txt")
+	profileAccountNamePath = resolveLocationWithId(profilesPath, "account_name.txt")
+	profileAccountPassPath = resolveLocationWithId(profilesPath, "account_pass.txt")
 
 	requiredPaths := []string{appsPath, profilesPath}
 	for _, path := range requiredPaths {
@@ -87,4 +91,10 @@ func writeTrimSpace(filePath string, data string) error {
 		return err
 	}
 	return nil
+}
+
+type fileGetter struct {
+	name string
+	f1   func() (ReadonlyFile, error)
+	f2   func() (string, error)
 }

@@ -7,10 +7,9 @@ import (
 
 type Profile interface {
 	GetId() string
-	GetCert() (ReadonlyFile, error)
-	GetProv() (ReadonlyFile, error)
-	GetPassword() (string, error)
+	GetFiles() ([]fileGetter, error)
 	GetName() (string, error)
+	IsAccount() (bool, error)
 }
 
 func newProfile(id string) *profile {
@@ -35,7 +34,38 @@ func (p *profile) GetId() string {
 	return p.id
 }
 
-func (p *profile) GetCert() (ReadonlyFile, error) {
+func (p *profile) IsAccount() (bool, error) {
+	if _, err := os.Stat(profileAccountNamePath(p.id)); os.IsNotExist(err) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (p *profile) GetFiles() ([]fileGetter, error) {
+	isAccount, err := p.IsAccount()
+	if err != nil {
+		return nil, &ProfileError{"is account", p.id, err}
+	}
+	var files = []fileGetter{
+		{name: "cert.p12", f1: p.getCert},
+		{name: "cert_pass.txt", f2: p.getCertPass},
+	}
+	if isAccount {
+		files = append(files, []fileGetter{
+			{name: "account_name.txt", f2: p.getAccountName},
+			{name: "account_pass.txt", f2: p.getAccountPass},
+		}...)
+	} else {
+		files = append(files, []fileGetter{
+			{name: "prov.mobileprovision", f1: p.getProv},
+		}...)
+	}
+	return files, nil
+}
+
+func (p *profile) getCert() (ReadonlyFile, error) {
 	file, err := os.Open(profileCertPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesCertPath", p.id, err}
@@ -43,7 +73,7 @@ func (p *profile) GetCert() (ReadonlyFile, error) {
 	return file, nil
 }
 
-func (p *profile) GetProv() (ReadonlyFile, error) {
+func (p *profile) getProv() (ReadonlyFile, error) {
 	file, err := os.Open(profileProvPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesProvPath", p.id, err}
@@ -51,10 +81,26 @@ func (p *profile) GetProv() (ReadonlyFile, error) {
 	return file, nil
 }
 
-func (p *profile) GetPassword() (string, error) {
-	data, err := readTrimSpace(profilePassPath(p.id))
+func (p *profile) getAccountName() (string, error) {
+	data, err := readTrimSpace(profileAccountNamePath(p.id))
 	if err != nil {
-		return "", &ProfileError{"read file ProfilesPassPath", p.id, err}
+		return "", &ProfileError{"read file profileAccountNamePath", p.id, err}
+	}
+	return data, nil
+}
+
+func (p *profile) getAccountPass() (string, error) {
+	data, err := readTrimSpace(profileAccountPassPath(p.id))
+	if err != nil {
+		return "", &ProfileError{"read file profileAccountPassPath", p.id, err}
+	}
+	return data, nil
+}
+
+func (p *profile) getCertPass() (string, error) {
+	data, err := readTrimSpace(profileCertPassPath(p.id))
+	if err != nil {
+		return "", &ProfileError{"read file profileCertPassPath", p.id, err}
 	}
 	return data, nil
 }

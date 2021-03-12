@@ -114,14 +114,17 @@ func serve(host string, port uint64) {
 		return s == config.Current.BuilderKey, nil
 	})
 
-	e.GET("/", index, basicAuth)
+	e.GET("/", renderIndex, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
+	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
+	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
 	e.GET("/jobs", getLastJob, workflowKeyAuth)
-	e.POST("/jobs/:id", uploadJobResult, workflowKeyAuth)
+	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
+	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", host, port)))
 }
@@ -131,14 +134,13 @@ func getFavIcon(c echo.Context) error {
 	return nil
 }
 
-func uploadJobResult(c echo.Context) error {
-	appId, ok := storage.Jobs.ResolveReturnJob(c.Param("id"))
-	if !ok {
-		return c.NoContent(404)
+func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
+	if !storage.Jobs.DeleteById(job.Id) {
+		return errors.New("unable to delete return job " + job.Id)
 	}
-	app, ok := storage.Apps.Get(appId)
+	app, ok := storage.Apps.Get(job.AppId)
 	if !ok {
-		return errors.New(fmt.Sprintf("return job appid %s not resolved", appId))
+		return errors.New(fmt.Sprintf("return job %s appid %s not resolved", job.Id, job.AppId))
 	}
 	header, err := c.FormFile(formFile)
 	if err != nil {
@@ -155,6 +157,15 @@ func uploadJobResult(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+func get2FA(c echo.Context, job *storage.ReturnJob) error {
+	code := job.TwoFactorCode.Load()
+	if code == "" {
+		return c.NoContent(404)
+	} else {
+		return c.String(200, code)
+	}
+}
+
 func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		id := c.Param("id")
@@ -166,14 +177,38 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 	}
 }
 
+func jobResolver(handler func(echo.Context, *storage.ReturnJob) error) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+		job, ok := storage.Jobs.GetById(id)
+		if !ok {
+			return c.NoContent(404)
+		}
+		return handler(c, job)
+	}
+}
+
 func getLastJob(c echo.Context) error {
-	if err := storage.Jobs.WriteLastJob(c.Response()); errors.Is(err, storage.ErrNotFound) {
+	if err := storage.Jobs.TakeLastJob(c.Response()); errors.Is(err, storage.ErrNotFound) {
 		return c.NoContent(404)
 	} else if err != nil {
 		return err
 	}
 	c.Response().Header().Set("Content-Type", mime.TypeByExtension(".tar"))
 	return c.NoContent(200)
+}
+
+func render2FAPage(c echo.Context, _ storage.App) error {
+	return c.HTML(200, assets.TwoFactorHtml)
+}
+
+func set2FA(c echo.Context, app storage.App) error {
+	job, ok := storage.Jobs.GetByAppId(app.GetId())
+	if !ok {
+		return errors.New("no job found for app " + app.GetId())
+	}
+	job.TwoFactorCode.Store(c.FormValue("formToken"))
+	return c.Redirect(302, "/")
 }
 
 func deleteApp(c echo.Context, app storage.App) error {
@@ -270,10 +305,18 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := app.SetWorkflowUrl(config.Current.Builder.GetStatusUrl()); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	isAccount, err := profile.IsAccount()
+	if err != nil {
+		return err
+	}
+	if isAccount {
+		return c.Redirect(302, fmt.Sprintf("/apps/%s/2fa", app.GetId()))
+	} else {
+		return c.Redirect(302, "/")
+	}
 }
 
-func index(c echo.Context) error {
+func renderIndex(c echo.Context) error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
 		return err

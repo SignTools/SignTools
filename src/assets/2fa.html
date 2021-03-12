@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iOS Signer Service | 2FA</title>
+    <link rel="icon" type="image/png" href="/favicon.png"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+            integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"
+            async></script>
+    <style>
+        a, a:hover {
+            color: inherit;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand navbar-dark bg-dark py-3">
+    <div class="container px-4">
+        <ol class="breadcrumb bg-transparent py-2 my-0 me-auto text-white">
+            <li class="breadcrumb-item"><a href="/">iOS Signer</a></li>
+            <li class="breadcrumb-item">2FA</li>
+        </ol>
+    </div>
+</nav>
+<div class="modal fade show" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="uploadForm" method="post" enctype="multipart/form-data" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title">Enter 2FA code</h5>
+                    <a id="btnModalClose" class="btn-close" href="/"></a>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-0">
+                        <label class="form-check-label mb-3" for="formToken">
+                            When you receive a 2-factor authentication (2FA) 6-digit code on any connected Apple
+                            device, please enter it here:
+                        </label>
+                        <input type="text" class="form-control" name="formToken" id="formToken" inputmode="numeric"
+                               pattern="[0-9]*" autocomplete="one-time-code" placeholder="123456"/>
+                        <div class="invalid-feedback">
+                            Please enter a valid 6-digit 2FA code.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="formSubmit" type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    const modalElem = document.getElementById('uploadModal')
+    const formToken = document.getElementById('formToken')
+    let form = document.getElementById('uploadForm')
+    const modal = new bootstrap.Modal(modalElem, {
+        backdrop: "static",
+        keyboard: false
+    })
+
+    form.addEventListener('submit', function (event) {
+        formToken.classList.remove('is-invalid')
+        formToken.classList.remove('is-valid')
+        if (formToken.value.length !== 6) {
+            event.preventDefault()
+            event.stopPropagation()
+            formToken.classList.add('is-invalid')
+        }
+    }, false)
+
+    modal.show()
+</script>
+</html>

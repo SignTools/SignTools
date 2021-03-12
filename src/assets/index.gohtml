@@ -18,14 +18,6 @@
             color: inherit;
             text-decoration: none;
         }
-
-        .vertical-center {
-            margin: 0;
-        }
-
-        .jumbotron {
-            background-color: transparent !important;
-        }
     </style>
 </head>
 <body>
@@ -115,44 +107,42 @@
         </div>
     </div>
 </div>
-<div class="jumbotron vertical-center">
-    <div class="container py-4 py-xxl-5 py-xl-5 px-4">
-        <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
-            {{range $_, $app := .Apps}}
-                <div class="col-sm-6 col-lg-3 p-2">
-                    <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col">
-                                    <h5 class="card-title" style="word-break: break-all">{{$app.Name}}</h5>
-                                </div>
-                                <div class="col-auto">
-                                    <a class="btn-close btn-close-white p-2" href="{{$app.DeleteUrl}}"></a>
-                                </div>
+<div class="container py-4 py-xxl-5 py-xl-5 px-4">
+    <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
+        {{range $_, $app := .Apps}}
+            <div class="col-sm-6 col-lg-3 p-2">
+                <div class="card text-white {{if $app.IsSigned}} bg-success {{else}} bg-primary {{end}}">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col">
+                                <h5 class="card-title" style="word-break: break-all">{{$app.Name}}</h5>
                             </div>
-                            <p class="card-text mb-2">
-                                Profile: {{$app.ProfileName}}
-                                <br>
-                                {{if $app.IsSigned}}Signed{{else}}Processing{{end}}
-                            </p>
-                            <div class="row justify-content-end">
-                                <div class="col-auto">
-                                    {{if $app.IsSigned}}
-                                        <a class="btn btn-outline-light ms-auto me-2 mt-2"
-                                           href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
-                                        <a class="btn btn-outline-light ms-0 mt-2"
-                                           href="{{$app.DownloadUrl}}">Download</a>
-                                    {{else}}
-                                        <a class="btn btn-outline-light ms-auto mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
-                                           href="{{$app.WorkflowUrl}}">Status</a>
-                                    {{end}}
-                                </div>
+                            <div class="col-auto">
+                                <a class="btn-close btn-close-white p-2" href="{{$app.DeleteUrl}}"></a>
+                            </div>
+                        </div>
+                        <p class="card-text mb-2">
+                            Profile: {{$app.ProfileName}}
+                            <br>
+                            {{if $app.IsSigned}}Signed{{else}}Processing{{end}}
+                        </p>
+                        <div class="row justify-content-end">
+                            <div class="col-auto">
+                                {{if $app.IsSigned}}
+                                    <a class="btn btn-outline-light ms-auto me-2 mt-2"
+                                       href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
+                                    <a class="btn btn-outline-light ms-0 mt-2"
+                                       href="{{$app.DownloadUrl}}">Download</a>
+                                {{else}}
+                                    <a class="btn btn-outline-light ms-auto mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
+                                       href="{{$app.WorkflowUrl}}">Status</a>
+                                {{end}}
                             </div>
                         </div>
                     </div>
                 </div>
-            {{end}}
-        </div>
+            </div>
+        {{end}}
     </div>
 </div>
 </body>
