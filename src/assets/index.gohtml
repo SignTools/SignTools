@@ -53,12 +53,12 @@
                         <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required>
                     </div>
                     <div class="mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             <label for="formProfile" class="form-label">Signing profile</label>
-                            <select class="form-select" id="formProfile" name="{{.FormProfileName}}" required>
+                            <select class="form-select" id="formProfile" name="{{.FormProfileId}}" required>
                                 <option selected disabled value="">Choose...</option>
                                 {{range $_, $profile := .Profiles}}
-                                    <option>{{$profile.Name}}</option>
+                                    <option value="{{$profile.Id}}">{{$profile.Name}}</option>
                                 {{end}}
                             </select>
                         </div>

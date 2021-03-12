@@ -20,14 +20,14 @@ type Profile struct {
 }
 
 type IndexData struct {
-	Apps            []App
-	Profiles        []Profile
-	FormFile        string
-	FormProfileName string
-	FormAppDebug    string
-	FormAllDevices  string
-	FormFileShare   string
-	FormAlignAppId  string
+	Apps           []App
+	Profiles       []Profile
+	FormFile       string
+	FormProfileId  string
+	FormAppDebug   string
+	FormAllDevices string
+	FormFileShare  string
+	FormAlignAppId string
 }
 
 type ManifestData struct {

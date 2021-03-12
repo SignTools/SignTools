@@ -23,12 +23,12 @@ import (
 )
 
 var (
-	formFile        = "file"
-	formProfileName = "profile_name"
-	formAllDevices  = "all_devices"
-	formAppDebug    = "app_debug"
-	formFileShare   = "file_share"
-	formAlignAppId  = "align_app_id"
+	formFile       = "file"
+	formProfileId  = "profile_id"
+	formAllDevices = "all_devices"
+	formAppDebug   = "app_debug"
+	formFileShare  = "file_share"
+	formAlignAppId = "align_app_id"
 )
 
 func cleanupApps() error {
@@ -232,10 +232,10 @@ func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) erro
 }
 
 func uploadUnsignedApp(c echo.Context) error {
-	profileName := c.FormValue(formProfileName)
-	profile, ok := storage.Profiles.GetByName(profileName)
+	profileId := c.FormValue(formProfileId)
+	profile, ok := storage.Profiles.GetById(profileId)
 	if !ok {
-		return errors.New("no profile with id " + profileName)
+		return errors.New("no profile with id " + profileId)
 	}
 	header, err := c.FormFile(formFile)
 	if err != nil {
@@ -279,12 +279,12 @@ func index(c echo.Context) error {
 		return err
 	}
 	data := assets.IndexData{
-		FormFile:        formFile,
-		FormProfileName: formProfileName,
-		FormAllDevices:  formAllDevices,
-		FormAppDebug:    formAppDebug,
-		FormFileShare:   formFileShare,
-		FormAlignAppId:  formAlignAppId,
+		FormFile:       formFile,
+		FormProfileId:  formProfileId,
+		FormAllDevices: formAllDevices,
+		FormAppDebug:   formAppDebug,
+		FormFileShare:  formFileShare,
+		FormAlignAppId: formAlignAppId,
 	}
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()

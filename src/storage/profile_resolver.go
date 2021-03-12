@@ -7,14 +7,12 @@ import (
 
 func newProfileResolver() *profileResolver {
 	return &profileResolver{
-		idToProfileMap:   map[string]Profile{},
-		nameToProfileMap: map[string]Profile{},
+		idToProfileMap: map[string]Profile{},
 	}
 }
 
 type profileResolver struct {
-	idToProfileMap   map[string]Profile
-	nameToProfileMap map[string]Profile
+	idToProfileMap map[string]Profile
 }
 
 func (r *profileResolver) refresh() error {
@@ -25,12 +23,7 @@ func (r *profileResolver) refresh() error {
 	for _, idDir := range idDirs {
 		id := idDir.Name()
 		profile := newProfile(id)
-		name, err := profile.GetName()
-		if err != nil {
-			return &AppError{"get profile name", id, err}
-		}
 		r.idToProfileMap[id] = profile
-		r.nameToProfileMap[name] = profile
 	}
 	return nil
 }
@@ -50,14 +43,6 @@ func (r *profileResolver) GetAll() ([]Profile, error) {
 
 func (r *profileResolver) GetById(id string) (Profile, bool) {
 	profile, ok := r.idToProfileMap[id]
-	if !ok {
-		return nil, false
-	}
-	return profile, true
-}
-
-func (r *profileResolver) GetByName(name string) (Profile, bool) {
-	profile, ok := r.nameToProfileMap[name]
 	if !ok {
 		return nil, false
 	}
