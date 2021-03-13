@@ -2,7 +2,11 @@
 
 ## Free developer account limitations
 
-### 1. You must manually register your device(s) to the developer account
+### 1. Apps cannot be installed Over the Air (OTA)
+
+Aka "Install button doesn't work", "Unable to install \*.ipa". This is a deliberate restriction by Apple, not a bug. Open the signer service page on your computer, click "Download", then sideload the app manually.
+
+### 2. You must manually register your device(s) to the developer account
 
 For each device where you want to sideload apps, you need to have installed any app signed with your developer account at least once manually before using this service. Doing so will register your device's identifier (UDID) with the developer account, something the builder cannot do without physical connection with your device.
 
@@ -12,15 +16,11 @@ First, follow the `How do I get the certificate?` section below.
 
 **On all other platforms**: You can install any app with a third-party signing tool like [AltStore](https://altstore.io/). That will take care of UDID registration.
 
-### 2. Two-factor authentication (2FA)
+### 3. Two-factor authentication (2FA)
 
 Upon submitting an app for signing, the web service will ask you for a 2FA code. It will be used by the builder to log into your account and perform the signing.
 
 If you use one of the CI builders, each time you sign an app a new computer will be added as "signed in" to your account. Currently, there is no way to automatically sign out a builder after it's done. You can always remove these computers manually, either from your Apple device or [appleid.apple.com](https://appleid.apple.com/). If you are uncomfortable with this, use a separate Apple account.
-
-### 3. Apps cannot be installed Over the Air (OTA)
-
-Aka "Install button doesn't work". Open the signer service page on your computer, click "Download", then sideload the app manually. This is a deliberate restriction by Apple, not a bug.
 
 ### 4. Each signed app will expire in 7 days
 
@@ -30,13 +30,13 @@ Re-sign it and you will get another 7 days.
 
 Re-use an existing app's bundle id if you hit the limit. Note that the old app will be replaced with the new one when you install it. Otherwise, wait for an app id to expire.
 
-### 4. You cannot use an existing app's bundle id
+### 6. You cannot use an existing app's bundle id
 
 Say you were feeling adventurous and wanted to sign an app with the same bundle id as YouTube. You can't do that with a free developer account. Apple checks if the bundle id is already registered anywhere else before providing you with a provisioning profile for that id.
 
 ## How do I get a certificate?
 
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account (1). Select your account (2) and click on `Manage Certificates...` (3). On the new window (B), click the plus button (1) and `Apple Development` (2). Click `Done` (3). Now open the `Keychain` app (C). There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click (3) and select `Export 2 items...` (4). This will export you the `.p12` file you need.
+**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
 
 <table>
 <tr>
@@ -84,7 +84,7 @@ ideviceinstaller -i app.ipa
 
 You can also use `-u YOUR_UDID -n` to run this command over the network. When the installation finishes, you should see a more detailed error. Please create an issue here on GitHub and upload the unsigned app along with the detailed error from above so this can be fixed.
 
-## "Unable To Install '\*.ipa'"
+## "Unable To Install \*.ipa"
 
 Are you trying to OTA install an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
 

@@ -24,7 +24,7 @@ More information and examples can be found in the installation section.
 
 ## :rocket: Free developer accounts
 
-As of v2.0.0 this service now supports **free developer accounts**! Although with [some limitations](FAQ.md), this is a huge milestone not only for the project but for the sideloading community as a whole. The signing process is achieved **without any** reverse engineering or third-party tools - only Apple's very own operating system and developer tools are used, just in a clever way.
+As of v2.0.0 this service now supports **free developer accounts**! Although with some [severe limitations](FAQ.md), this is a huge milestone not only for the project but for the sideloading community as a whole. The signing process is achieved **without any** reverse engineering or third-party tools - only Apple's very own operating system and developer tools are used, just in a clever way.
 
 ## Disclaimer
 
