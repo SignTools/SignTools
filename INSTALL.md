@@ -211,8 +211,8 @@ The web service cannot work by itself. You have two options:
 **ngrok** - less secure (unless you trust ngrok), but quick and easy to set up
 
 1. Register for [ngrok](https://ngrok.com/)
-2. Install ngrok and connect your account as instructed on the dashboard
-3. **Every time before** starting your service, run the following command:
+2. Download ngrok and connect your account as instructed on the download page
+3. **Every time before** starting your service, execute the following command and make sure to keep it running:
    ```bash
    ngrok http -inspect=false 8080
    ```
