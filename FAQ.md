@@ -36,7 +36,7 @@ Say you were feeling adventurous and wanted to sign an app with the same bundle 
 
 ## How do I get a certificate?
 
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) sign into your account (A-1). Select your account (A-2) and click on `Manage Certificates...` (A-3). On the new window, click the plus button (B-1) and `Apple Development` (B-2). Click `Done` (B-3). Now open the `Keychain` app. There you will find your certificate (C-1) and private key (C-2). Select them by holding `Command`, then right-click (C-3) and select `Export 2 items...` (C-4). This will export you the `.p12` file you need.
+**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account (1). Select your account (2) and click on `Manage Certificates...` (3). On the new window (B), click the plus button (1) and `Apple Development` (2). Click `Done` (3). Now open the `Keychain` app (C). There you will find your certificate (1) and private key (2). Select them by holding `Command`, then right-click (3) and select `Export 2 items...` (4). This will export you the `.p12` file you need.
 
 <table>
 <tr>
