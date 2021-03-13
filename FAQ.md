@@ -38,18 +38,18 @@ Say you were feeling adventurous and wanted to sign an app with the same bundle 
 
 **On macOS:** Install [Xcode](https://developer.apple.com/xcode/) sign into your account (A-1). Select your account (A-2) and click on `Manage Certificates...` (A-3). On the new window, click the plus button (B-1) and `Apple Development` (B-2). Click `Done` (B-3). Now open the `Keychain` app. There you will find your certificate (C-1) and private key (C-2). Select them by holding `Command`, then right-click (C-3) and select `Export 2 items...` (C-4). This will export you the `.p12` file you need.
 
-    <table>
-    <tr>
-        <th>A</th>
-        <th>B</th>
-        <th>C</th>
-    </tr>
-    <tr>
-        <td><img src="img/6.png"/></td>
-        <td><img src="img/7.png"/></td>
-        <td><img src="img/5.png"/></td>
-    </tr>
-    </table>
+<table>
+<tr>
+    <th>A</th>
+    <th>B</th>
+    <th>C</th>
+</tr>
+<tr>
+    <td><img src="img/6.png"/></td>
+    <td><img src="img/7.png"/></td>
+    <td><img src="img/5.png"/></td>
+</tr>
+</table>
 
 **On all other platforms:** There is no official way to do this. You should be able to use a third-party signing tool like [AltStore](https://altstore.io/) and then extract the certificate from its app data, but this has not been tested.
 
