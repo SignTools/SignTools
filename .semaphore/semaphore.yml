@@ -4,6 +4,9 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
+  containers:
+    - name: main
+      image: 'semaphoreci/ubuntu:18.04'
 blocks:
   - name: 'Block #1'
     task:
