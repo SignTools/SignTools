@@ -3,8 +3,8 @@
 There are multiple ways to install this web service:
 
 - On your phone
-- On your computer without HTTPS certificate or port forwarding
-- On your server with HTTPS and open port 443
+- On your computer, without HTTPS certificate or port forwarding
+- On your server, with HTTPS and open port 443
 
 But in all cases, you first need a builder.
 
@@ -22,7 +22,7 @@ You need to create a configuration file which links the web service to your buil
 
 1. Download the correct [binary release](https://github.com/SignTools/ios-signer-service/releases) for your computer
 2. Run it once - it will exit immediately, saying that it has generated a configuration file
-3. In the same directory as the binary, you will find `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below:
+3. In the same folder as the binary, you will find a new file `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below:
 
 ```yml
 # the builder you created in the previous section
@@ -33,13 +33,13 @@ builder:
     repo_name: ios-signer-ci
     org_name: YOUR_PROFILE_NAME
     workflow_file_name: sign.yml
-    token: YOUR_TOKEN
+    token: YOUR_GITHUB_TOKEN
     ref: master
   semaphore:
     enabled: false
     project_id: YOUR_PROJECT_ID
     org_name: YOUR_ORG_NAME
-    token: YOUR_TOKEN
+    token: YOUR_SEMAPHORE_TOKEN
     ref: refs/heads/master
     secret_name: ios-signer
   # use this if you have an unsupported builder
@@ -50,7 +50,7 @@ builder:
     secrets_url: http://localhost:1234/secrets
     trigger_body: hello
     headers:
-      Authorization: Token YOUR_TOKEN
+      Authorization: Token YOUR_CUSTOM_TOKEN
     attempt_http2: true
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or OTA won't work!
@@ -77,13 +77,13 @@ basic_auth:
 
 You need to add at least one code signing profile.
 
-1. Create a new directory named `data` (if you changed `save_dir` above, use that value)
-2. Create another directory named `profiles` inside it
-3. Create a new directory named `my_profile` inside `profiles`. You can use any name here, this will be the ID of your signing profile
+1. Create a new folder named `data` (if you changed `save_dir` above, use that value)
+2. Create another folder named `profiles` inside it
+3. Create a new folder named `my_profile` inside `profiles`. You can use any name here, this will be the ID of your signing profile
 4. Put your signing profile's files inside it
 5. Repeat these steps for each signing profile that you want to add
 
-There are two types of signing profiles, each with different requirements. If you can, use a certificate with provisioning profile - it will save you from a lot of limitations. For more information and help, check out the [FAQ page](FAQ.md). The file structure is as follows:
+There are two types of signing profiles, each with different requirements. If you can, use a "certificate + provisioning profile" - it will save you from a lot of limitations. For more information and help, check out the [FAQ page](FAQ.md). The folder structure is as follows:
 
 - Certificate + provisioning profile (`cert.p12`, `cert_pass.txt`, `prov.mobileprovision`)
 
@@ -118,7 +118,7 @@ There are two types of signing profiles, each with different requirements. If yo
 
 That's all the initial configuration! To recap, you now have the following configuration files:
 
-- `data` directory (or whatever you set in `save_dir`)
+- `data` folder (or whatever you set in `save_dir`)
 - `signer-cfg.yml` file
 
 ## 3. Web service installation
@@ -135,7 +135,7 @@ You can install the web service on your computer, or you can install it on your 
 4. Open the Files app on your phone
 5. In the top-right corner, click on the three dots and select `Edit`
 6. Enable (toggle) the `iSH` entry under `Locations`
-7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the directory `root`
+7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`
 8. Open the `iSH` app on your phone. It may take some time before text shows up.
 9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in
 10. Type `apk add curl` and press enter
@@ -146,7 +146,7 @@ You can install the web service on your computer, or you can install it on your 
    ```bash
    curl -sL git.io/ios-signer-ish | sh
    ```
-2. If you haven't already, connect your ngrok account:
+2. If you haven't already, connect your ngrok account as instructed on the download page:
    ```bash
    ./ngrok authtoken YOUR_NGROK_TOKEN
    ```
@@ -173,10 +173,10 @@ Just repeat the `Installing` section.
 
 You have two options:
 
-**Raw**
+**Normal**
 
-1. Download the correct [binary release](https://github.com/SignTools/ios-signer-service/releases)
-2. Move the configuration files from sections `2.1.` and `2.2.` to the same directory as the binary you just downloaded
+1. Download the correct [binary release](https://github.com/SignTools/ios-signer-service/releases) (if this is a different computer than you used before)
+2. Move the configuration files from sections `2.1.` and `2.2.` to the same folder as the binary you just downloaded
 
 **Docker**
 
@@ -187,7 +187,7 @@ You have two options:
 
 #### 3.2.2. Running
 
-Default arguments:
+Default arguments, if you need them:
 
 - The listening port is 8080. You can change this with the argument `-port 1234`
 - The listening host is all (0.0.0.0). You can change this with the argument `-host 1.2.3.4`
@@ -212,11 +212,11 @@ The web service cannot work by itself. You have two options:
 
 1. Register for [ngrok](https://ngrok.com/)
 2. Download ngrok and connect your account as instructed on the download page
-3. **Every time before** starting your service, execute the following command and make sure to keep it running:
+3. **Every time before** starting your service, execute the following command and keep it running:
    ```bash
    ngrok http -inspect=false 8080
    ```
-4. Then start your service with the following arguments:
+4. Then start your service with the following command:
    ```bash
    ios-signer-service -ngrok-port 4040 -host localhost
    ```
