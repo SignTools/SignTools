@@ -67,7 +67,7 @@ You can also use `-u YOUR_UDID -n` to run this command over the network. When th
 
 ## "Unable To Install \*.ipa"
 
-Are you trying to OTA install an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
+Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
 
 Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the `This app cannot be installed because its integrity could not be verified` section above.
 
