@@ -63,6 +63,8 @@ This project is self-hosted; there is no public service. It does not provide any
 
 ## [Installation](INSTALL.md)
 
+## [How does this all work?](DETAILS.md)
+
 ## [Frequently Asked Questions (FAQ)](FAQ.md)
 
 ## License

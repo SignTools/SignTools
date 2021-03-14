@@ -34,25 +34,6 @@ Re-use an existing app's bundle id if you hit the limit. Note that the old app w
 
 Say you were feeling adventurous and wanted to sign an app with the same bundle id as YouTube. You can't do that with a free developer account. Apple checks if the bundle id is already registered anywhere else before providing you with a provisioning profile for that id.
 
-## How do I get a certificate?
-
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
-
-<table>
-<tr>
-    <th>A</th>
-    <th>B</th>
-    <th>C</th>
-</tr>
-<tr>
-    <td><img src="img/6.png"/></td>
-    <td><img src="img/7.png"/></td>
-    <td><img src="img/5.png"/></td>
-</tr>
-</table>
-
-**On all other platforms:** There is no official way to do this. You should be able to use a third-party signing tool like [AltStore](https://altstore.io/) and then extract the certificate from its app data, but this has not been tested.
-
 ## What kind of certificates/provisioning profiles are supported?
 
 Technically, everything is supported as long as your iOS device trusts it. This includes free signing profiles, but of course, they expire after a week. The only major difference between signing profiles is based on the provisioning profile's `application-identifier`. There are two types:
@@ -92,13 +73,15 @@ Otherwise, try installing again, sometimes it's a network problem. If that doesn
 
 ## How can I debug a failing builder?
 
-Edit the `sign.sh` file in your builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so:
+First, check the builder's logs and see if you can find anything helpful there. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing.
+
+If those logs didn't help, edit the `sign.sh` file in **your** builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so change:
 
 ```bash
 ./xresign.sh ...  >/dev/null 2>&1
 ```
 
-Becomes:
+To:
 
 ```bash
 ./xresign.sh ...
