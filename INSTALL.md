@@ -92,11 +92,11 @@ There are two types of signing profiles:
 
 - **Certificate + provisioning profile**
 
-  If you have a paid developer account, it is highly recommended to use this. Doing so will save you from a lot of limitations. To get a provisioning profile, create one from your developer portal. You will probably want it to have a **wildcard** application identifier. For the differences, check the [FAQ](FAQ.md) page. Read ahead on how to get your certificate.
+  If you have a paid developer account, it is highly recommended to use this method. Doing so will save you from a lot of limitations. To get a provisioning profile (`.mobileprovision` file), [create one](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/CreatingaDevelopmentProvisioningProfile/CreatingaDevelopmentProvisioningProfile.html) from your developer portal and download it. You will probably want it to be a `Development` type and not `Distribution`, so that you can have a `wildcard` application identifier and app debugging entitlement (`get-task-allow`). For the differences, check the [FAQ](FAQ.md) page. Also don't forget to [register the UDID](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/AddingaDeviceIDtoYourDevelopmentTeam/AddingaDeviceIDtoYourDevelopmentTeam.html#//apple_ref/doc/uid/TP40011211-CH1-SW1) of each device that you want to sideload to. Read ahead on how to get your certificate.
 
 - **Certificate + developer account**
 
-  If you don't have a paid developer account, this is your only option. Make sure to read the limitations in the [FAQ](FAQ.md) page before you proceed. Read ahead on how to get your certificate.
+  If you don't have a paid developer account, this is your only option. Make sure to read and understand the limitations in the [FAQ](FAQ.md) page before you proceed. Read ahead on how to get your certificate.
 
 The certificate is a file with an extension `.p12`. To obtain it, follow the instructions below:
 
@@ -119,7 +119,7 @@ The certificate is a file with an extension `.p12`. To obtain it, follow the ins
 
 Once you have your certificate and optionally provisioning profile, you need to create the correct folders for the service to read them:
 
-1. Create a new folder named `data` (if you changed `save_dir` above, use that value)
+1. Create a new folder named `data` (if you changed `save_dir` in the config above, use that)
 2. Create another folder named `profiles` inside of it
 3. Create a new folder named `my_profile` inside of `profiles`. You can use any profile name here, this will be the ID of your signing profile
 4. Put the signing related files inside here. Read ahead to see what they should be named
