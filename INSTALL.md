@@ -26,7 +26,7 @@ You need to create a configuration file which links the web service to your buil
 2. Run it once - it will exit immediately, saying that it has generated a configuration file
 3. In the same folder as the binary, you will find a new file `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below. The lines that start with a hashtag `#` are comments, you do not need to touch them.
 
-> :warning: __Don't forget to set "`enabled: true`" on the builder that you are configuring!__
+> :warning: **Don't forget to set "`enabled: true`" on the builder that you are configuring!**
 
 ```yml
 # here you define the builder you created in the previous section
@@ -66,7 +66,7 @@ builder:
     attempt_http2: true
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or web install (OTA) won't work!
-# leave untouched if you don't know what it is - use ngrok instead.
+# leave untouched if you don't know what this means - use ngrok instead
 server_url: https://mywebsite.com
 # where to save data like apps and signing profiles
 save_dir: data
@@ -122,10 +122,10 @@ Once you have your certificate and optionally provisioning profile, you need to 
 1. Create a new folder named `data` (if you changed `save_dir` above, use that value)
 2. Create another folder named `profiles` inside of it
 3. Create a new folder named `my_profile` inside of `profiles`. You can use any profile name here, this will be the ID of your signing profile
-4. Put the signing related files inside here. Read ahead to see what they should ba called
+4. Put the signing related files inside here. Read ahead to see what they should be named
 5. Repeat the steps above for each signing profile that you want to add
 
-> :warning: __You need to match the files names exactly as they are shown below. For an example, your certificate must be named exactly `cert.p12`. Be aware that Windows may hide the extensions by default.__
+> :warning: **You need to match the files names exactly as they are shown below. For an example, your certificate must be named exactly `cert.p12`. Be aware that Windows may hide the extensions by default.**
 
 - **Certificate + provisioning profile**
 
@@ -199,7 +199,7 @@ You can install the web service on your computer, on a server, or on your phone.
    ./start-signer.sh
    ```
 
-   > :warning: __When iOS asks you to grant location permission to iSH, click "Always Allow". The location is not actually used for anything, but it allows the service to keep running in the background if you minimize iSH or lock your phone.__
+   > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location is not actually used for anything, but it allows the service to keep running in the background if you minimize iSH or lock your phone.**
 
 2. When the service finishes loading, look for a line similar to this:
    ```log
