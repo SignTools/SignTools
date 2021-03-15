@@ -211,7 +211,7 @@ You can install the web service on your computer, on a server, or on your phone.
 
 Just repeat the `Installing` section.
 
-### 3.2. Self-hosting on computer
+### 3.2. Self-hosting on computer or server
 
 #### 3.2.1. Installing
 
@@ -239,7 +239,7 @@ For overview, these are the default arguments that will be used:
 
 The web service cannot work by itself. You have two options:
 
-**Reverse proxy** - secure, fast and reliable, but harder to set up
+**Reverse proxy** - secure, fast, reliable, but harder to set up
 
 - Requires publicly accessible port 443 (HTTPS)
 - Requires domain with valid certificate
@@ -252,7 +252,7 @@ The web service cannot work by itself. You have two options:
   ```
   where `:id` is a wildcard parameter.
 
-**ngrok** - less secure and slow, but quick and easy to set up
+**ngrok** - less secure, slow, but quick and easy to set up
 
 1. Register for [ngrok](https://ngrok.com/)
 2. Download ngrok and connect your account as instructed on the download page and the dashboard
