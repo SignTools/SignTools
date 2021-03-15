@@ -95,10 +95,7 @@ func serve(host string, port uint64) {
 		}()
 	}
 
-	if err := config.Current.Builder.SetSecrets(map[string]string{
-		"SECRET_KEY": config.Current.BuilderKey,
-		"SECRET_URL": config.Current.ServerUrl,
-	}); err != nil {
+	if err := setBuilderSecrets(); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -133,6 +130,13 @@ func serve(host string, port uint64) {
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", host, port)))
+}
+
+func setBuilderSecrets() error {
+	return config.Current.Builder.SetSecrets(map[string]string{
+		"SECRET_KEY": config.Current.BuilderKey,
+		"SECRET_URL": config.Current.ServerUrl,
+	})
 }
 
 func getFavIcon(c echo.Context) error {
@@ -309,6 +313,9 @@ func uploadUnsignedApp(c echo.Context) error {
 		return err
 	}
 	storage.Jobs.MakeSignJob(app.GetId(), userBundleId, profile.GetId())
+	if err := setBuilderSecrets(); err != nil {
+		return err
+	}
 	if err := config.Current.Builder.Trigger(); err != nil {
 		return err
 	}
