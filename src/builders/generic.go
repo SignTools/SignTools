@@ -7,7 +7,7 @@ import (
 )
 
 type GenericData struct {
-	Enabled      bool              `yaml:"enabled"`
+	Enable       bool              `yaml:"enable"`
 	StatusUrl    string            `yaml:"status_url"`
 	TriggerUrl   string            `yaml:"trigger_url"`
 	SecretsUrl   string            `yaml:"secrets_url"`

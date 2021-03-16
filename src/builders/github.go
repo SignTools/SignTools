@@ -13,7 +13,7 @@ import (
 )
 
 type GitHubData struct {
-	Enabled          bool   `yaml:"enabled"`
+	Enable           bool   `yaml:"enable"`
 	RepoName         string `yaml:"repo_name"`
 	OrgName          string `yaml:"org_name"`
 	WorkflowFileName string `yaml:"workflow_file_name"`

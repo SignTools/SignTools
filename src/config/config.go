@@ -24,13 +24,13 @@ type Builder struct {
 }
 
 func (b *Builder) MakeFirstEnabled() builders.Builder {
-	if b.GitHub.Enabled {
+	if b.GitHub.Enable {
 		return builders.MakeGitHub(&b.GitHub)
 	}
-	if b.Semaphore.Enabled {
+	if b.Semaphore.Enable {
 		return builders.MakeSemaphore(&b.Semaphore)
 	}
-	if b.Generic.Enabled {
+	if b.Generic.Enable {
 		return builders.MakeGeneric(&b.Generic)
 	}
 	return nil
@@ -50,7 +50,7 @@ func createDefaultFile() *File {
 	return &File{
 		Builder: Builder{
 			GitHub: builders.GitHubData{
-				Enabled:          false,
+				Enable:           false,
 				RepoName:         "ios-signer-ci",
 				OrgName:          "YOUR_PROFILE_NAME",
 				WorkflowFileName: "sign.yml",
@@ -58,7 +58,7 @@ func createDefaultFile() *File {
 				Ref:              "master",
 			},
 			Semaphore: builders.SemaphoreData{
-				Enabled:    false,
+				Enable:     false,
 				ProjectId:  "YOUR_PROJECT_ID",
 				OrgName:    "YOUR_ORG_NAME",
 				Token:      "YOUR_TOKEN",
@@ -66,7 +66,7 @@ func createDefaultFile() *File {
 				SecretName: "ios-signer",
 			},
 			Generic: builders.GenericData{
-				Enabled:     false,
+				Enable:      false,
 				StatusUrl:   "http://localhost:1234/status",
 				TriggerUrl:  "http://localhost:1234/trigger",
 				SecretsUrl:  "http://localhost:1234/secrets",

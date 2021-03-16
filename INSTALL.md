@@ -26,7 +26,7 @@ You need to create a configuration file which links the web service to your buil
 2. Run it once - it will exit immediately, saying that it has generated a configuration file
 3. In the same folder as the binary, you will find a new file `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below. The lines that start with a hashtag `#` are comments, you do not need to touch them.
 
-> :warning: **Don't forget to set "`enabled: true`" on the builder that you are configuring!**
+> :warning: **Don't forget to set "`enable: true`" on the builder that you are configuring!**
 
 ```yml
 # here you define the builder you created in the previous section
@@ -34,7 +34,7 @@ You need to create a configuration file which links the web service to your buil
 builder:
   # GitHub Actions
   github:
-    enabled: false
+    enable: false
     # the name you gave your builder repository
     repo_name: ios-signer-ci
     # your GitHub profile/organization name
@@ -45,7 +45,7 @@ builder:
     ref: master
   # Semaphore CI
   semaphore:
-    enabled: false
+    enable: false
     # the project id (not name) you got when creating the builder
     project_id: YOUR_PROJECT_ID
     # your Semaphore CI profile/organization name
@@ -56,7 +56,7 @@ builder:
     secret_name: ios-signer
   # your own custom (unsupported) builder
   generic:
-    enabled: false
+    enable: false
     status_url: http://localhost:1234/status
     trigger_url: http://localhost:1234/trigger
     secrets_url: http://localhost:1234/secrets

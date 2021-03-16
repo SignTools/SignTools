@@ -10,7 +10,7 @@ import (
 )
 
 type SemaphoreData struct {
-	Enabled    bool   `yaml:"enabled"`
+	Enable     bool   `yaml:"enable"`
 	ProjectId  string `yaml:"project_id"`
 	OrgName    string `yaml:"org_name"`
 	Token      string `yaml:"token"`
