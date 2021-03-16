@@ -22,6 +22,7 @@ func MakeSemaphore(data *SemaphoreData) *Semaphore {
 	return &Semaphore{
 		data: data,
 		client: sling.New().Client(MakeClient(false)).
+			Base(fmt.Sprintf("https://%s.semaphoreci.com/api/", data.OrgName)).
 			SetMany(map[string]string{
 				"Authorization": "Token " + data.Token,
 			}),
@@ -34,12 +35,11 @@ type Semaphore struct {
 }
 
 func (s *Semaphore) Trigger() error {
-	url := fmt.Sprintf("https://%s.semaphoreci.com/api/v1alpha/plumber-workflows", s.data.OrgName)
 	body := fmt.Sprintf(`project_id=%s&reference=%s`, s.data.ProjectId, s.data.Ref)
 	resp, err := s.client.New().
 		Body(bytes.NewReader([]byte(body))).
 		Set("Content-Type", "application/x-www-form-urlencoded").
-		Post(url).
+		Post("v1alpha/plumber-workflows").
 		ReceiveSuccess(nil)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (s *Semaphore) SetSecrets(secrets map[string]string) error {
 	response, err := s.client.New().
 		Body(bytes.NewReader(bodyBytes)).
 		Set("Content-Type", "application/json").
-		Patch(fmt.Sprintf("https://%s.semaphoreci.com/api/v1beta/secrets/%s", s.data.OrgName, s.data.SecretName)).
+		Patch("v1beta/secrets/" + s.data.SecretName).
 		ReceiveSuccess(nil)
 	if err != nil {
 		return errors.WithMessage(err, "update existing secret")
@@ -98,7 +98,7 @@ func (s *Semaphore) SetSecrets(secrets map[string]string) error {
 		response, err = s.client.New().
 			Body(bytes.NewReader(bodyBytes)).
 			Set("Content-Type", "application/json").
-			Post(fmt.Sprintf("https://%s.semaphoreci.com/api/v1beta/secrets", s.data.OrgName)).
+			Post("v1beta/secrets").
 			ReceiveSuccess(nil)
 		if err != nil {
 			return errors.WithMessage(err, "create new secret")
