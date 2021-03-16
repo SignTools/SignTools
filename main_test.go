@@ -24,11 +24,7 @@ import (
 )
 
 var (
-	workflowData          = uuid.NewString()
-	workflowAuthorization = map[string]string{
-		uuid.NewString(): uuid.NewString(),
-		uuid.NewString(): uuid.NewString(),
-	}
+	workflowKey     = uuid.NewString()
 	builderKey      = uuid.NewString()
 	saveDir         = ""
 	profileId       = uuid.NewString()
@@ -73,13 +69,10 @@ func TestMain(m *testing.M) {
 	workflowPort := uint64(8099)
 
 	config.Current = config.Config{
-		Builder: builders.MakeGeneric(&builders.GenericData{
-			StatusUrl:    "",
-			TriggerUrl:   fmt.Sprintf("http://localhost:%d/trigger", workflowPort),
-			SecretsUrl:   fmt.Sprintf("http://localhost:%d/secrets", workflowPort),
-			TriggerBody:  workflowData,
-			Headers:      workflowAuthorization,
-			AttemptHTTP2: true,
+		Builder: builders.MakeSelfHosted(&builders.SelfHostedData{
+			Enable: true,
+			Url:    fmt.Sprintf("http://localhost:%d", workflowPort),
+			Key:    workflowKey,
 		}),
 		File: &config.File{
 			ServerUrl:           fmt.Sprintf("http://localhost:%d", servePort),
@@ -111,7 +104,13 @@ func startWorkflowServer(port uint64) {
 	e.HideBanner = true
 	e.Use(middleware.Logger())
 
-	e.POST("/secrets", func(c echo.Context) error {
+	keyAuth := middleware.KeyAuth(func(s string, c echo.Context) (bool, error) {
+		return s == workflowKey, nil
+	})
+
+	eg := e.Group("", keyAuth)
+
+	eg.POST("/secrets", func(c echo.Context) error {
 		secretsHit = true
 		params, err := c.FormParams()
 		if err != nil {
@@ -134,24 +133,8 @@ func startWorkflowServer(port uint64) {
 		return c.NoContent(200)
 	})
 
-	e.POST("/trigger", func(c echo.Context) error {
+	eg.POST("/trigger", func(c echo.Context) error {
 		triggerHit = true
-		builder := config.Current.Builder.(*builders.Generic)
-		for key, val := range builder.Headers {
-			if c.Request().Header.Get(key) != val {
-				log.Fatalln("bad header")
-			}
-		}
-		if c.Request().Body == nil {
-			log.Fatalln("trigger body is nil")
-		}
-		bodyBytes, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		if string(bodyBytes) != builder.TriggerBody {
-			log.Fatalln("mismatching data")
-		}
 		return c.NoContent(200)
 	})
 

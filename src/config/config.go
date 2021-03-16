@@ -18,9 +18,9 @@ type BasicAuth struct {
 }
 
 type Builder struct {
-	GitHub    builders.GitHubData    `yaml:"github"`
-	Semaphore builders.SemaphoreData `yaml:"semaphore"`
-	Generic   builders.GenericData   `yaml:"generic"`
+	GitHub     builders.GitHubData     `yaml:"github"`
+	Semaphore  builders.SemaphoreData  `yaml:"semaphore"`
+	SelfHosted builders.SelfHostedData `yaml:"selfhosted"`
 }
 
 func (b *Builder) MakeFirstEnabled() builders.Builder {
@@ -30,8 +30,8 @@ func (b *Builder) MakeFirstEnabled() builders.Builder {
 	if b.Semaphore.Enable {
 		return builders.MakeSemaphore(&b.Semaphore)
 	}
-	if b.Generic.Enable {
-		return builders.MakeGeneric(&b.Generic)
+	if b.SelfHosted.Enable {
+		return builders.MakeSelfHosted(&b.SelfHosted)
 	}
 	return nil
 }
@@ -65,16 +65,10 @@ func createDefaultFile() *File {
 				Ref:        "refs/heads/master",
 				SecretName: "ios-signer",
 			},
-			Generic: builders.GenericData{
-				Enable:      false,
-				StatusUrl:   "http://localhost:1234/status",
-				TriggerUrl:  "http://localhost:1234/trigger",
-				SecretsUrl:  "http://localhost:1234/secrets",
-				TriggerBody: "hello",
-				Headers: map[string]string{
-					"Authorization": "Token YOUR_TOKEN",
-				},
-				AttemptHTTP2: true,
+			SelfHosted: builders.SelfHostedData{
+				Enable: false,
+				Url:    "http://192.168.1.133:8090",
+				Key:    "SOME_SECRET_KEY",
 			},
 		},
 		ServerUrl:           "http://localhost:8080",
