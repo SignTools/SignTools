@@ -11,10 +11,15 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Checkout
+      - name: Checkout with token
+        if: github.event_name != 'pull_request'
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.API_GITHUB_TOKEN }}
+
+      - name: Checkout without token
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v2
 
       - name: Setup Go environment
         uses: actions/setup-go@v2.1.3
