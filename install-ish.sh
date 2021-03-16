@@ -5,14 +5,14 @@ echo "Installing dependencies..."
 apk add curl jq unzip
 
 echo "Installing ngrok..."
-curl -sL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-386.zip -o ngrok.zip
+curl -sfSL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-386.zip -o ngrok.zip
 unzip -o ngrok.zip
 rm ngrok.zip
 chmod +x ngrok
 
 echo "Installing service..."
-LATEST_VERSION=$(curl -sL "https://api.github.com/repos/signtools/ios-signer-service/releases/latest" | jq -r .tag_name)
-curl -sL "https://github.com/SignTools/ios-signer-service/releases/download/$LATEST_VERSION/ios-signer-service_${LATEST_VERSION#?}_linux_386" -o ios-signer-service
+LATEST_VERSION=$(curl -sfSL "https://api.github.com/repos/signtools/ios-signer-service/releases/latest" | jq -r .tag_name)
+curl -sfSL "https://github.com/SignTools/ios-signer-service/releases/download/$LATEST_VERSION/ios-signer-service_${LATEST_VERSION#?}_linux_386" -o ios-signer-service
 chmod +x ios-signer-service
 
 echo "Installing runner script..."
