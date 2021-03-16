@@ -82,7 +82,7 @@ sign_timeout_mins: 10
 basic_auth:
   enable: false
   username: "admin"
-  # make sure to at least change the password
+  # don't forget to change the password
   password: "admin"
 ```
 
@@ -199,7 +199,7 @@ You can install the web service on your computer, on a server, or on your phone.
    ./start-signer.sh
    ```
 
-   > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location is not actually used for anything, but it allows the service to keep running in the background if you minimize iSH or lock your phone.**
+   > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location data is not used for anything, but the permission allows the service to keep running in the background if you minimize iSH or lock your phone.**
 
 2. When the service finishes loading, look for a line similar to this:
    ```log
@@ -231,7 +231,7 @@ You have two options:
 
 #### 3.2.2. Running
 
-For overview, these are the default arguments that will be used:
+For reference, these are the default arguments that will be used:
 
 - The listening port is 8080. You can change this with the argument `-port 1234`
 - The listening host is all (0.0.0.0). You can change this with the argument `-host 1.2.3.4`
