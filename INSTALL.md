@@ -12,7 +12,13 @@ But in all cases, you first need a builder.
 
 ## 1. Builder
 
-Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the instructions. When you are done, you will have made your very own macOS builder.
+You can create a builder in one of two ways:
+
+- **Use a Continuous Integration (CI) service** such as GitHub Actions or Semaphore CI. This method is the easiest, fastest, and most recommended way to make a builder. Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the instructions.
+
+- **Use your own Mac machine**. This method is only recommended if you already have a server Mac, you are somewhat experienced in server management, and you would like to host your truly own builder. Go to [ios-signer-builder](https://github.com/SignTools/ios-signer-builder) for instructions.
+
+Once you have made your builder, proceed below.
 
 ## 2. Web service configuration
 
@@ -54,16 +60,13 @@ builder:
     token: YOUR_SEMAPHORE_TOKEN
     ref: refs/heads/master
     secret_name: ios-signer
-  # your own custom (unsupported) builder
-  generic:
+  # your own self-hosted Mac builder
+  selfhosted:
     enable: false
-    status_url: http://localhost:1234/status
-    trigger_url: http://localhost:1234/trigger
-    secrets_url: http://localhost:1234/secrets
-    trigger_body: hello
-    headers:
-      Authorization: Token YOUR_CUSTOM_TOKEN
-    attempt_http2: true
+    # the url of your builder
+    url: http://192.168.1.133:8090
+    # the auth key you used when you started the builder
+    key: SOME_SECRET_KEY
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or web install (OTA) won't work!
 # leave untouched if you don't know what this means - use ngrok instead
