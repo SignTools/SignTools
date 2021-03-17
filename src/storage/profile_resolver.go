@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"os"
+	"ios-signer-service/src/util"
 	"sort"
 )
 
@@ -16,7 +16,7 @@ type profileResolver struct {
 }
 
 func (r *profileResolver) refresh() error {
-	idDirs, err := os.ReadDir(profilesPath)
+	idDirs, err := util.ReadDirNonHidden(profilesPath)
 	if err != nil {
 		return &AppError{"read profiles dir", ".", err}
 	}

@@ -6,8 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -60,4 +62,19 @@ func WaitForServer(url string, timeout time.Duration) error {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
+}
+
+// Just like os.ReadDir but ignores hidden files starting with '.' such as macOS '.DS_Store'.
+func ReadDirNonHidden(name string) ([]os.DirEntry, error) {
+	dirs, err := os.ReadDir(name)
+	if err != nil {
+		return nil, err
+	}
+	var nonHiddenDirs []os.DirEntry
+	for _, dir := range dirs {
+		if !strings.HasPrefix(dir.Name(), ".") {
+			nonHiddenDirs = append(nonHiddenDirs, dir)
+		}
+	}
+	return nonHiddenDirs, nil
 }

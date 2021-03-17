@@ -2,7 +2,7 @@ package storage
 
 import (
 	"io"
-	"os"
+	"ios-signer-service/src/util"
 	"sort"
 	"sync"
 )
@@ -21,7 +21,7 @@ type appResolver struct {
 func (r *appResolver) refresh() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	idDirs, err := os.ReadDir(appsPath)
+	idDirs, err := util.ReadDirNonHidden(appsPath)
 	if err != nil {
 		return &AppError{"read apps dir", ".", err}
 	}
