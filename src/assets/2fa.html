@@ -34,14 +34,14 @@
         <div class="modal-content">
             <form id="uploadForm" method="post" enctype="multipart/form-data" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title">Enter 2FA code</h5>
+                    <h5 class="modal-title">Submit 2FA code</h5>
                     <a id="btnModalClose" class="btn-close" href="/"></a>
                 </div>
                 <div class="modal-body">
                     <div class="mb-0">
                         <label class="form-check-label mb-3" for="formToken">
-                            After about a minute, you will receive a 6-digit two-factor authentication (2FA) code from
-                            Apple. When you do, please enter it here:
+                            If two-factor authentication (2FA) is necessary to sign this app, you will receive a 6-digit
+                            verification code by Apple after about a minute. If you do, please enter it here:
                         </label>
                         <input type="text" class="form-control" name="formToken" id="formToken" inputmode="numeric"
                                pattern="[0-9]*" autocomplete="one-time-code" placeholder="123456"/>

@@ -322,15 +322,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := app.SetWorkflowUrl(config.Current.Builder.GetStatusUrl()); err != nil {
 		return err
 	}
-	isAccount, err := profile.IsAccount()
-	if err != nil {
-		return err
-	}
-	if isAccount {
-		return c.Redirect(302, fmt.Sprintf("/apps/%s/2fa", app.GetId()))
-	} else {
-		return c.Redirect(302, "/")
-	}
+	return c.Redirect(302, "/")
 }
 
 func renderIndex(c echo.Context) error {
@@ -382,16 +374,17 @@ func renderIndex(c echo.Context) error {
 		}
 
 		data.Apps = append(data.Apps, assets.App{
-			Id:          app.GetId(),
-			Status:      status,
-			Name:        name,
-			ModTime:     modTime.Format(time.RFC822),
-			WorkflowUrl: workflowUrl,
-			ProfileName: profileName,
-			BundleId:    bundleId,
-			ManifestUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
-			DownloadUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
-			DeleteUrl:   util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),
+			Id:           app.GetId(),
+			Status:       status,
+			Name:         name,
+			ModTime:      modTime.Format(time.RFC822),
+			WorkflowUrl:  workflowUrl,
+			ProfileName:  profileName,
+			BundleId:     bundleId,
+			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
+			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
+			TwoFactorUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "2fa"),
+			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),
 		})
 	}
 	profiles, err := storage.Profiles.GetAll()
