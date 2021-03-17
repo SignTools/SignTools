@@ -18,7 +18,7 @@ First, follow the `How do I get the certificate?` section below.
 
 ### 3. Two-factor authentication (2FA)
 
-Upon submitting an app for signing, the web service will ask you for a 2FA code. It will be used by the builder to log into your account and perform the signing.
+Upon submitting an app for signing, you will be redirected to the index page (dashboard), where you will see the new app as "processing". If the account used to sign this app requires a 2FA code, in next minute it will be sent to you by Apple. If this happens, click the `Submit 2FA` button on your app in the dashboard and enter the code you just received. It will be used by the builder to finish logging into your account and perform the signing.
 
 If you use one of the CI builders, each time you sign an app a new computer will be added as "signed in" to your account. Currently, there is no way to automatically sign out a builder after it's done. You can always remove these computers manually, either from your Apple device or [appleid.apple.com](https://appleid.apple.com/). If you are uncomfortable with this, use a separate Apple account.
 
