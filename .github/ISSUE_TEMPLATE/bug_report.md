@@ -1,21 +1,22 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
+title: ""
 labels: bug
-assignees: ''
-
+assignees: ""
 ---
 
 **I tried basic troubleshooting first**
-- [ ] Updated the web service **and** the builder to the latest version
-- [ ] Read through the FAQ: https://github.com/SignTools/ios-signer-service/blob/master/FAQ.md
+
+- [ ] Updated **both** [ios-signer-service](https://github.com/SignTools/ios-signer-service) **and** the builder ([ios-signer-ci](https://github.com/SignTools/ios-signer-ci) or [ios-signer-builder](https://github.com/SignTools/ios-signer-builder)) to the latest version
+- [ ] Read through the [FAQ page](https://github.com/SignTools/ios-signer-service/blob/master/FAQ.md)
 
 **Describe the bug**
 A clear and concise description of what the bug is.
 
 **To reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -27,11 +28,12 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**System statistics**
-- Web service version: [e.g. 1.8.3]
-- Builder type: [e.g. official CI, custom]
-- Builder version, if applicable: [take your latest commit hash, e.g. 03e0ed9]
-- Deployment method: [e.g. nginx, ngrok]
+**System configuration**
+
+- ios-signer-service version: [e.g. 2.1.1]
+- Installation type: [e.g. computer, phone; nginx, ngrok]
+- Builder type: [ios-signer-ci, ios-signer-builder]
+- Builder version: [e.g. 1.0.0 for ios-signer-builder; the latest commit hash of your ios-signer-ci repo, e.g. 03e0ed9]
 
 **Additional context**
 Add any other context about the problem here.
