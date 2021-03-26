@@ -166,8 +166,10 @@
                                        href="{{$app.DownloadUrl}}">Download</a>
                                 {{else}}
                                     {{if eq $app.Status 0 }}
-                                        <a class="btn btn-outline-light ms-auto mt-2 me-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
+                                        <a class="btn btn-outline-light ms-auto mt-2 me-2" href="{{$app.TwoFactorUrl}}">Submit
+                                            2FA</a>
                                     {{end}}
+                                    <a class="btn btn-outline-light ms-auto mt-2 me-2" href="{{$app.RestartUrl}}">Restart</a>
                                     <a class="btn btn-outline-light ms-auto mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
                                        href="{{$app.WorkflowUrl}}">Status</a>
                                 {{end}}

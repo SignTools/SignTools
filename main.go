@@ -122,6 +122,7 @@ func serve(host string, port uint64) {
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
+	e.GET("/apps/:id/restart", appResolver(restartSign), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
@@ -312,7 +313,28 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	storage.Jobs.MakeSignJob(app.GetId(), userBundleId, profile.GetId())
+	if err := startSign(app); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/")
+}
+
+func restartSign(c echo.Context, app storage.App) error {
+	if err := startSign(app); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/")
+}
+
+func startSign(app storage.App) error {
+	if err := app.ResetModTime(); err != nil {
+		return err
+	}
+	profileId, err := app.GetProfileId()
+	if err != nil {
+		return err
+	}
+	storage.Jobs.MakeSignJob(app.GetId(), profileId)
 	if err := setBuilderSecrets(); err != nil {
 		return err
 	}
@@ -322,7 +344,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := app.SetWorkflowUrl(config.Current.Builder.GetStatusUrl()); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	return nil
 }
 
 func renderIndex(c echo.Context) error {
@@ -384,6 +406,7 @@ func renderIndex(c echo.Context) error {
 			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
 			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
 			TwoFactorUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "2fa"),
+			RestartUrl:   util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "restart"),
 			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),
 		})
 	}

@@ -9,6 +9,7 @@ type App struct {
 	ManifestUrl  string
 	DownloadUrl  string
 	TwoFactorUrl string
+	RestartUrl   string
 	DeleteUrl    string
 	ProfileName  string
 	BundleId     string

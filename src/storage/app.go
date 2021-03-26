@@ -23,6 +23,7 @@ type App interface {
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
+	ResetModTime() error
 	GetProfileId() (string, error)
 	_prune() error
 }
@@ -192,6 +193,16 @@ func (a *app) SetWorkflowUrl(url string) error {
 	defer a.mu.Unlock()
 	if err := writeTrimSpace(appWorkflowUrlPath(a.id), url); err != nil {
 		return &AppError{"set workflow url file", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) ResetModTime() error {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	now := time.Now()
+	if err := os.Chtimes(appPath(a.id), now, now); err != nil {
+		return &AppError{"change app dir mod time", a.id, err}
 	}
 	return nil
 }
