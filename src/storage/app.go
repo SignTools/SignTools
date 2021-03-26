@@ -146,7 +146,7 @@ func (a *app) SetSigned(reader io.ReadSeeker, bundleId string) error {
 		return &AppError{"already exists", a.id, err}
 	}
 	if exists {
-		return &AppError{"true", a.id, errors.New("already exists")}
+		return &AppError{"", a.id, errors.New("already exists")}
 	}
 	file, err := os.Create(appSignedPath(a.id))
 	if err != nil {
