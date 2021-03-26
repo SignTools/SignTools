@@ -132,7 +132,7 @@
 <div class="container py-4 py-xxl-5 py-xl-5 px-4">
     <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
         {{range $_, $app := .Apps}}
-            <div class="col-sm-6 col-lg-3 p-2">
+            <div class="col-sm-6 col-lg-4 col-xl-3 p-2">
                 <div class="card text-white
                     {{if eq $app.Status 0 }} bg-primary
                     {{else if eq $app.Status 1 }} bg-success
@@ -157,23 +157,23 @@
                             <br>
                             {{$app.ModTime}}
                         </p>
-                        <div class="row justify-content-end">
-                            <div class="col-auto">
-                                {{if eq $app.Status 1 }}
-                                    <a class="btn btn-outline-light ms-auto me-2 mt-2"
-                                       href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
-                                    <a class="btn btn-outline-light ms-0 mt-2"
-                                       href="{{$app.DownloadUrl}}">Download</a>
-                                {{else}}
-                                    {{if eq $app.Status 0 }}
-                                        <a class="btn btn-outline-light ms-auto mt-2 me-2" href="{{$app.TwoFactorUrl}}">Submit
-                                            2FA</a>
-                                    {{end}}
-                                    <a class="btn btn-outline-light ms-auto mt-2 me-2" href="{{$app.RestartUrl}}">Restart</a>
-                                    <a class="btn btn-outline-light ms-auto mt-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
-                                       href="{{$app.WorkflowUrl}}">Status</a>
+                        <div class="d-flex flex-wrap justify-content-end">
+                            {{if eq $app.Status 1 }}
+                                <a class="btn btn-outline-light mt-2 ms-2"
+                                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}">Install</a>
+                                <a class="btn btn-outline-light mt-2 ms-2"
+                                   href="{{$app.DownloadUrl}}">Download</a>
+                            {{else}}
+                                {{if eq $app.Status 0 }}
+                                    <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit
+                                        2FA</a>
                                 {{end}}
-                            </div>
+                                <div class="d-flex">
+                                    <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.RestartUrl}}">Restart</a>
+                                    <a class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
+                                       href="{{$app.WorkflowUrl}}">Status</a>
+                                </div>
+                            {{end}}
                         </div>
                     </div>
                 </div>
