@@ -13,15 +13,16 @@ import (
 )
 
 var (
-	appsPath           string
-	appPath            func(id string) string
-	appSignedPath      func(id string) string
-	appUnsignedPath    func(id string) string
-	appWorkflowUrlPath func(id string) string
-	appNamePath        func(id string) string
-	appProfileIdPath   func(id string) string
-	appSignArgsPath    func(id string) string
-	appBundleIdPath    func(id string) string
+	appsPath            string
+	appPath             func(id string) string
+	appSignedPath       func(id string) string
+	appUnsignedPath     func(id string) string
+	appWorkflowUrlPath  func(id string) string
+	appNamePath         func(id string) string
+	appProfileIdPath    func(id string) string
+	appSignArgsPath     func(id string) string
+	appBundleIdPath     func(id string) string
+	appUserBundleIdPath func(id string) string
 
 	profilesPath           string
 	profileCertPath        func(id string) string
@@ -51,6 +52,7 @@ func Load() {
 	appProfileIdPath = resolveLocationWithId(appsPath, "profile_id")
 	appSignArgsPath = resolveLocationWithId(appsPath, "sign_args")
 	appBundleIdPath = resolveLocationWithId(appsPath, "bundle_id")
+	appUserBundleIdPath = resolveLocationWithId(appsPath, "user_bundle_id")
 
 	profilesPath = filepath.Join(config.Current.SaveDir, "profiles")
 	profileCertPath = resolveLocationWithId(profilesPath, "cert.p12")

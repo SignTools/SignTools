@@ -19,6 +19,7 @@ type App interface {
 	GetName() (string, error)
 	GetSignArgs() (string, error)
 	GetBundleId() (string, error)
+	GetUserBundleId() (string, error)
 	GetWorkflowUrl() (string, error)
 	SetWorkflowUrl(string) error
 	GetModTime() (time.Time, error)
@@ -40,7 +41,7 @@ func loadAppFromId(id string) App {
 	return &app{id: id}
 }
 
-func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string) (App, error) {
+func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
 	id := uuid.NewString()
 	app := &app{id: id}
 
@@ -57,7 +58,10 @@ func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs s
 		return nil, &AppError{"set unsigned", id, err}
 	}
 	if err := app.setSignArgs(signArgs); err != nil {
-		return nil, &AppError{"set unsigned", id, err}
+		return nil, &AppError{"set sign args", id, err}
+	}
+	if err := app.setUserBundleId(userBundleId); err != nil {
+		return nil, &AppError{"set user bundle id", id, err}
 	}
 	return app, nil
 }
@@ -83,6 +87,16 @@ func (a *app) GetBundleId() (string, error) {
 	data, err := readTrimSpace(appBundleIdPath(a.id))
 	if err != nil {
 		return "", &AppError{"read bundle id file", a.id, err}
+	}
+	return data, nil
+}
+
+func (a *app) GetUserBundleId() (string, error) {
+	a.mu.RLock()
+	a.mu.RUnlock()
+	data, err := readTrimSpace(appUserBundleIdPath(a.id))
+	if err != nil {
+		return "", &AppError{"read user bundle id file", a.id, err}
 	}
 	return data, nil
 }
@@ -237,6 +251,13 @@ func (a *app) setSignArgs(args string) error {
 func (a *app) setBundleId(id string) error {
 	if err := writeTrimSpace(appBundleIdPath(a.id), id); err != nil {
 		return &AppError{"write bundle id file", a.id, err}
+	}
+	return nil
+}
+
+func (a *app) setUserBundleId(id string) error {
+	if err := writeTrimSpace(appUserBundleIdPath(a.id), id); err != nil {
+		return &AppError{"write user bundle id file", a.id, err}
 	}
 	return nil
 }

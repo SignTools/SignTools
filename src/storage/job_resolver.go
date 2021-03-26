@@ -22,14 +22,13 @@ type JobResolver struct {
 }
 
 // User bundle ID is unused if the profile is not an account.
-func (r *JobResolver) MakeSignJob(appId string, userBundleId string, profileId string) {
+func (r *JobResolver) MakeSignJob(appId string, profileId string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.signJobs = append(r.signJobs, signJob{
-		ts:           time.Now(),
-		appId:        appId,
-		userBundleId: userBundleId,
-		profileId:    profileId,
+		ts:        time.Now(),
+		appId:     appId,
+		profileId: profileId,
 	})
 }
 

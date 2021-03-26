@@ -308,7 +308,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	} else if idType == formNames.FormIdCustom {
 		signArgs += " -b " + userBundleId
 	}
-	app, err := storage.Apps.New(file, header.Filename, profile, signArgs)
+	app, err := storage.Apps.New(file, header.Filename, profile, signArgs, userBundleId)
 	if err != nil {
 		return err
 	}
