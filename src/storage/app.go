@@ -74,7 +74,7 @@ type app struct {
 
 func (a *app) GetSignArgs() (string, error) {
 	a.mu.RLock()
-	a.mu.RUnlock()
+	defer a.mu.RUnlock()
 	data, err := readTrimSpace(appSignArgsPath(a.id))
 	if err != nil {
 		return "", &AppError{"read sign args file", a.id, err}
@@ -84,7 +84,7 @@ func (a *app) GetSignArgs() (string, error) {
 
 func (a *app) GetBundleId() (string, error) {
 	a.mu.RLock()
-	a.mu.RUnlock()
+	defer a.mu.RUnlock()
 	data, err := readTrimSpace(appBundleIdPath(a.id))
 	if err != nil {
 		return "", &AppError{"read bundle id file", a.id, err}
@@ -94,7 +94,7 @@ func (a *app) GetBundleId() (string, error) {
 
 func (a *app) GetUserBundleId() (string, error) {
 	a.mu.RLock()
-	a.mu.RUnlock()
+	defer a.mu.RUnlock()
 	data, err := readTrimSpace(appUserBundleIdPath(a.id))
 	if err != nil {
 		return "", &AppError{"read user bundle id file", a.id, err}
@@ -104,7 +104,7 @@ func (a *app) GetUserBundleId() (string, error) {
 
 func (a *app) GetProfileId() (string, error) {
 	a.mu.RLock()
-	a.mu.RUnlock()
+	defer a.mu.RUnlock()
 	data, err := readTrimSpace(appProfileIdPath(a.id))
 	if err != nil {
 		return "", &AppError{"read profile id file", a.id, err}
@@ -198,8 +198,8 @@ func (a *app) SetWorkflowUrl(url string) error {
 }
 
 func (a *app) ResetModTime() error {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	now := time.Now()
 	if err := os.Chtimes(appPath(a.id), now, now); err != nil {
 		return &AppError{"change app dir mod time", a.id, err}
