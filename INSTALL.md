@@ -52,8 +52,8 @@ builder:
   # Semaphore CI
   semaphore:
     enable: false
-    # the project id (not name) you got when creating the builder
-    project_id: YOUR_PROJECT_ID
+    # the name you gave to your Semaphore CI project
+    project_name: YOUR_PROJECT_NAME
     # your Semaphore CI profile/organization name
     org_name: YOUR_ORG_NAME
     # your Semaphore CI token that you got when creating the builder
