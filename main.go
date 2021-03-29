@@ -341,7 +341,11 @@ func startSign(app storage.App) error {
 	if err := config.Current.Builder.Trigger(); err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(config.Current.Builder.GetStatusUrl()); err != nil {
+	statusUrl, err := config.Current.Builder.GetStatusUrl()
+	if err != nil {
+		return err
+	}
+	if err := app.SetWorkflowUrl(statusUrl); err != nil {
 		return err
 	}
 	return nil

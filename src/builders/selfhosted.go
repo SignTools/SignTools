@@ -5,7 +5,6 @@ import (
 	"github.com/ViRb3/sling/v2"
 	"ios-signer-service/src/util"
 	"net/url"
-	"strings"
 )
 
 type SelfHostedData struct {
@@ -38,8 +37,8 @@ func (g *SelfHosted) Trigger() error {
 	return util.Check2xxCode(resp.StatusCode)
 }
 
-func (g *SelfHosted) GetStatusUrl() string {
-	return strings.TrimRight(g.Url, "/") + "/status"
+func (g *SelfHosted) GetStatusUrl() (string, error) {
+	return util.JoinUrls(g.Url, "/status")
 }
 
 func (g *SelfHosted) SetSecrets(secrets map[string]string) error {

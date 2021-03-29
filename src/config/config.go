@@ -58,12 +58,12 @@ func createDefaultFile() *File {
 				Ref:              "master",
 			},
 			Semaphore: builders.SemaphoreData{
-				Enable:     false,
-				ProjectId:  "YOUR_PROJECT_ID",
-				OrgName:    "YOUR_ORG_NAME",
-				Token:      "YOUR_TOKEN",
-				Ref:        "refs/heads/master",
-				SecretName: "ios-signer",
+				Enable:      false,
+				ProjectName: "YOUR_PROJECT_NAME",
+				OrgName:     "YOUR_ORG_NAME",
+				Token:       "YOUR_TOKEN",
+				Ref:         "refs/heads/master",
+				SecretName:  "ios-signer",
 			},
 			SelfHosted: builders.SelfHostedData{
 				Enable: false,

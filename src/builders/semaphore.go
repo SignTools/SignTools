@@ -10,19 +10,21 @@ import (
 )
 
 type SemaphoreData struct {
-	Enable     bool   `yaml:"enable"`
-	ProjectId  string `yaml:"project_id"`
-	OrgName    string `yaml:"org_name"`
-	Token      string `yaml:"token"`
-	Ref        string `yaml:"ref"`
-	SecretName string `yaml:"secret_name"`
+	Enable      bool   `yaml:"enable"`
+	ProjectName string `yaml:"project_name"`
+	OrgName     string `yaml:"org_name"`
+	Token       string `yaml:"token"`
+	Ref         string `yaml:"ref"`
+	SecretName  string `yaml:"secret_name"`
 }
 
 func MakeSemaphore(data *SemaphoreData) *Semaphore {
+	baseUrl := fmt.Sprintf("https://%s.semaphoreci.com/", data.OrgName)
 	return &Semaphore{
-		data: data,
+		data:    data,
+		baseUrl: baseUrl,
 		client: sling.New().Client(MakeClient(false)).
-			Base(fmt.Sprintf("https://%s.semaphoreci.com/api/", data.OrgName)).
+			Base(baseUrl + "api/").
 			SetMany(map[string]string{
 				"Authorization": "Token " + data.Token,
 			}),
@@ -30,12 +32,17 @@ func MakeSemaphore(data *SemaphoreData) *Semaphore {
 }
 
 type Semaphore struct {
-	data   *SemaphoreData
-	client *sling.Sling
+	data    *SemaphoreData
+	client  *sling.Sling
+	baseUrl string
 }
 
 func (s *Semaphore) Trigger() error {
-	body := fmt.Sprintf(`project_id=%s&reference=%s`, s.data.ProjectId, s.data.Ref)
+	projectId, err := s.getProjectId()
+	if err != nil {
+		return err
+	}
+	body := fmt.Sprintf(`project_id=%s&reference=%s`, projectId, s.data.Ref)
 	resp, err := s.client.New().
 		Body(bytes.NewReader([]byte(body))).
 		Set("Content-Type", "application/x-www-form-urlencoded").
@@ -47,8 +54,58 @@ func (s *Semaphore) Trigger() error {
 	return util.Check2xxCode(resp.StatusCode)
 }
 
-func (s *Semaphore) GetStatusUrl() string {
-	return fmt.Sprintf("https://%s.semaphoreci.com/projects/%s", s.data.OrgName, s.data.ProjectId)
+func (s *Semaphore) GetStatusUrl() (string, error) {
+	return util.JoinUrls(s.baseUrl, "projects/"+s.data.ProjectName)
+}
+
+func (s *Semaphore) getProjectId() (string, error) {
+	data := semaphoreProject{}
+	resp, err := s.client.New().
+		Get("v1alpha/projects/" + s.data.ProjectName).
+		ReceiveSuccess(&data)
+	if err != nil {
+		return "", err
+	}
+	if err := util.Check2xxCode(resp.StatusCode); err != nil {
+		return "", err
+	}
+	return data.Metadata.ID, nil
+}
+
+type semaphoreProject struct {
+	Spec struct {
+		Visibility string        `json:"visibility"`
+		Schedulers []interface{} `json:"schedulers"`
+		Repository struct {
+			Whitelist struct {
+				Tags     []interface{} `json:"tags"`
+				Branches []interface{} `json:"branches"`
+			} `json:"whitelist"`
+			URL    string `json:"url"`
+			Status struct {
+				PipelineFiles []struct {
+					Path  string `json:"path"`
+					Level string `json:"level"`
+				} `json:"pipeline_files"`
+			} `json:"status"`
+			RunOn              []interface{} `json:"run_on"`
+			PipelineFile       string        `json:"pipeline_file"`
+			Owner              string        `json:"owner"`
+			Name               string        `json:"name"`
+			ForkedPullRequests struct {
+				AllowedSecrets []interface{} `json:"allowed_secrets"`
+			} `json:"forked_pull_requests"`
+		} `json:"repository"`
+	} `json:"spec"`
+	Metadata struct {
+		OwnerID     string `json:"owner_id"`
+		OrgID       string `json:"org_id"`
+		Name        string `json:"name"`
+		ID          string `json:"id"`
+		Description string `json:"description"`
+	} `json:"metadata"`
+	Kind       string `json:"kind"`
+	APIVersion string `json:"apiVersion"`
 }
 
 type semaphoreSecret struct {

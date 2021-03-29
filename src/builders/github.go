@@ -51,8 +51,8 @@ func (g *GitHub) Trigger() error {
 	return util.Check2xxCode(response.StatusCode)
 }
 
-func (g *GitHub) GetStatusUrl() string {
-	return fmt.Sprintf("https://github.com/%s/%s/actions/workflows/%s", g.data.OrgName, g.data.RepoName, g.data.WorkflowFileName)
+func (g *GitHub) GetStatusUrl() (string, error) {
+	return fmt.Sprintf("https://github.com/%s/%s/actions/workflows/%s", g.data.OrgName, g.data.RepoName, g.data.WorkflowFileName), nil
 }
 
 func (g *GitHub) SetSecrets(secrets map[string]string) error {

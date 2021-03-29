@@ -26,7 +26,7 @@ func MakeClient(attemptHttp2 bool) *http.Client {
 type Builder interface {
 	Trigger() error
 	SetSecrets(map[string]string) error
-	GetStatusUrl() string
+	GetStatusUrl() (string, error)
 }
 
 // static check to ensure all methods are implemented
