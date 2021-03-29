@@ -71,6 +71,7 @@ func main() {
 	if *ngrokPort == 0 {
 		config.Current.PublicUrl = config.Current.ServerUrl
 	} else {
+		log.Println("Obtaining ngrok public URL...")
 		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https", 10*time.Second)
 		if err != nil {
 			log.Fatalln(err)
@@ -98,6 +99,7 @@ func serve(host string, port uint64) {
 		}()
 	}
 
+	log.Println("Setting builder secrets...")
 	if err := setBuilderSecrets(); err != nil {
 		log.Fatalln(err)
 	}
