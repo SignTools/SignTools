@@ -16,7 +16,7 @@ type SelfHostedData struct {
 func MakeSelfHosted(data *SelfHostedData) *SelfHosted {
 	return &SelfHosted{
 		SelfHostedData: data,
-		Client: sling.New().Client(MakeClient(true)).
+		Client: sling.New().Client(MakeClient()).
 			Base(data.Url).
 			SetMany(map[string]string{
 				"Authorization": "Bearer " + data.Key,

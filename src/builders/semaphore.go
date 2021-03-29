@@ -23,8 +23,10 @@ func MakeSemaphore(data *SemaphoreData) *Semaphore {
 	return &Semaphore{
 		data:    data,
 		baseUrl: baseUrl,
-		client: sling.New().Client(MakeClient(false)).
-			Base(baseUrl + "api/").
+		client: sling.New().Client(MakeClient()).
+			Base(baseUrl+"api/").
+			// default Go http2 user agent is (accidentally) blocked by the API server
+			Set("User-Agent", "curl/7.75.0").
 			SetMany(map[string]string{
 				"Authorization": "Token " + data.Token,
 			}),
