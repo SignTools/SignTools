@@ -87,6 +87,7 @@ func createDefaultFile() *File {
 type Config struct {
 	Builder    builders.Builder
 	BuilderKey string
+	PublicUrl  string
 	*File
 }
 

@@ -10,6 +10,7 @@ import (
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/src/assets"
+	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/ngrok"
 	"ios-signer-service/src/storage"
@@ -67,13 +68,15 @@ func main() {
 
 	config.Load(*configFile)
 	storage.Load()
-	if *ngrokPort != 0 {
+	if *ngrokPort == 0 {
+		config.Current.PublicUrl = config.Current.ServerUrl
+	} else {
 		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https", 10*time.Second)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		log.Println("ngrok public URL: " + publicUrl)
-		config.Current.ServerUrl = publicUrl
+		config.Current.PublicUrl = publicUrl
 	}
 
 	serve(*host, *port)
@@ -134,9 +137,16 @@ func serve(host string, port uint64) {
 }
 
 func setBuilderSecrets() error {
+	var secretUrl string
+	if _, ok := config.Current.Builder.(*builders.SelfHosted); ok {
+		// use internal IP between builder and service
+		secretUrl = config.Current.ServerUrl
+	} else {
+		secretUrl = config.Current.PublicUrl
+	}
 	return config.Current.Builder.SetSecrets(map[string]string{
 		"SECRET_KEY": config.Current.BuilderKey,
-		"SECRET_URL": config.Current.ServerUrl,
+		"SECRET_URL": secretUrl,
 	})
 }
 
@@ -239,7 +249,7 @@ func getManifest(c echo.Context, app storage.App) error {
 		return err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", c.Param("id"), "signed"),
+		DownloadUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", c.Param("id"), "signed"),
 		BundleId:    "com.foo.bar",
 		Title:       appName,
 	}
@@ -407,11 +417,11 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:  workflowUrl,
 			ProfileName:  profileName,
 			BundleId:     bundleId,
-			ManifestUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "manifest"),
-			DownloadUrl:  util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "signed"),
-			TwoFactorUrl: util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "2fa"),
-			RestartUrl:   util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "restart"),
-			DeleteUrl:    util.JoinUrlsPanic(config.Current.ServerUrl, "apps", app.GetId(), "delete"),
+			ManifestUrl:  util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "manifest"),
+			DownloadUrl:  util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
+			TwoFactorUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "2fa"),
+			RestartUrl:   util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "restart"),
+			DeleteUrl:    util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "delete"),
 		})
 	}
 	profiles, err := storage.Profiles.GetAll()

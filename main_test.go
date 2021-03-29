@@ -81,6 +81,7 @@ func TestMain(m *testing.M) {
 			CleanupIntervalMins: 0,
 		},
 		BuilderKey: builderKey,
+		PublicUrl:  fmt.Sprintf("http://localhost:%d", servePort),
 	}
 	storage.Load()
 
@@ -174,7 +175,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 	assert.NoError(t, err)
 	field.Write([]byte(signedData))
 	w.Close()
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/jobs/%s/signed", config.Current.ServerUrl, returnId), &b)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/jobs/%s/signed", config.Current.PublicUrl, returnId), &b)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+builderKey)
 	req.Header.Set("Content-Type", w.FormDataContentType())
@@ -184,7 +185,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 }
 
 func takeJob(t *testing.T) string {
-	req, err := http.NewRequest("GET", config.Current.ServerUrl+"/jobs", nil)
+	req, err := http.NewRequest("GET", config.Current.PublicUrl+"/jobs", nil)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+builderKey)
 	resp, err := http.DefaultClient.Do(req)
@@ -210,13 +211,13 @@ func takeJob(t *testing.T) string {
 }
 
 func TestAuthenticationNone(t *testing.T) {
-	resp, err := http.Get(config.Current.ServerUrl + "/jobs")
+	resp, err := http.Get(config.Current.PublicUrl + "/jobs")
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 }
 
 func TestAuthenticationWrong(t *testing.T) {
-	req, err := http.NewRequest("GET", config.Current.ServerUrl+"/jobs", nil)
+	req, err := http.NewRequest("GET", config.Current.PublicUrl+"/jobs", nil)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer 1234")
 	resp, err := http.DefaultClient.Do(req)
@@ -249,7 +250,7 @@ func uploadUnsigned(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	assert.NoError(t, w.Close())
-	req, err := http.NewRequest("POST", config.Current.ServerUrl+"/apps", &b)
+	req, err := http.NewRequest("POST", config.Current.PublicUrl+"/apps", &b)
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp, err := http.DefaultClient.Do(req)
