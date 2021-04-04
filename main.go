@@ -12,9 +12,9 @@ import (
 	"ios-signer-service/src/assets"
 	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
-	"ios-signer-service/src/ngrok"
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/util"
+	"ios-signer-service/tunnel"
 	"log"
 	"mime"
 	"net/http"
@@ -64,23 +64,32 @@ func main() {
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
 	ngrokPort := flag.Uint64("ngrok-port", 0, "Ngrok web interface port. "+
 		"Used to automatically parse the server_url")
+	cloudflaredPort := flag.Uint64("cloudflared-port", 0, "cloudflared metrics port. "+
+		"Used to automatically parse the server_url")
 	flag.Parse()
 
 	config.Load(*configFile)
 	storage.Load()
-	if *ngrokPort == 0 {
+	switch {
+	case *ngrokPort != 0:
+		obtainPublicUrl(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
+	case *cloudflaredPort != 0:
+		obtainPublicUrl(&tunnel.Cloudflare{Port: *cloudflaredPort})
+	default:
 		config.Current.PublicUrl = config.Current.ServerUrl
-	} else {
-		log.Println("Obtaining ngrok public URL...")
-		publicUrl, err := ngrok.GetPublicUrl(*ngrokPort, "https", 10*time.Second)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		log.Println("ngrok public URL: " + publicUrl)
-		config.Current.PublicUrl = publicUrl
 	}
 
 	serve(*host, *port)
+}
+
+func obtainPublicUrl(provider tunnel.Provider) {
+	log.Println("Obtaining public URL...")
+	publicUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Public URL: " + publicUrl)
+	config.Current.PublicUrl = publicUrl
 }
 
 func serve(host string, port uint64) {

@@ -69,7 +69,7 @@ builder:
     key: SOME_SECRET_KEY
 # the public address of your server, used to build URLs for the website and builder
 # must be valid HTTPS or web install (OTA) won't work!
-# leave untouched if you don't know what this means - use ngrok instead
+# leave untouched if you don't know what this means - use a tunnel provider instead
 server_url: https://mywebsite.com
 # where to save data like apps and signing profiles
 save_dir: data
@@ -81,7 +81,7 @@ cleanup_interval_mins: 30
 # this should also match the job timeout in the builder
 sign_timeout_mins: 10
 # this protects the web ui with a username and password
-# definitely enable it if you left "server_url" empty and are using ngrok
+# definitely enable it if you left "server_url" empty and are using a tunnel provider
 basic_auth:
   enable: false
   username: "admin"
@@ -172,26 +172,21 @@ You can install the web service on your computer, on a server, or on your phone.
 
 #### 3.1.1. Preparing
 
-1. Register for [ngrok](https://ngrok.com/). The download page and the dashboard will give you instructions on how to connect your account with the program. Note down the token that you see there, you will need it shortly.
-2. Get the [iSH](https://ish.app/) app on your phone. Open the app, and when text appears, close it.
-3. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone.
-4. Open the Files app on your phone.
-5. In the top-right corner, click on the three dots and select `Edit`.
-6. Enable (toggle) the `iSH` entry under `Locations`.
-7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
-8. Open the `iSH` app again.
-9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
-10. Type `apk add curl` and press enter.
+1. Get the [iSH](https://ish.app/) app on your phone. Open the app, and when text appears, close it.
+2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone.
+3. Open the Files app on your phone.
+4. In the top-right corner, click on the three dots and select `Edit`.
+5. Enable (toggle) the `iSH` entry under `Locations`.
+6. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
+7. Open the `iSH` app again.
+8. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
+9. Type `apk add curl` and press enter.
 
 #### 3.1.2. Installing
 
 1. Type the following command and press enter:
    ```bash
    curl -sL git.io/ios-signer-ish | sh
-   ```
-2. If you haven't already, connect your ngrok account as instructed on the download page:
-   ```bash
-   ./ngrok authtoken YOUR_NGROK_TOKEN
    ```
 
 #### 3.1.3. Running
@@ -206,9 +201,9 @@ You can install the web service on your computer, on a server, or on your phone.
 
 2. When the service finishes loading, look for a line similar to this:
    ```log
-   2021/03/08 20:50:02 ngrok public URL: https://2a25cbf1a2d4.ngrok.io
+   2021/03/08 20:50:02 Public URL: https://difficult-ones-oaks-ordered.trycloudflare.com/
    ```
-   `https://xxxxxxxxxxxx.ngrok.io` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
 
 #### 3.1.4. Updating
 
@@ -255,20 +250,21 @@ The web service cannot work by itself. You have two options:
   ```
   where `:id` is a wildcard parameter.
 
-**ngrok** - less secure, slow, but quick and easy to set up
+**Tunnel provider** - less secure, slower, but quick and easy to set up
 
-1. Register for [ngrok](https://ngrok.com/)
-2. Download ngrok and connect your account as instructed on the download page and the dashboard
-3. **Every time before** starting your service, execute the following command and keep it running:
+[ngrok](https://ngrok.com/) and [Cloudflare Argo](https://blog.cloudflare.com/a-free-argo-tunnel-for-your-next-project/#how-can-i-use-the-free-version) are supported as tunnel providers. The latter will be demonstrated in this guide. Run the signer service with `-help` to see alternative details.
+
+1. Download the correct [cloudflared](https://github.com/cloudflare/cloudflared/releases/latest) binary for your computer.
+2. **Every time before** starting your service, execute the following command and keep it running:
    ```bash
-   ngrok http -inspect=false 8080
+   cloudflared tunnel -url http://localhost:8080 -metrics localhost:51881
    ```
-4. Then start your service with the following command:
+3. Then start your service with the following command:
    ```bash
-   ios-signer-service -ngrok-port 4040 -host localhost
+   ios-signer-service -cloudflared-port 51881
    ```
-5. When the service finishes loading, look for a line similar to this:
+4. When the service finishes loading, look for a line similar to this:
    ```log
-   2021/03/08 20:50:02 ngrok public URL: https://2a25cbf1a2d4.ngrok.io
+   2021/03/08 20:50:02 Public URL: https://difficult-ones-oaks-ordered.trycloudflare.com/
    ```
-   `https://xxxxxxxxxxxx.ngrok.io` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!

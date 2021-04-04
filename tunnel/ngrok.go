@@ -1,4 +1,4 @@
-package ngrok
+package tunnel
 
 import (
 	"fmt"
@@ -9,24 +9,13 @@ import (
 	"time"
 )
 
-func GetPublicUrl(ngrokPort uint64, proto string, timeout time.Duration) (string, error) {
-	timer := time.After(timeout)
-	var url string
-	var err error
-	for len(timer) < 1 {
-		url, err = getPublicUrl(ngrokPort, proto, timeout)
-		if err == nil {
-			return url, nil
-		} else if !errors.Is(err, ErrTunnelNotFound) {
-			return "", err
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	return "", err
+type Ngrok struct {
+	Port  uint64
+	Proto string
 }
 
-func getPublicUrl(ngrokPort uint64, proto string, timeout time.Duration) (string, error) {
-	ngrokUrl := fmt.Sprintf("http://localhost:%d/api/tunnels", ngrokPort)
+func (n *Ngrok) getPublicUrl(timeout time.Duration) (string, error) {
+	ngrokUrl := fmt.Sprintf("http://localhost:%d/api/tunnels", n.Port)
 	if err := util.WaitForServer(ngrokUrl, timeout); err != nil {
 		return "", errors.WithMessage(err, "connecting to ngrok")
 	}
@@ -39,14 +28,12 @@ func getPublicUrl(ngrokPort uint64, proto string, timeout time.Duration) (string
 		return "", err
 	}
 	for _, tunnel := range tunnels.Tunnels {
-		if strings.EqualFold(tunnel.Proto, proto) {
+		if strings.EqualFold(tunnel.Proto, n.Proto) {
 			return tunnel.PublicURL, nil
 		}
 	}
 	return "", ErrTunnelNotFound
 }
-
-var ErrTunnelNotFound = errors.New("tunnel not found")
 
 type Tunnels struct {
 	Tunnels []Tunnel `json:"tunnels"`
