@@ -31,7 +31,7 @@ If applicable, add screenshots to help explain your problem.
 **System configuration**
 
 - ios-signer-service version: [e.g. 2.1.1]
-- Installation type: [e.g. computer, phone; nginx, ngrok]
+- Installation type: [e.g. computer, phone; nginx, ngrok, cloudflared]
 - Builder type: [ios-signer-ci, ios-signer-builder]
 - Builder version: [e.g. 1.0.0 for ios-signer-builder; the latest commit hash of your ios-signer-ci repo, e.g. 03e0ed9]
 
