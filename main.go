@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -259,6 +260,10 @@ func getManifest(c echo.Context, app storage.App) error {
 	if err != nil {
 		return err
 	}
+	appName, err = escapeXML(appName)
+	if err != nil {
+		return err
+	}
 	data := assets.ManifestData{
 		DownloadUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", c.Param("id"), "signed"),
 		BundleId:    "com.foo.bar",
@@ -269,6 +274,14 @@ func getManifest(c echo.Context, app storage.App) error {
 		return err
 	}
 	return c.Blob(200, "text/plain", result.Bytes())
+}
+
+func escapeXML(str string) (string, error) {
+	buff := bytes.NewBuffer(nil)
+	if err := xml.EscapeText(buff, []byte(str)); err != nil {
+		return "", err
+	}
+	return buff.String(), nil
 }
 
 func getSignedApp(c echo.Context, app storage.App) error {

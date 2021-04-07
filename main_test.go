@@ -257,3 +257,9 @@ func uploadUnsigned(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, util.Check2xxCode(resp.StatusCode))
 }
+
+func TestEscapeXML(t *testing.T) {
+	escapedText, err := escapeXML("This & That")
+	assert.NoError(t, err)
+	assert.Equal(t, "This &amp; That", escapedText)
+}
