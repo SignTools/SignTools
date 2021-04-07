@@ -72,9 +72,9 @@ func main() {
 	storage.Load()
 	switch {
 	case *ngrokPort != 0:
-		obtainPublicUrl(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
+		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
 	case *cloudflaredPort != 0:
-		obtainPublicUrl(&tunnel.Cloudflare{Port: *cloudflaredPort})
+		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
 	default:
 		config.Current.PublicUrl = config.Current.ServerUrl
 	}
@@ -82,14 +82,14 @@ func main() {
 	serve(*host, *port)
 }
 
-func obtainPublicUrl(provider tunnel.Provider) {
+func getPublicUrlFatal(provider tunnel.Provider) string {
 	log.Println("Obtaining public URL...")
 	publicUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println("Public URL: " + publicUrl)
-	config.Current.PublicUrl = publicUrl
+	return publicUrl
 }
 
 func serve(host string, port uint64) {
