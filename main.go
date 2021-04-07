@@ -252,28 +252,36 @@ func deleteApp(c echo.Context, app storage.App) error {
 }
 
 func getManifest(c echo.Context, app storage.App) error {
-	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
+	manifestBytes, err := makeManifest(app)
 	if err != nil {
 		return err
+	}
+	return c.Blob(200, "text/plain", manifestBytes)
+}
+
+func makeManifest(app storage.App) ([]byte, error) {
+	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
+	if err != nil {
+		return nil, err
 	}
 	appName, err := app.GetName()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	appName, err = escapeXML(appName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", c.Param("id"), "signed"),
+		DownloadUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
 		BundleId:    "com.foo.bar",
 		Title:       appName,
 	}
 	var result bytes.Buffer
 	if err := t.Execute(&result, data); err != nil {
-		return err
+		return nil, err
 	}
-	return c.Blob(200, "text/plain", result.Bytes())
+	return result.Bytes(), nil
 }
 
 func escapeXML(str string) (string, error) {

@@ -3,10 +3,12 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
@@ -19,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -154,6 +157,16 @@ func TestIntegration(t *testing.T) {
 	validateFile(t, signedData, func(app storage.App) (storage.ReadonlyFile, error) {
 		return app.GetSigned()
 	})
+	validateManifest(t)
+}
+
+func validateManifest(t *testing.T) {
+	apps, err := storage.Apps.GetAll()
+	assert.NoError(t, err)
+	assert.Len(t, apps, 1)
+	manifestBytes, err := makeManifest(apps[0])
+	assert.NoError(t, err)
+	assert.NoError(t, validateXML(string(manifestBytes)))
 }
 
 func validateFile(t *testing.T, actualData string, f func(storage.App) (storage.ReadonlyFile, error)) {
@@ -230,7 +243,7 @@ func uploadUnsigned(t *testing.T) {
 	w := multipart.NewWriter(&b)
 
 	formData := map[string][]string{
-		formNames.FormFile:       {"file.ipa", unsignedData},
+		formNames.FormFile:       {"This & That.ipa", unsignedData},
 		formNames.FormProfileId:  {profileId},
 		formNames.FormAllDevices: {"true"},
 		formNames.FormAppDebug:   {"true"},
@@ -262,4 +275,16 @@ func TestEscapeXML(t *testing.T) {
 	escapedText, err := escapeXML("This & That")
 	assert.NoError(t, err)
 	assert.Equal(t, "This &amp; That", escapedText)
+}
+
+func validateXML(input string) error {
+	decoder := xml.NewDecoder(strings.NewReader(input))
+	for {
+		err := decoder.Decode(new(interface{}))
+		if errors.Is(err, io.EOF) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
 }
