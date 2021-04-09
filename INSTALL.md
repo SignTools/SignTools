@@ -201,7 +201,7 @@ You can install the web service on your computer, on a server, or on your phone.
 
 2. When the service finishes loading, look for a line similar to this:
    ```log
-   2021/03/08 20:50:02 Public URL: https://difficult-ones-oaks-ordered.trycloudflare.com/
+   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
    ```
    `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
 
@@ -265,6 +265,6 @@ The web service cannot work by itself. You have two options:
    ```
 4. When the service finishes loading, look for a line similar to this:
    ```log
-   2021/03/08 20:50:02 Public URL: https://difficult-ones-oaks-ordered.trycloudflare.com/
+   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
    ```
    `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
