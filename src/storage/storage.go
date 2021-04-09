@@ -1,12 +1,11 @@
 package storage
 
 import (
-	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/util"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,14 +64,14 @@ func Load() {
 	requiredPaths := []string{appsPath, profilesPath}
 	for _, path := range requiredPaths {
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			log.Fatalln(errors.WithMessage(err, "mkdir required path"))
+			log.Fatal().Err(err).Msg("mkdir required path")
 		}
 	}
 	if err := Apps.refresh(); err != nil {
-		log.Fatalln(errors.WithMessage(err, "refresh apps"))
+		log.Fatal().Err(err).Msg("refresh apps")
 	}
 	if err := Profiles.refresh(); err != nil {
-		log.Fatalln(errors.WithMessage(err, "refresh profiles"))
+		log.Fatal().Err(err).Msg("refresh profiles")
 	}
 }
 

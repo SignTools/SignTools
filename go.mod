@@ -8,7 +8,9 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/labstack/echo/v4 v4.2.2
 	github.com/pkg/errors v0.9.1
+	github.com/rs/zerolog v1.21.0
 	github.com/stretchr/testify v1.7.0
+	github.com/ziflex/lecho/v2 v2.2.0
 	go.uber.org/atomic v1.7.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be

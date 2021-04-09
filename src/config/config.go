@@ -4,9 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 	"ios-signer-service/src/builders"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -96,19 +96,19 @@ var Current Config
 func Load(fileName string) {
 	allowedExts := []string{".yml", ".yaml"}
 	if !isAllowedExt(allowedExts, fileName) {
-		log.Fatalf("config extension not allowed: %v\n", allowedExts)
+		log.Fatal().Msgf("config extension not allowed: %v\n", allowedExts)
 	}
 	fileConfig, err := getFile(fileName)
 	if err != nil {
-		log.Fatalln(errors.WithMessage(err, "get config"))
+		log.Fatal().Err(err).Msg("get config")
 	}
 	builder := fileConfig.Builder.MakeFirstEnabled()
 	if builder == nil {
-		log.Fatalln("init: no builder defined")
+		log.Fatal().Msg("init: no builder defined")
 	}
 	builderKey := make([]byte, 32)
 	if _, err := rand.Read(builderKey); err != nil {
-		log.Fatalln("init: error generating builder key: " + err.Error())
+		log.Fatal().Err(err).Msg("init: error generating builder key")
 	}
 	Current = Config{
 		Builder:    builder,

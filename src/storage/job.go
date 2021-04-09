@@ -4,9 +4,9 @@ import (
 	"archive/tar"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"go.uber.org/atomic"
 	"io"
-	"log"
 	"time"
 )
 
@@ -72,7 +72,7 @@ func tarPackage(w *tar.Writer, fileGen *fileGetter) error {
 			return errors.WithMessage(err, "write bytes")
 		}
 	} else {
-		log.Fatalln("badly initialized fileGetter")
+		log.Fatal().Msg("badly initialized fileGetter")
 	}
 	return nil
 }

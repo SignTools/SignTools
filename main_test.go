@@ -9,14 +9,15 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/ziflex/lecho/v2"
 	"io"
 	"io/ioutil"
 	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/util"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -43,17 +44,17 @@ func TestMain(m *testing.M) {
 	var err error
 	saveDir, err = os.MkdirTemp(".", "data-test")
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 	defer func() {
 		if err := os.RemoveAll(saveDir); err != nil {
-			log.Fatalln(err)
+			log.Fatal().Err(err).Send()
 		}
 	}()
 
 	profileDir := filepath.Join(saveDir, "profiles", profileId)
 	if err := os.MkdirAll(profileDir, os.ModePerm); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 	contentMap := map[string]string{
 		"cert.p12":             profileCert,
@@ -63,7 +64,7 @@ func TestMain(m *testing.M) {
 	}
 	for key, val := range contentMap {
 		if err := ioutil.WriteFile(filepath.Join(profileDir, key), []byte(val), os.ModePerm); err != nil {
-			log.Fatalln(err)
+			log.Fatal().Err(err).Send()
 		}
 	}
 
@@ -90,12 +91,12 @@ func TestMain(m *testing.M) {
 
 	go startWorkflowServer(workflowPort)
 	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", workflowPort), 5*time.Second); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 
 	go serve(serveHost, servePort)
 	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", servePort), 5*time.Second); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 	m.Run()
 }
@@ -106,7 +107,9 @@ var secretsHit = false
 func startWorkflowServer(port uint64) {
 	e := echo.New()
 	e.HideBanner = true
-	e.Use(middleware.Logger())
+	logger := lecho.From(log.Logger)
+	e.Logger = logger
+	e.Use(lecho.Middleware(lecho.Config{Logger: logger}))
 
 	keyAuth := middleware.KeyAuth(func(s string, c echo.Context) (bool, error) {
 		return s == workflowKey, nil
@@ -118,20 +121,20 @@ func startWorkflowServer(port uint64) {
 		secretsHit = true
 		params, err := c.FormParams()
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatal().Err(err).Send()
 		}
 		for key, val := range params {
 			switch key {
 			case "SECRET_KEY":
 				if val[0] != builderKey {
-					log.Fatalln("bad key")
+					log.Fatal().Msg("bad key")
 				}
 			case "SECRET_URL":
 				if val[0] != config.Current.File.ServerUrl {
-					log.Fatalln("bad url")
+					log.Fatal().Msg("bad url")
 				}
 			default:
-				log.Fatalln("unknown secret")
+				log.Fatal().Msg("unknown secret")
 			}
 		}
 		return c.NoContent(200)
@@ -142,7 +145,7 @@ func startWorkflowServer(port uint64) {
 		return c.NoContent(200)
 	})
 
-	log.Fatalln(e.Start(fmt.Sprintf("localhost:%d", port)))
+	log.Fatal().Err(e.Start(fmt.Sprintf("localhost:%d", port))).Send()
 }
 
 func TestIntegration(t *testing.T) {

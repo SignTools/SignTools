@@ -8,6 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/ziflex/lecho/v2"
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/src/assets"
@@ -16,13 +19,16 @@ import (
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/util"
 	"ios-signer-service/tunnel"
-	"log"
 	"mime"
 	"net/http"
 	"os"
 	textTemplate "text/template"
 	"time"
 )
+
+func init() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+}
 
 var formNames = assets.FormNames{
 	FormFile:         "file",
@@ -67,7 +73,12 @@ func main() {
 		"Used to automatically parse the server_url")
 	cloudflaredPort := flag.Uint64("cloudflared-port", 0, "cloudflared metrics port. "+
 		"Used to automatically parse the server_url")
+	logJson := flag.Bool("log-json", false, "If enabled, outputs logs in JSON instead of pretty printing them.")
 	flag.Parse()
+
+	if *logJson {
+		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+	}
 
 	config.Load(*configFile)
 	storage.Load()
@@ -84,39 +95,41 @@ func main() {
 }
 
 func getPublicUrlFatal(provider tunnel.Provider) string {
-	log.Println("Obtaining public URL...")
+	log.Info().Str("state", "obtaining public url").Send()
 	publicUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
-	log.Println("Public URL: " + publicUrl)
+	log.Info().Str("state", "obtained public url").Str("url", publicUrl).Send()
 	return publicUrl
 }
 
 func serve(host string, port uint64) {
 	if err := os.MkdirAll(config.Current.SaveDir, 0777); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 
 	if config.Current.CleanupIntervalMins > 0 && config.Current.CleanupMins > 0 {
 		go func() {
 			for {
 				if err := cleanupApps(); err != nil {
-					log.Println(errors.WithMessage(err, "cleanup apps"))
+					log.Err(err).Msg("cleanup apps")
 				}
 				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
 			}
 		}()
 	}
 
-	log.Println("Setting builder secrets...")
+	log.Info().Str("state", "setting builder secrets").Send()
 	if err := setBuilderSecrets(); err != nil {
-		log.Fatalln(err)
+		log.Fatal().Err(err).Send()
 	}
 
 	e := echo.New()
 	e.HideBanner = true
-	e.Use(middleware.Logger())
+	logger := lecho.From(log.Logger)
+	e.Logger = logger
+	e.Use(lecho.Middleware(lecho.Config{Logger: logger}))
 
 	forcedBasicAuth := middleware.BasicAuth(func(username string, password string, c echo.Context) (bool, error) {
 		return username == config.Current.BasicAuth.Username && password == config.Current.BasicAuth.Password, nil
@@ -145,7 +158,7 @@ func serve(host string, port uint64) {
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%d", host, port)))
+	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
 func setBuilderSecrets() error {
@@ -412,25 +425,25 @@ func renderIndex(c echo.Context) error {
 		}
 		name, err := app.GetName()
 		if err != nil {
-			log.Println(errors.WithMessage(err, "get name"))
+			log.Err(err).Msg("get name")
 		}
 		workflowUrl, err := app.GetWorkflowUrl()
 		if err != nil {
-			log.Println(errors.WithMessage(err, "get workflow url"))
+			log.Err(err).Msg("get workflow url")
 		}
 		bundleId, _ := app.GetBundleId()
 		profileId, err := app.GetProfileId()
 		if err != nil {
-			log.Println(errors.WithMessage(err, "get profile id"))
+			log.Err(err).Msg("get profile id")
 		}
 		var profileName string
 		if profile, ok := storage.Profiles.GetById(profileId); ok {
 			profileName, err = profile.GetName()
 			if err != nil {
-				log.Println(errors.WithMessage(err, "get profile name"))
+				log.Err(err).Msg("get profile name")
 			}
 		} else {
-			log.Println(errors.WithMessage(err, "get profile"))
+			log.Err(err).Msg("get profile")
 			profileName = "unknown"
 		}
 		appTimeoutTime := modTime.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute)
