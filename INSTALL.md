@@ -200,10 +200,18 @@ You can install the web service on your computer, on a server, or on your phone.
    > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location data is not used for anything, but the permission allows the service to keep running in the background if you minimize iSH or lock your phone.**
 
 2. When the service finishes loading, look for a line similar to this:
+
    ```log
    11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
    ```
+
    `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+
+   Due to Apple's strict background process policy, iSH will get killed if it uses more than "80% cpu over 60 seconds". This can break any part of the service. To make sure it doesn't happen:
+
+   > :warning: **Use Safari browser. Whenever you are waiting for something to complete, such as app upload, signing, or installation, open iSH in the foreground. Safari will continue in the background.**
+
+   Watch the logs to know when the operation is complete. You can periodically switch between Safari and iSH to check as well, just don't leave iSH in the background for more than 30 seconds.
 
 #### 3.1.4. Updating
 
