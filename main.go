@@ -158,6 +158,7 @@ func serve(host string, port uint64) {
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 
+	log.Info().Str("state", "started http server").Send()
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
