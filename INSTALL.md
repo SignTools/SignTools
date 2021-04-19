@@ -175,12 +175,13 @@ You can install the web service on your computer, on a server, or on your phone.
 1. Get the [iSH](https://ish.app/) app on your phone. Open the app, and when text appears, close it.
 2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone.
 3. Open the Files app on your phone.
-4. In the top-right corner, click on the three dots and select `Edit`.
-5. Enable (toggle) the `iSH` entry under `Locations`.
-6. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
-7. Open the `iSH` app again.
-8. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
-9. Type `apk add curl` and press enter.
+4. Swipe to the right until you go to the `Browse` screen.
+5. In the top-right corner, click on the three dots and select `Edit`.
+6. Enable (toggle) the `iSH` entry under `Locations`.
+7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
+8. Open the `iSH` app again.
+9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
+10. Type `apk add curl` and press enter.
 
 #### 3.1.2. Installing
 
