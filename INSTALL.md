@@ -10,6 +10,8 @@ There are multiple ways to install this web service:
 
 But in all cases, you first need a builder.
 
+For a video tutorial, [click here](https://www.youtube.com/watch?v=Tcco-bES1-M). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
+
 ## 1. Builder
 
 You can create a builder in one of two ways:
