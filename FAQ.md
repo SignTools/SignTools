@@ -55,7 +55,7 @@ If that doesn't help, you need to figure out what entitlements the app requires.
 
 ## "This app cannot be installed because its integrity could not be verified."
 
-This error means that the signing process went terribly wrong. To debug the problem, install [libimobiledevice](https://libimobiledevice.org/) (for Windows: [imobiledevice-net](https://github.com/libimobiledevice-win32/imobiledevice-net)). Download the problematic signed app from your service to your computer, and then attempt to install it on your iOS device:
+This error means that the signature is invalid. Is your signing profile valid? Is your device's UDID registered with the signing profile? To debug this problem, install [libimobiledevice](https://libimobiledevice.org/) (for Windows: [imobiledevice-net](https://github.com/libimobiledevice-win32/imobiledevice-net)). Download the problematic signed app from your service to your computer, then attempt to install it on your iOS device:
 
 ```bash
 ideviceinstaller -i app.ipa
@@ -65,7 +65,7 @@ You can also use `-u YOUR_UDID -n` to run this command over the network. When th
 
 ## "Unable To Install \*.ipa"
 
-Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
+This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
 
 Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the `This app cannot be installed because its integrity could not be verified` section above.
 
