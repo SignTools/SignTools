@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"github.com/pkg/errors"
+	"ios-signer-service/src/config"
 	"ios-signer-service/src/util"
+	"os"
 	"sort"
 )
 
@@ -19,6 +22,12 @@ func (r *profileResolver) refresh() error {
 	idDirs, err := util.ReadDirNonHidden(profilesPath)
 	if err != nil {
 		return &AppError{"read profiles dir", ".", err}
+	}
+	envProfile, err := newEnvProfile(config.Current.EnvProfile)
+	if err == nil {
+		r.idToProfileMap["imported"] = envProfile
+	} else if !os.IsNotExist(err) {
+		return errors.WithMessage(err, "import profile from envvars")
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()

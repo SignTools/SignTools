@@ -1,0 +1,88 @@
+{
+  "name": "iOS Signer Service",
+  "description": "A self-hosted, cross-platform service to sign and install iOS apps, all without a computer.",
+  "repository": "https://github.com/SignTools/ios-signer-service",
+  "logo": "https://github.com/SignTools/ios-signer-service/raw/master/img/logo.png",
+  "keywords": [
+    "ios",
+    "cross-platform",
+    "signing",
+    "ci",
+    "apps",
+    "ipa",
+    "sideload"
+  ],
+  "stack": "container",
+  "image": "signtools/ios-signer-service",
+  "env": {
+    "BUILDER_GITHUB_ENABLE": {
+      "description": "A builder is required. Currently, only GitHub Actions is supported. Make sure you have one set up before continuing: https://github.com/SignTools/ios-signer-service/blob/heroku/INSTALL-SIMPLE.md#2-builder",
+      "generator": "true",
+      "value": "true"
+    },
+    "BUILDER_GITHUB_REPO_NAME": {
+      "description": "The name you gave to your builder repository.",
+      "value": "ios-signer-ci"
+    },
+    "BUILDER_GITHUB_ORG_NAME": {
+      "description": "Your GitHub profile/organization name.",
+      "value": ""
+    },
+    "BUILDER_GITHUB_WORKFLOW_FILE_NAME": {
+      "description": "Your builder repository's workflow file name. Leave as default if you didn't change this.",
+      "value": "sign.yml"
+    },
+    "BUILDER_GITHUB_TOKEN": {
+      "description": "Your GitHub personal access token that you created with the builder.",
+      "value": ""
+    },
+    "BUILDER_GITHUB_REF": {
+      "description": "Your builder repository ref (branch). Leave as default if you didn't change this.",
+      "value": "master"
+    },
+    "SERVER_URL": {
+      "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the address will be: https://testapp.herokuapp.com",
+      "value": ""
+    },
+    "BASIC_AUTH_ENABLE": {
+      "description": "Your app will be public, so it must be password-protected.",
+      "generator": "true",
+      "value": "true"
+    },
+    "BASIC_AUTH_USERNAME": {
+      "description": "A strong username to protect your service.",
+      "value": ""
+    },
+    "BASIC_AUTH_PASSWORD": {
+      "description": "A strong password to protect your service.",
+      "value": ""
+    },
+    "PROFILE_NAME": {
+      "description": "A friendly name to display your signing profile on the website.",
+      "value": "My iPhone 12"
+    },
+    "PROFILE_CERT_PASS": {
+      "description": "Your signing profile certificate's password.",
+      "value": ""
+    },
+    "PROFILE_CERT_BASE64": {
+      "description": "Your signing profile's certificate (p12). You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "value": ""
+    },
+    "PROFILE_PROV_BASE64": {
+      "description": "Your signing profile's provisioning profile (mobileprovision). Not needed if you are using an Apple developer account. You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "required": false,
+      "value": ""
+    },
+    "PROFILE_ACCOUNT_NAME": {
+      "description": "Your Apple developer account's username. Not needed if you are using a provisioning profile.",
+      "required": false,
+      "value": ""
+    },
+    "PROFILE_ACCOUNT_PASS": {
+      "description": "Your Apple developer account's password. Not needed if you are using a provisioning profile.",
+      "required": false,
+      "value": ""
+    }
+  }
+}

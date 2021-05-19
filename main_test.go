@@ -86,6 +86,7 @@ func TestMain(m *testing.M) {
 		},
 		BuilderKey: builderKey,
 		PublicUrl:  fmt.Sprintf("http://localhost:%d", servePort),
+		EnvProfile: &config.EnvProfile{},
 	}
 	storage.Load()
 
