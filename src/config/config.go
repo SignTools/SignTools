@@ -3,6 +3,10 @@ package config
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"github.com/knadh/koanf"
+	kyaml "github.com/knadh/koanf/parsers/yaml"
+	kfile "github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/providers/structs"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
@@ -128,10 +132,19 @@ func isAllowedExt(allowedExts []string, fileName string) bool {
 }
 
 func getFile(fileName string) (*File, error) {
-	fileConfig := createDefaultFile()
-	exists, err := readExistingFile(fileName, fileConfig)
-	if err != nil {
-		return nil, errors.WithMessage(err, "read existing")
+	mapDelim := '.'
+	k := koanf.New(string(mapDelim))
+	if err := k.Load(structs.Provider(createDefaultFile(), "yaml"), nil); err != nil {
+		return nil, errors.WithMessage(err, "load default")
+	}
+	if err := k.Load(kfile.Provider(fileName), kyaml.Parser()); os.IsNotExist(err) {
+		log.Info().Str("name", fileName).Msg("config file created")
+	} else if err != nil {
+		return nil, errors.WithMessage(err, "load existing")
+	}
+	fileConfig := File{}
+	if err := k.UnmarshalWithConf("", &fileConfig, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
+		return nil, errors.WithMessage(err, "unmarshal")
 	}
 	file, err := os.Create(fileName)
 	if err != nil {
@@ -141,22 +154,5 @@ func getFile(fileName string) (*File, error) {
 	if err := yaml.NewEncoder(file).Encode(&fileConfig); err != nil {
 		return nil, errors.WithMessage(err, "write")
 	}
-	if !exists {
-		return nil, errors.New("no file found, generating one")
-	}
-	return fileConfig, nil
-}
-
-func readExistingFile(fileName string, fileConfig *File) (bool, error) {
-	file, err := os.Open(fileName)
-	if os.IsNotExist(err) {
-		return false, nil
-	} else if err != nil {
-		return true, errors.WithMessage(err, "open")
-	}
-	defer file.Close()
-	if err := yaml.NewDecoder(file).Decode(fileConfig); err != nil {
-		return true, errors.WithMessage(err, "decode")
-	}
-	return true, nil
+	return &fileConfig, nil
 }
