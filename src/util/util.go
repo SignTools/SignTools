@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,14 +14,14 @@ import (
 	"time"
 )
 
-func SafeJoin(basePath string, unsafePath ...string) string {
+func SafeJoinFilePaths(basePath string, unsafePath ...string) string {
 	return filepath.Join(basePath, filepath.Clean("/"+filepath.Join(unsafePath...)))
 }
 
-func JoinUrlsPanic(fullBaseUrl string, relativeUrl ...string) string {
+func JoinUrlsFatal(fullBaseUrl string, relativeUrl ...string) string {
 	result, err := JoinUrls(fullBaseUrl, relativeUrl...)
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err).Send()
 	}
 	return result
 }

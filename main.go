@@ -295,7 +295,7 @@ func makeManifest(app storage.App) ([]byte, error) {
 		return nil, err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
+		DownloadUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
 		BundleId:    "com.foo.bar",
 		Title:       appName,
 	}
@@ -471,11 +471,11 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:  workflowUrl,
 			ProfileName:  profileName,
 			BundleId:     bundleId,
-			ManifestUrl:  util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "manifest"),
-			DownloadUrl:  util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
-			TwoFactorUrl: util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "2fa"),
-			RestartUrl:   util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "restart"),
-			DeleteUrl:    util.JoinUrlsPanic(config.Current.PublicUrl, "apps", app.GetId(), "delete"),
+			ManifestUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "manifest"),
+			DownloadUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
+			TwoFactorUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "2fa"),
+			RestartUrl:   util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "restart"),
+			DeleteUrl:    util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "delete"),
 		})
 	}
 	profiles, err := storage.Profiles.GetAll()

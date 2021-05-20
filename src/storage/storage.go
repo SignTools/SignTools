@@ -77,7 +77,7 @@ func Load() {
 
 var resolveLocationWithId = func(parent string, path string) func(id string) string {
 	return func(id string) string {
-		return util.SafeJoin(parent, id, path)
+		return util.SafeJoinFilePaths(parent, id, path)
 	}
 }
 
