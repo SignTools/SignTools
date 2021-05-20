@@ -52,6 +52,6 @@ The certificate is a file with an extension `.p12`. To obtain it, follow the ins
 
 Click on the button below - register for a free account and follow the setup page.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/ios-signer-service/tree/heroku)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/ios-signer-service/tree/master)
 
 Once you are done, you will be left with your very own web service. Congratulations!
