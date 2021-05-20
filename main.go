@@ -22,6 +22,7 @@ import (
 	"mime"
 	"net/http"
 	"os"
+	"strings"
 	textTemplate "text/template"
 	"time"
 )
@@ -144,6 +145,13 @@ func serve(host string, port uint64) {
 	workflowKeyAuth := middleware.KeyAuth(func(s string, c echo.Context) (bool, error) {
 		return s == config.Current.BuilderKey, nil
 	})
+
+	e.Pre(middleware.HTTPSRedirectWithConfig(middleware.RedirectConfig{
+		Skipper: func(echo.Context) bool {
+			return !strings.HasPrefix(config.Current.PublicUrl, "https")
+		},
+		Code: 302,
+	}))
 
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
