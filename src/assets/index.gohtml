@@ -231,11 +231,11 @@
     formProfile.addEventListener("change", function () {
         const selectedOption = formProfile.options[formProfile.selectedIndex]
         if (selectedOption.getAttribute('account') === 'true') {
-            if (formIdProv.checked) {
-                formIdOriginal.checked = true
-            }
+            formIdCustom.click()
+            formIdOriginal.setAttribute('disabled', 'true')
             formIdProv.setAttribute('disabled', 'true')
         } else {
+            formIdOriginal.removeAttribute('disabled')
             formIdProv.removeAttribute('disabled')
         }
     })
