@@ -1,16 +1,24 @@
-# Installation
+# Advanced Installation
 
 Before you begin, it is recommended to understand exactly how this project works. Knowing what is happening at each point will help you troubleshoot any issues far better. Check out the [How does this all work?](DETAILS.md) page.
 
-There are multiple ways to install this web service:
+## Table of Contents
 
-- On your phone
-- On your computer, without requiring HTTPS certificate or port forwarding
-- On your server, with HTTPS and open port 443
-
-But in all cases, you first need a builder.
-
-For a video tutorial, [click here](https://www.youtube.com/watch?v=Tcco-bES1-M). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
+- [Advanced Installation](#advanced-installation)
+  - [Table of Contents](#table-of-contents)
+  - [1. Builder](#1-builder)
+  - [2. Web service configuration](#2-web-service-configuration)
+    - [2.1. Configuration file](#21-configuration-file)
+    - [2.2. Signing profiles](#22-signing-profiles)
+  - [3. Web service installation](#3-web-service-installation)
+    - [3.1. Self-hosting on computer or server](#31-self-hosting-on-computer-or-server)
+      - [3.1.1. Installing](#311-installing)
+      - [3.1.2. Running](#312-running)
+    - [3.2. Self-hosting on phone](#32-self-hosting-on-phone)
+      - [3.2.1. Preparing](#321-preparing)
+      - [3.2.2. Installing](#322-installing)
+      - [3.2.3. Running](#323-running)
+      - [3.2.4. Updating](#324-updating)
 
 ## 1. Builder
 
@@ -168,61 +176,9 @@ That's all the initial configuration! To recap, you now have the following confi
 
 ## 3. Web service installation
 
-You can install the web service on your computer, on a server, or on your phone. The device that you choose will have to be connected to the internet in order for anybody to use the service.
+### 3.1. Self-hosting on computer or server
 
-### 3.1. Self-hosting on phone
-
-#### 3.1.1. Preparing
-
-1. Get the [iSH](https://ish.app/) app on your phone. Open the app, and when text appears, close it.
-2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone.
-3. Open the Files app on your phone.
-4. Swipe to the right until you go to the `Browse` screen.
-5. In the top-right corner, click on the three dots and select `Edit`.
-6. Enable (toggle) the `iSH` entry under `Locations`.
-7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
-8. Open the `iSH` app again.
-9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
-10. Type `apk add curl` and press enter.
-
-#### 3.1.2. Installing
-
-1. Type the following command and press enter:
-   ```bash
-   curl -sL git.io/ios-signer-ish | sh
-   ```
-
-#### 3.1.3. Running
-
-1. Type the following command and press enter:
-
-   ```bash
-   ./start-signer.sh
-   ```
-
-   > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location data is not used for anything, but the permission allows the service to keep running in the background if you minimize iSH or lock your phone.**
-
-2. When the service finishes loading, look for a line similar to this:
-
-   ```log
-   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
-   ```
-
-   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
-
-   Due to Apple's strict background process policy, iSH will get killed if it uses more than "80% cpu over 60 seconds". This can break any part of the service. To make sure it doesn't happen:
-
-   > :warning: **Use Safari browser. Whenever you are waiting for something to complete, such as app upload, signing, or installation, open iSH in the foreground. Safari will continue in the background.**
-
-   Watch the logs to know when the operation is complete. You can periodically switch between Safari and iSH to check as well, just don't leave iSH in the background for more than 30 seconds.
-
-#### 3.1.4. Updating
-
-Just repeat the `Installing` section.
-
-### 3.2. Self-hosting on computer or server
-
-#### 3.2.1. Installing
+#### 3.1.1. Installing
 
 You have two options:
 
@@ -238,7 +194,7 @@ You have two options:
    - `./signer-cfg.yml:/signer-cfg.yml`
    - `./data:/data` (or whatever you set in `save_dir`)
 
-#### 3.2.2. Running
+#### 3.1.2. Running
 
 For reference, these are the default arguments that will be used:
 
@@ -279,3 +235,55 @@ The web service cannot work by itself. You have two options:
    11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
    ```
    `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+
+### 3.2. Self-hosting on phone
+
+It is highly discouraged to use this method unless you absolutely need to. There are a lot of limitations and weird quirks, and signing will be _very_ slow.
+
+#### 3.2.1. Preparing
+
+1. Get the [iSH](https://ish.app/) app on your phone. Open the app, and when text appears, close it.
+2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to your phone. You can use any method, like [iTunes](https://www.apple.com/us/itunes/) or [iMazing](https://imazing.com/). It doesn't matter where you put the files as long as you can access them from the Files app on your phone.
+3. Open the Files app on your phone.
+4. Swipe to the right until you go to the `Browse` screen.
+5. In the top-right corner, click on the three dots and select `Edit`.
+6. Enable (toggle) the `iSH` entry under `Locations`.
+7. Move the files you just copied from your computer to the `iSH` location you just enabled, inside the folder `root`.
+8. Open the `iSH` app again.
+9. Type `ls` and press enter. If you did everything correctly, you should see the names of the files you just moved in.
+10. Type `apk add curl` and press enter.
+
+#### 3.2.2. Installing
+
+1. Type the following command and press enter:
+   ```bash
+   curl -sL git.io/ios-signer-ish | sh
+   ```
+
+#### 3.2.3. Running
+
+1. Type the following command and press enter:
+
+   ```bash
+   ./start-signer.sh
+   ```
+
+   > :warning: **When iOS asks you to grant location permission to iSH, click "Always Allow". The location data is not used for anything, but the permission allows the service to keep running in the background if you minimize iSH or lock your phone.**
+
+2. When the service finishes loading, look for a line similar to this:
+
+   ```log
+   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
+   ```
+
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+
+   Due to Apple's strict background process policy, iSH will get killed if it uses more than "80% cpu over 60 seconds". This can break any part of the service. To make sure it doesn't happen:
+
+   > :warning: **Use Safari browser. Whenever you are waiting for something to complete, such as app upload, signing, or installation, open iSH in the foreground. Safari will continue in the background.**
+
+   Watch the logs to know when the operation is complete. You can periodically switch between Safari and iSH to check as well, just don't leave iSH in the background for more than 30 seconds.
+
+#### 3.2.4. Updating
+
+Just repeat the `Installing` section.

@@ -18,7 +18,7 @@
 
 There are many reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered by Apple and unrealistic for the average user. This is where iOS Signer Service comes to the rescue. No more terminal, no more computer. Sideload any app directly from your phone through a simple web interface.
 
-What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can be hosted on any computer or **even your phone**.
+What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can be hosted on any computer or **even a free server**.
 
 More information and examples can be found in the installation section.
 
@@ -34,7 +34,7 @@ This project is self-hosted; there is no public service. It does not provide any
 
 - No jailbreak required
 - All iOS versions supported
-- No computer required at all
+- No computer required after an initial setup
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
@@ -61,9 +61,13 @@ This project is self-hosted; there is no public service. It does not provide any
 </tr>
 </table>
 
-## [Installation](INSTALL.md)
+## Installation
 
-## [How does this all work?](DETAILS.md)
+There are multiple ways to install this web service:
+
+- ### [Simple](INSTALL-SIMPLE.md) - on a free Heroku server
+
+- ### [Advanced](INSTALL-ADVANCED.md) - on your own machine
 
 ## [Frequently Asked Questions (FAQ)](FAQ.md)
 

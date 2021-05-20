@@ -1,5 +1,22 @@
 # Frequently Asked Questions (F.A.Q.)
 
+## Table of Contents
+
+- [Frequently Asked Questions (F.A.Q.)](#frequently-asked-questions-faq)
+  - [Table of Contents](#table-of-contents)
+  - [Free developer account limitations](#free-developer-account-limitations)
+    - [1. Apps cannot be installed Over the Air (OTA)](#1-apps-cannot-be-installed-over-the-air-ota)
+    - [2. You must manually register your device(s) to the developer account](#2-you-must-manually-register-your-devices-to-the-developer-account)
+    - [3. Two-factor authentication (2FA)](#3-two-factor-authentication-2fa)
+    - [4. Each signed app will expire in 7 days](#4-each-signed-app-will-expire-in-7-days)
+    - [5. A maximum of 10 app ids can be registered per 7 days](#5-a-maximum-of-10-app-ids-can-be-registered-per-7-days)
+    - [6. You cannot use an existing app's bundle id](#6-you-cannot-use-an-existing-apps-bundle-id)
+  - [What kind of certificates/provisioning profiles are supported?](#what-kind-of-certificatesprovisioning-profiles-are-supported)
+  - [App runs, but malfunctions due to invalid signing/entitlements](#app-runs-but-malfunctions-due-to-invalid-signingentitlements)
+  - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
+  - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
+  - [How can I debug a failing builder?](#how-can-i-debug-a-failing-builder)
+
 ## Free developer account limitations
 
 ### 1. Apps cannot be installed Over the Air (OTA)
