@@ -26,7 +26,7 @@
         <ol class="breadcrumb bg-transparent py-2 my-0 me-auto text-white">
             <li class="breadcrumb-item"><a href="/">iOS Signer</a></li>
         </ol>
-        <a id="fileSelect" class="btn btn-outline-light my-0 ms-auto" href="#">
+        <a id="btnUploadApp" class="btn btn-outline-light my-0 ms-auto" href="#">
             Upload App
         </a>
     </div>
@@ -37,7 +37,7 @@
             <form id="uploadForm" action="/apps" method="post" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title">Upload App</h5>
-                    <button id="btnModalClose" type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button id="btnModalClose" type="button" class="btn-close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -184,7 +184,7 @@
 </body>
 
 <script>
-    const fileSelect = document.getElementById("fileSelect")
+    const btnUploadApp = document.getElementById("btnUploadApp")
     const formFileSelect = document.getElementById("formFileSelect");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
@@ -200,19 +200,15 @@
     const formIdProv = document.getElementById('formIdProv')
     const formIdCustom = document.getElementById('formIdCustom')
     const formIdCustomText = document.getElementById('formIdCustomText')
-    let modalVisible = false
+    let canRefresh = true
 
-    fileSelect.addEventListener("click", function () {
-        formFileSelect.click();
+    btnUploadApp.addEventListener("click", function () {
+        canRefresh = false
+        modal.show()
     });
-    modalElem.addEventListener("hidden.bs.modal", function () {
-        // allow change event to hit even if file is re-selected
-        formFileSelect.value = ""
-    })
-    formFileSelect.addEventListener("change", function () {
-        if (!modal.visible) {
-            modal.show()
-        }
+    btnModalClose.addEventListener("click", function () {
+        modal.hide()
+        canRefresh = true
     });
     formSubmit.addEventListener("click", function () {
         if (!uploadForm.checkValidity()) {
@@ -254,5 +250,11 @@
     let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
+
+    setInterval(function () {
+        if (canRefresh) {
+            window.location.reload(1);
+        }
+    }, 10_000);
 </script>
 </html>
