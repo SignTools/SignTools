@@ -22,6 +22,10 @@ What's the catch? The workflow uses a separate macOS machine, called a "builder"
 
 More information and examples can be found in the installation section.
 
+## :raised_hands: Community
+
+Come join the official Discord to get more interactive support and have general conversations about this project: https://discord.gg/A4T6npnRCk
+
 ## :rocket: Free developer accounts
 
 As of v2.0.0 this service now supports **free developer accounts**! Although with some [severe limitations](FAQ.md), this is a huge milestone not only for the project but for the sideloading community as a whole. The signing process is achieved **without any** reverse engineering or third-party tools - only Apple's very own operating system and developer tools are used, just in a clever way.
