@@ -1,5 +1,7 @@
 # Simple Installation
 
+For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
+
 ## 1. Limitations
 
 This installation guide uses [Heroku](https://www.heroku.com/) to host your signing service for free. The free plan has several small limitations that you should be aware of:
