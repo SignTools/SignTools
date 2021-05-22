@@ -9,13 +9,20 @@ import (
 	"io/ioutil"
 	"ios-signer-service/src/config"
 	"os"
+	"reflect"
 )
+
+var ErrInsufficientData = errors.New("insufficient data")
 
 // Attempts to parse a Profile from environment variables.
 // Returns os.ErrNotExist if variables are missing, otherwise any other error.
 func newEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
-	if cfg.Name == "" || cfg.CertBase64 == "" || cfg.CertPass == "" {
+	// cfg is empty, no envvars were set
+	if reflect.DeepEqual(cfg, &config.EnvProfile{}) {
 		return nil, os.ErrNotExist
+	}
+	if cfg.Name == "" || cfg.CertBase64 == "" || cfg.CertPass == "" {
+		return nil, ErrInsufficientData
 	}
 	if cfg.ProvBase64 != "" {
 		log.Info().Msg("importing cert profile from envvars")
@@ -48,8 +55,9 @@ func newEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			accountName: cfg.AccountName,
 			accountPass: cfg.AccountPass,
 		}, nil
+	} else {
+		return nil, ErrInsufficientData
 	}
-	return nil, os.ErrNotExist
 }
 
 func decodeVar(dataStr string) ([]byte, error) {
