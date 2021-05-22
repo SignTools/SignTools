@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	textTemplate "text/template"
 	"time"
 )
@@ -464,6 +465,17 @@ func renderIndex(c echo.Context) error {
 		} else if time.Now().Before(appTimeoutTime) {
 			status = assets.AppStatusProcessing
 		}
+		baseUrl := getBaseUrl(c)
+		manifestUrl := ""
+		if strings.HasPrefix(baseUrl, "https") {
+			// must be a full URL
+			manifestUrl, err = util.JoinUrls(baseUrl, "/apps", app.GetId(), "manifest")
+			if err != nil {
+				return err
+			}
+		} else {
+			log.Warn().Str("base_url", baseUrl).Msg("disabled installation on non-HTTPS connection")
+		}
 
 		data.Apps = append(data.Apps, assets.App{
 			Id:           app.GetId(),
@@ -473,7 +485,7 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:  workflowUrl,
 			ProfileName:  profileName,
 			BundleId:     bundleId,
-			ManifestUrl:  path.Join("/apps", app.GetId(), "manifest"),
+			ManifestUrl:  manifestUrl,
 			DownloadUrl:  path.Join("/apps", app.GetId(), "signed"),
 			TwoFactorUrl: path.Join("/apps", app.GetId(), "2fa"),
 			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
