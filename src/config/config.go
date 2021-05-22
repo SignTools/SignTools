@@ -184,7 +184,7 @@ func getFile(mapDelim rune, fileName string) (*File, error) {
 		return nil, errors.WithMessage(err, "load default")
 	}
 	if err := k.Load(kfile.Provider(fileName), kyaml.Parser()); os.IsNotExist(err) {
-		log.Info().Str("name", fileName).Msg("config file created")
+		log.Info().Str("name", fileName).Msg("creating config file")
 	} else if err != nil {
 		return nil, errors.WithMessage(err, "load existing")
 	}
