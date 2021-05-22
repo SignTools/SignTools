@@ -44,8 +44,13 @@
       "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the address will be: https://testapp.herokuapp.com",
       "value": ""
     },
+    "REDIRECT_HTTPS": {
+      "description": "Your service will be public, so it must always be encrypted with HTTPS.",
+      "generator": "true",
+      "value": "true"
+    },
     "BASIC_AUTH_ENABLE": {
-      "description": "Your app will be public, so it must be password-protected.",
+      "description": "Your service will be public, so it must be password-protected.",
       "generator": "true",
       "value": "true"
     },

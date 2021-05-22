@@ -40,6 +40,12 @@ var (
 	signedData      = uuid.NewString()
 )
 
+var listenHost = "localhost"
+var servePort = uint64(8098)
+var serveAddress = fmt.Sprintf("http://%s:%d", listenHost, servePort)
+var workflowPort = uint64(8099)
+var workflowAddress = fmt.Sprintf("http://%s:%d", listenHost, workflowPort)
+
 func TestMain(m *testing.M) {
 	var err error
 	saveDir, err = os.MkdirTemp(".", "data-test")
@@ -68,35 +74,30 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	serveHost := "localhost"
-	servePort := uint64(8098)
-	workflowPort := uint64(8099)
-
 	config.Current = config.Config{
 		Builder: builders.MakeSelfHosted(&builders.SelfHostedData{
 			Enable: true,
-			Url:    fmt.Sprintf("http://localhost:%d", workflowPort),
+			Url:    workflowAddress,
 			Key:    workflowKey,
 		}),
 		File: &config.File{
-			ServerUrl:           fmt.Sprintf("http://localhost:%d", servePort),
+			ServerUrl:           serveAddress,
 			SaveDir:             saveDir,
 			CleanupMins:         0,
 			CleanupIntervalMins: 0,
 		},
 		BuilderKey: builderKey,
-		PublicUrl:  fmt.Sprintf("http://localhost:%d", servePort),
 		EnvProfile: &config.EnvProfile{},
 	}
 	storage.Load()
 
-	go startWorkflowServer(workflowPort)
-	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", workflowPort), 5*time.Second); err != nil {
+	go startWorkflowServer(listenHost, workflowPort)
+	if err := util.WaitForServer(workflowAddress, 5*time.Second); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 
-	go serve(serveHost, servePort)
-	if err := util.WaitForServer(fmt.Sprintf("http://localhost:%d", servePort), 5*time.Second); err != nil {
+	go serve(listenHost, servePort)
+	if err := util.WaitForServer(serveAddress, 5*time.Second); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 	m.Run()
@@ -105,7 +106,7 @@ func TestMain(m *testing.M) {
 var triggerHit = false
 var secretsHit = false
 
-func startWorkflowServer(port uint64) {
+func startWorkflowServer(host string, port uint64) {
 	e := echo.New()
 	e.HideBanner = true
 	logger := lecho.From(log.Logger)
@@ -146,7 +147,7 @@ func startWorkflowServer(port uint64) {
 		return c.NoContent(200)
 	})
 
-	log.Fatal().Err(e.Start(fmt.Sprintf("localhost:%d", port))).Send()
+	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
 func TestIntegration(t *testing.T) {
@@ -168,7 +169,7 @@ func validateManifest(t *testing.T) {
 	apps, err := storage.Apps.GetAll()
 	assert.NoError(t, err)
 	assert.Len(t, apps, 1)
-	manifestBytes, err := makeManifest(apps[0])
+	manifestBytes, err := makeManifest(serveAddress, apps[0])
 	assert.NoError(t, err)
 	assert.NoError(t, validateXML(string(manifestBytes)))
 }
@@ -192,7 +193,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 	assert.NoError(t, err)
 	field.Write([]byte(signedData))
 	w.Close()
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/jobs/%s/signed", config.Current.PublicUrl, returnId), &b)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/jobs/%s/signed", config.Current.ServerUrl, returnId), &b)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+builderKey)
 	req.Header.Set("Content-Type", w.FormDataContentType())
@@ -202,7 +203,7 @@ func uploadSignedFile(t *testing.T, returnId string) {
 }
 
 func takeJob(t *testing.T) string {
-	req, err := http.NewRequest("GET", config.Current.PublicUrl+"/jobs", nil)
+	req, err := http.NewRequest("GET", config.Current.ServerUrl+"/jobs", nil)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+builderKey)
 	resp, err := http.DefaultClient.Do(req)
@@ -228,13 +229,13 @@ func takeJob(t *testing.T) string {
 }
 
 func TestAuthenticationNone(t *testing.T) {
-	resp, err := http.Get(config.Current.PublicUrl + "/jobs")
+	resp, err := http.Get(config.Current.ServerUrl + "/jobs")
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, 400)
 }
 
 func TestAuthenticationWrong(t *testing.T) {
-	req, err := http.NewRequest("GET", config.Current.PublicUrl+"/jobs", nil)
+	req, err := http.NewRequest("GET", config.Current.ServerUrl+"/jobs", nil)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer 1234")
 	resp, err := http.DefaultClient.Do(req)
@@ -267,7 +268,7 @@ func uploadUnsigned(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	assert.NoError(t, w.Close())
-	req, err := http.NewRequest("POST", config.Current.PublicUrl+"/apps", &b)
+	req, err := http.NewRequest("POST", config.Current.ServerUrl+"/apps", &b)
 	assert.NoError(t, err)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	resp, err := http.DefaultClient.Do(req)

@@ -79,10 +79,11 @@ builder:
     url: http://192.168.1.133:8090
     # the auth key you used when you started the builder
     key: SOME_SECRET_KEY
-# the public address of your server, used to build URLs for the website and builder
-# must be valid HTTPS or web install (OTA) won't work!
-# leave untouched if you don't know what this means - use a tunnel provider instead
+# the base url used by the builder to reach this server
+# leave empty if using a tunnel provider, it will set this automatically
 server_url: https://mywebsite.com
+# whether to redirect all http requests to https
+redirect_https: false
 # where to save data like apps and signing profiles
 save_dir: data
 # apps older than this time will be deleted when a cleanup job is run
@@ -93,7 +94,7 @@ cleanup_interval_mins: 30
 # this should also match the job timeout in the builder
 sign_timeout_mins: 10
 # this protects the web ui with a username and password
-# definitely enable it if you left "server_url" empty and are using a tunnel provider
+# definitely enable it if you are using a tunnel provider
 basic_auth:
   enable: false
   username: "admin"

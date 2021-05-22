@@ -14,15 +14,15 @@ import (
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/src/assets"
-	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/tunnel"
 	"ios-signer-service/src/util"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
+	"path"
 	textTemplate "text/template"
 	"time"
 )
@@ -85,11 +85,9 @@ func main() {
 	storage.Load()
 	switch {
 	case *ngrokPort != 0:
-		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
 	case *cloudflaredPort != 0:
-		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
-	default:
-		config.Current.PublicUrl = config.Current.ServerUrl
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
 	}
 
 	serve(*host, *port)
@@ -146,12 +144,11 @@ func serve(host string, port uint64) {
 		return s == config.Current.BuilderKey, nil
 	})
 
-	e.Pre(middleware.HTTPSRedirectWithConfig(middleware.RedirectConfig{
-		Skipper: func(echo.Context) bool {
-			return !strings.HasPrefix(config.Current.PublicUrl, "https")
-		},
-		Code: 302,
-	}))
+	if config.Current.RedirectHttps {
+		e.Pre(middleware.HTTPSRedirectWithConfig(middleware.RedirectConfig{
+			Code: 302,
+		}))
+	}
 
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
@@ -171,16 +168,9 @@ func serve(host string, port uint64) {
 }
 
 func setBuilderSecrets() error {
-	var secretUrl string
-	if _, ok := config.Current.Builder.(*builders.SelfHosted); ok {
-		// use internal IP between builder and service
-		secretUrl = config.Current.ServerUrl
-	} else {
-		secretUrl = config.Current.PublicUrl
-	}
 	return config.Current.Builder.SetSecrets(map[string]string{
 		"SECRET_KEY": config.Current.BuilderKey,
-		"SECRET_URL": secretUrl,
+		"SECRET_URL": config.Current.ServerUrl,
 	})
 }
 
@@ -274,14 +264,22 @@ func deleteApp(c echo.Context, app storage.App) error {
 }
 
 func getManifest(c echo.Context, app storage.App) error {
-	manifestBytes, err := makeManifest(app)
+	manifestBytes, err := makeManifest(getBaseUrl(c), app)
 	if err != nil {
 		return err
 	}
 	return c.Blob(200, "text/plain", manifestBytes)
 }
 
-func makeManifest(app storage.App) ([]byte, error) {
+func getBaseUrl(c echo.Context) string {
+	serverUrl := url.URL{
+		Scheme: c.Scheme(),
+		Host:   c.Request().Host,
+	}
+	return serverUrl.String()
+}
+
+func makeManifest(baseUrl string, app storage.App) ([]byte, error) {
 	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
 	if err != nil {
 		return nil, err
@@ -294,8 +292,12 @@ func makeManifest(app storage.App) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	downloadUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
+	if err != nil {
+		return nil, err
+	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
+		DownloadUrl: downloadUrl,
 		BundleId:    "com.foo.bar",
 		Title:       appName,
 	}
@@ -471,11 +473,11 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:  workflowUrl,
 			ProfileName:  profileName,
 			BundleId:     bundleId,
-			ManifestUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "manifest"),
-			DownloadUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
-			TwoFactorUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "2fa"),
-			RestartUrl:   util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "restart"),
-			DeleteUrl:    util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "delete"),
+			ManifestUrl:  path.Join("/apps", app.GetId(), "manifest"),
+			DownloadUrl:  path.Join("/apps", app.GetId(), "signed"),
+			TwoFactorUrl: path.Join("/apps", app.GetId(), "2fa"),
+			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
+			DeleteUrl:    path.Join("/apps", app.GetId(), "delete"),
 		})
 	}
 	profiles, err := storage.Profiles.GetAll()
