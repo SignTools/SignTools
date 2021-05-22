@@ -88,18 +88,4 @@ Otherwise, try installing again, sometimes it's a network problem. If that doesn
 
 ## How can I debug a failing builder?
 
-First, check the builder's logs and see if you can find anything helpful there. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing.
-
-If those logs didn't help, edit the `sign.sh` file in **your** builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so change:
-
-```bash
-./xresign.sh ...  >/dev/null 2>&1
-```
-
-To:
-
-```bash
-./xresign.sh ...
-```
-
-Next time you run a build, the logs will give you full details that you can use to resolve your issue. The reason that the output suppression is there in the first place is to prevent leaks of potentially sensitive information about your certificates and apps.
+Check the builder's logs for any errors. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing or failed.
