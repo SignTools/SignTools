@@ -116,7 +116,7 @@ There are two types of signing profiles:
 
 The certificate is a file with an extension `.p12`. To obtain it, follow the instructions below:
 
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate, its certification authority/ies, and your private key. Select each one by holding `Command`, then right-click and select `Export items...`. This will export you the `.p12` file you need.
+**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate, its one or more certification authorities, and your private key. Select each one by holding `Command`, then right-click and select `Export items...`. This will export you the `.p12` file you need.
 
 <table>
 <tr>
