@@ -41,7 +41,7 @@
       "value": "master"
     },
     "SERVER_URL": {
-      "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the address will be: https://testapp.herokuapp.com",
+      "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the server url will be: https://testapp.herokuapp.com",
       "value": ""
     },
     "REDIRECT_HTTPS": {
