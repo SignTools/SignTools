@@ -60,7 +60,7 @@ func cleanupOld() error {
 		}
 		if modTime.Add(time.Duration(config.Current.CleanupMins) * time.Minute).Before(now) {
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
-				return err
+				log.Err(err).Str("id", app.GetId()).Msg("cleanup app")
 			}
 		}
 	}
