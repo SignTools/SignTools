@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/util"
 	"os"
@@ -31,7 +32,11 @@ func (r *profileResolver) refresh() error {
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
-		profile := newProfile(id)
+		profile, err := newProfile(id)
+		if err != nil {
+			log.Err(err).Str("id", id).Msg("load profile from files")
+			continue
+		}
 		r.idToProfileMap[id] = profile
 	}
 	return nil

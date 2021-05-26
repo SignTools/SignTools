@@ -1,7 +1,12 @@
 package storage
 
 import (
+	"crypto/x509"
 	"fmt"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/pkcs12"
+	"io/ioutil"
 	"os"
 )
 
@@ -12,12 +17,72 @@ type Profile interface {
 	IsAccount() (bool, error)
 }
 
-func newProfile(id string) *profile {
-	return &profile{id}
+func newProfile(id string) (*profile, error) {
+	p := profile{id: id}
+	pass, err := p.getCertPass()
+	if err != nil {
+		return nil, err
+	}
+	p12, err := p.getCert()
+	if err != nil {
+		return nil, err
+	}
+	p12Bytes, err := ioutil.ReadAll(p12)
+	if err != nil {
+		return nil, err
+	}
+	teamId, err := validateCertAndGetTeamId(p12Bytes, pass)
+	if err != nil {
+		return nil, errors.WithMessage(err, "validate certificate")
+	}
+	p.teamId = teamId
+	return &p, nil
+}
+
+func validateCertAndGetTeamId(p12Bytes []byte, pass string) (string, error) {
+	blocks, err := pkcs12.ToPEM(p12Bytes, pass)
+	if err != nil {
+		return "", err
+	}
+	keys := 0
+	appleCerts := 0
+	teamId := ""
+	for _, block := range blocks {
+		switch block.Type {
+		case "CERTIFICATE":
+			cert, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return "", err
+			}
+			if cert.IsCA {
+				appleCerts++
+			} else {
+				if len(cert.Subject.OrganizationalUnit) != 1 {
+					log.Error().Str("serial number", cert.SerialNumber.String()).
+						Msg("certificate has invalid organization unit")
+					continue
+				}
+				teamId = cert.Subject.OrganizationalUnit[0]
+			}
+		case "PRIVATE KEY":
+			keys++
+		}
+	}
+	if keys < 1 {
+		return "", errors.New("no private keys found in p12 file")
+	}
+	if teamId == "" {
+		return "", errors.New("no signing certificates found in p12 file")
+	}
+	if appleCerts < 1 {
+		return "", errors.New("no Apple intermediary certificates found in p12 file")
+	}
+	return teamId, nil
 }
 
 type profile struct {
-	id string
+	id     string
+	teamId string
 }
 
 type ProfileError struct {
@@ -51,6 +116,7 @@ func (p *profile) GetFiles() ([]fileGetter, error) {
 	var files = []fileGetter{
 		{name: "cert.p12", f1: p.getCert},
 		{name: "cert_pass.txt", f2: p.getCertPass},
+		{name: "team_id.txt", f2: p.getTeamId},
 	}
 	if isAccount {
 		files = append(files, []fileGetter{
@@ -103,6 +169,10 @@ func (p *profile) getCertPass() (string, error) {
 		return "", &ProfileError{"read file profileCertPassPath", p.id, err}
 	}
 	return data, nil
+}
+
+func (p *profile) getTeamId() (string, error) {
+	return p.teamId, nil
 }
 
 func (p *profile) GetName() (string, error) {

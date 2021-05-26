@@ -17,6 +17,19 @@ var ErrInsufficientData = errors.New("insufficient data")
 // Attempts to parse a Profile from environment variables.
 // Returns os.ErrNotExist if variables are missing, otherwise any other error.
 func newEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
+	p, err := parseEnvProfile(cfg)
+	if err != nil {
+		return nil, err
+	}
+	teamId, err := validateCertAndGetTeamId(p.cert, p.certPass)
+	if err != nil {
+		return nil, errors.WithMessage(err, "validate certificate")
+	}
+	p.teamId = teamId
+	return p, nil
+}
+
+func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 	// cfg is empty, no envvars were set
 	if reflect.DeepEqual(cfg, &config.EnvProfile{}) {
 		return nil, os.ErrNotExist
@@ -86,6 +99,7 @@ type envProfile struct {
 	cert        []byte
 	accountName string
 	accountPass string
+	teamId      string
 }
 
 func (p *envProfile) GetId() string {
@@ -105,6 +119,7 @@ func (p *envProfile) GetFiles() ([]fileGetter, error) {
 	var files = []fileGetter{
 		{name: "cert.p12", f2: fromString(string(p.cert))},
 		{name: "cert_pass.txt", f2: fromString(p.certPass)},
+		{name: "team_id.txt", f2: fromString(p.teamId)},
 	}
 	if isAccount {
 		files = append(files, []fileGetter{

@@ -32,9 +32,9 @@ var (
 	builderKey      = uuid.NewString()
 	saveDir         = ""
 	profileId       = uuid.NewString()
-	profileCert     = uuid.NewString()
+	profileCert     []byte
 	profileName     = uuid.NewString()
-	profileCertPass = uuid.NewString()
+	profileCertPass = "1234"
 	profileProv     = uuid.NewString()
 	unsignedData    = uuid.NewString()
 	signedData      = uuid.NewString()
@@ -62,14 +62,18 @@ func TestMain(m *testing.M) {
 	if err := os.MkdirAll(profileDir, os.ModePerm); err != nil {
 		log.Fatal().Err(err).Send()
 	}
-	contentMap := map[string]string{
+	profileCert, err = ioutil.ReadFile("cert-test.p12")
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+	contentMap := map[string][]byte{
 		"cert.p12":             profileCert,
-		"cert_pass.txt":        profileCertPass,
-		"name.txt":             profileName,
-		"prov.mobileprovision": profileProv,
+		"cert_pass.txt":        []byte(profileCertPass),
+		"name.txt":             []byte(profileName),
+		"prov.mobileprovision": []byte(profileProv),
 	}
 	for key, val := range contentMap {
-		if err := ioutil.WriteFile(filepath.Join(profileDir, key), []byte(val), os.ModePerm); err != nil {
+		if err := ioutil.WriteFile(filepath.Join(profileDir, key), val, os.ModePerm); err != nil {
 			log.Fatal().Err(err).Send()
 		}
 	}
