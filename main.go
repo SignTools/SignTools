@@ -47,7 +47,7 @@ var formNames = assets.FormNames{
 	FormBundleId:     "bundle_id",
 }
 
-func cleanupApps() error {
+func cleanupOld() error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
 		return err
@@ -61,6 +61,13 @@ func cleanupApps() error {
 		if modTime.Add(time.Duration(config.Current.CleanupMins) * time.Minute).Before(now) {
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
 				return err
+			}
+		}
+	}
+	for _, job := range storage.Jobs.GetAll() {
+		if job.Ts.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute).Before(now) {
+			if !storage.Jobs.DeleteById(job.Id) {
+				log.Error().Str("id", job.Id).Msg("cleanup job")
 			}
 		}
 	}
@@ -112,8 +119,8 @@ func serve(host string, port uint64) {
 	if config.Current.CleanupIntervalMins > 0 && config.Current.CleanupMins > 0 {
 		go func() {
 			for {
-				if err := cleanupApps(); err != nil {
-					log.Err(err).Msg("cleanup apps")
+				if err := cleanupOld(); err != nil {
+					log.Err(err).Msg("cleanup old")
 				}
 				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
 			}
@@ -163,9 +170,17 @@ func serve(host string, port uint64) {
 	e.GET("/jobs", getLastJob, workflowKeyAuth)
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
+	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
 	log.Info().Str("state", "started http server").Send()
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+func failJob(c echo.Context, job *storage.ReturnJob) error {
+	if !storage.Jobs.DeleteById(job.Id) {
+		return errors.New("unable to delete return job " + job.Id)
+	}
+	return c.NoContent(200)
 }
 
 func setBuilderSecrets() error {
@@ -181,9 +196,6 @@ func getFavIcon(c echo.Context) error {
 }
 
 func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
-	if !storage.Jobs.DeleteById(job.Id) {
-		return errors.New("unable to delete return job " + job.Id)
-	}
 	app, ok := storage.Apps.Get(job.AppId)
 	if !ok {
 		return errors.New(fmt.Sprintf("return job %s appid %s not resolved", job.Id, job.AppId))
@@ -199,6 +211,9 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 	defer file.Close()
 	if err := app.SetSigned(file, c.FormValue(formNames.FormBundleId)); err != nil {
 		return err
+	}
+	if !storage.Jobs.DeleteById(job.Id) {
+		return errors.New("unable to delete return job " + job.Id)
 	}
 	return c.NoContent(200)
 }
@@ -458,12 +473,17 @@ func renderIndex(c echo.Context) error {
 			log.Err(err).Msg("get profile")
 			profileName = "unknown"
 		}
-		appTimeoutTime := modTime.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute)
-		status := assets.AppStatusFailed
+		jobPending := storage.Jobs.IsPendingForAppId(app.GetId())
+		_, jobExists := storage.Jobs.GetByAppId(app.GetId())
+		var status int
 		if isSigned {
 			status = assets.AppStatusSigned
-		} else if time.Now().Before(appTimeoutTime) {
+		} else if jobPending {
+			status = assets.AppStatusWaiting
+		} else if jobExists {
 			status = assets.AppStatusProcessing
+		} else {
+			status = assets.AppStatusFailed
 		}
 		baseUrl := getBaseUrl(c)
 		manifestUrl := ""

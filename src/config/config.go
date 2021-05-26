@@ -84,7 +84,7 @@ func createDefaultFile() *File {
 		RedirectHttps:       false,
 		SaveDir:             "data",
 		CleanupMins:         60 * 24 * 7,
-		CleanupIntervalMins: 30,
+		CleanupIntervalMins: 5,
 		SignTimeoutMins:     15,
 		BasicAuth: BasicAuth{
 			Enable:   false,

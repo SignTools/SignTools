@@ -10,12 +10,15 @@ import (
 	"time"
 )
 
+// A signing job waiting to be picked up by a builder.
 type signJob struct {
 	ts        time.Time
 	appId     string
 	profileId string
 }
 
+// When a signJob has been picked up by a builder, it's replaced
+// with a return job waiting for the builder to submit its results.
 type ReturnJob struct {
 	Id            string
 	Ts            time.Time

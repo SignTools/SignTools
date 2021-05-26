@@ -89,10 +89,9 @@ save_dir: data
 # apps older than this time will be deleted when a cleanup job is run
 cleanup_mins: 10080
 # how often does the cleanup job run
-cleanup_interval_mins: 30
-# apps older than this time will be marked as failed
-# this should also match the job timeout in the builder
-sign_timeout_mins: 10
+cleanup_interval_mins: 5
+# apps that have been processing for more than this time will be marked as failed
+sign_timeout_mins: 15
 # this protects the web ui with a username and password
 # definitely enable it if you are using a tunnel provider
 basic_auth:

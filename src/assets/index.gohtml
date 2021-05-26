@@ -137,6 +137,7 @@
                     {{if eq $app.Status 0 }} bg-primary
                     {{else if eq $app.Status 1 }} bg-success
                     {{else if eq $app.Status 2 }} bg-danger
+                    {{else if eq $app.Status 3 }} bg-secondary
                     {{end}}">
                     <div class="card-body">
                         <div class="row">
@@ -153,6 +154,7 @@
                             {{if eq $app.Status 0 }} Processing
                             {{else if eq $app.Status 1 }} Signed
                             {{else if eq $app.Status 2 }} Failed
+                            {{else if eq $app.Status 3 }} Waiting
                             {{end}}
                             <br>
                             {{$app.ModTime}}
