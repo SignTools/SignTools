@@ -234,9 +234,9 @@ The web service cannot work by itself. You have two options:
    ```
 4. When the service finishes loading, look for a line similar to this:
    ```log
-   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
+   11:51PM INF using server url url=https://aids-woman-zum-summer.trycloudflare.com
    ```
-   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. Congratulations!
 
 ### 3.2. Self-hosting on phone
 
@@ -275,10 +275,10 @@ It is highly discouraged to use this method unless you absolutely need to. There
 2. When the service finishes loading, look for a line similar to this:
 
    ```log
-   11:51PM INF  state="obtained public url" url=https://aids-woman-zum-summer.trycloudflare.com
+   11:51PM INF using server url url=https://aids-woman-zum-summer.trycloudflare.com
    ```
 
-   `https://xxxxxxxxxxxx.trycloudflare.com` is the public URL of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. Congratulations!
 
    Due to Apple's strict background process policy, iSH will get killed if it uses more than "80% cpu over 60 seconds". This can break any part of the service. To make sure it doesn't happen:
 

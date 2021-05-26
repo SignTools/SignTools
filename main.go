@@ -98,17 +98,17 @@ func main() {
 		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
 	}
 
+	log.Info().Str("url", config.Current.ServerUrl).Msg("using server url")
 	serve(*host, *port)
 }
 
 func getPublicUrlFatal(provider tunnel.Provider) string {
-	log.Info().Str("state", "obtaining public url").Send()
-	publicUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
+	log.Info().Msg("obtaining server url")
+	serverUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
-	log.Info().Str("state", "obtained public url").Str("url", publicUrl).Send()
-	return publicUrl
+	return serverUrl
 }
 
 func serve(host string, port uint64) {
@@ -127,7 +127,7 @@ func serve(host string, port uint64) {
 		}()
 	}
 
-	log.Info().Str("state", "setting builder secrets").Send()
+	log.Info().Msg("setting builder secrets")
 	if err := setBuilderSecrets(); err != nil {
 		log.Fatal().Err(err).Send()
 	}
@@ -172,7 +172,6 @@ func serve(host string, port uint64) {
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
-	log.Info().Str("state", "started http server").Send()
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
