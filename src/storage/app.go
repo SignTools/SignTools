@@ -25,7 +25,6 @@ type App interface {
 	GetModTime() (time.Time, error)
 	ResetModTime() error
 	GetProfileId() (string, error)
-	_prune() error
 }
 
 type AppError struct {
@@ -203,16 +202,6 @@ func (a *app) ResetModTime() error {
 	now := time.Now()
 	if err := os.Chtimes(appPath(a.id), now, now); err != nil {
 		return &AppError{"change app dir mod time", a.id, err}
-	}
-	return nil
-}
-
-// used by appResolver.Delete, must be synchronized
-func (a *app) _prune() error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := os.RemoveAll(appPath(a.id)); err != nil {
-		return &AppError{"remove app dir", a.id, err}
 	}
 	return nil
 }

@@ -38,22 +38,25 @@ var ErrNotFound = errors.New("not found")
 
 func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	if r.appIdToSignJobMap.Len() < 1 {
+		r.mu.Unlock()
 		return errors.WithMessage(ErrNotFound, "sign job")
 	}
 
 	elem := r.appIdToSignJobMap.Back()
 	r.appIdToSignJobMap.Delete(elem.Key)
 	job := elem.Value.(signJob)
+	r.mu.Unlock()
 
 	returnJobId, err := job.writeArchive(writer)
 	if err != nil {
 		return errors.WithMessage(err, "write archive")
 	}
 	returnJob := ReturnJob{Id: returnJobId, Ts: time.Now(), AppId: job.appId}
+	r.mu.Lock()
 	r.idToReturnJobMap[returnJobId] = &returnJob
 	r.appIdToReturnJobMap[job.appId] = &returnJob
+	r.mu.Unlock()
 	return nil
 }
 

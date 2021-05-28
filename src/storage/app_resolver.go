@@ -3,6 +3,7 @@ package storage
 import (
 	"io"
 	"ios-signer-service/src/util"
+	"os"
 	"sort"
 	"sync"
 )
@@ -59,28 +60,28 @@ func (r *appResolver) Get(id string) (App, bool) {
 }
 
 func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
 	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId)
 	if err != nil {
 		return nil, &AppError{"new app", ".", err}
 	}
-
+	r.mutex.Lock()
 	r.idToAppMap[app.GetId()] = app
+	r.mutex.Unlock()
 	return app, nil
 }
 
 func (r *appResolver) Delete(id string) error {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
 	app, ok := r.idToAppMap[id]
 	if !ok {
+		r.mutex.Unlock()
 		return nil
 	}
-	if err := app._prune(); err != nil {
-		return &AppError{"prune app", ".", err}
+	appId := app.GetId()
+	delete(r.idToAppMap, appId)
+	r.mutex.Unlock()
+	if err := os.RemoveAll(appPath(appId)); err != nil {
+		return &AppError{"delete app", appId, err}
 	}
-	delete(r.idToAppMap, app.GetId())
 	return nil
 }
