@@ -100,4 +100,5 @@ type fileGetter struct {
 	name string
 	f1   func() (ReadonlyFile, error)
 	f2   func() (string, error)
+	f3   func() ([]byte, error)
 }

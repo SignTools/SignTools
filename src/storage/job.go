@@ -71,7 +71,15 @@ func tarPackage(w *tar.Writer, fileGen *fileGetter) error {
 		if err != nil {
 			return errors.WithMessage(err, "read "+fileGen.name)
 		}
-		if err := tarWriteString(w, fileGen.name, data); err != nil {
+		if err := tarWriteBytes(w, fileGen.name, []byte(data)); err != nil {
+			return errors.WithMessage(err, "write bytes")
+		}
+	} else if fileGen.f3 != nil {
+		data, err := fileGen.f3()
+		if err != nil {
+			return errors.WithMessage(err, "read "+fileGen.name)
+		}
+		if err := tarWriteBytes(w, fileGen.name, data); err != nil {
 			return errors.WithMessage(err, "write bytes")
 		}
 	} else {
@@ -98,7 +106,7 @@ func tarWriteFile(w *tar.Writer, name string, file ReadonlyFile) error {
 	return nil
 }
 
-func tarWriteString(w *tar.Writer, name string, data string) error {
+func tarWriteBytes(w *tar.Writer, name string, data []byte) error {
 	if err := w.WriteHeader(&tar.Header{
 		Name: name,
 		Mode: 0600,
@@ -106,7 +114,7 @@ func tarWriteString(w *tar.Writer, name string, data string) error {
 	}); err != nil {
 		return errors.WithMessage(err, "write header "+name)
 	}
-	if _, err := w.Write([]byte(data)); err != nil {
+	if _, err := w.Write(data); err != nil {
 		return errors.WithMessage(err, "write "+name)
 	}
 	return nil

@@ -21,10 +21,11 @@ func newEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-	teamId, err := validateCertAndGetTeamId(p.cert, p.certPass)
+	fixedCert, teamId, err := processP12(p.originalCert, p.certPass)
 	if err != nil {
 		return nil, errors.WithMessage(err, "validate certificate")
 	}
+	p.fixedCert = fixedCert
 	p.teamId = teamId
 	return p, nil
 }
@@ -48,11 +49,11 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			return nil, errors.WithMessage(err, "decode prov base64")
 		}
 		return &envProfile{
-			id:       "imported",
-			name:     cfg.Name,
-			prov:     provBytes,
-			certPass: cfg.CertPass,
-			cert:     certBytes,
+			id:           "imported",
+			name:         cfg.Name,
+			prov:         provBytes,
+			certPass:     cfg.CertPass,
+			originalCert: certBytes,
 		}, nil
 	} else if cfg.AccountName != "" && cfg.AccountPass != "" {
 		log.Info().Msg("importing account profile from envvars")
@@ -61,12 +62,12 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			return nil, errors.WithMessage(err, "decode cert base64")
 		}
 		return &envProfile{
-			id:          "imported",
-			name:        cfg.Name,
-			certPass:    cfg.CertPass,
-			cert:        certBytes,
-			accountName: cfg.AccountName,
-			accountPass: cfg.AccountPass,
+			id:           "imported",
+			name:         cfg.Name,
+			certPass:     cfg.CertPass,
+			originalCert: certBytes,
+			accountName:  cfg.AccountName,
+			accountPass:  cfg.AccountPass,
 		}, nil
 	} else {
 		return nil, ErrInsufficientData
@@ -92,14 +93,15 @@ func decodeVar(dataStr string) ([]byte, error) {
 }
 
 type envProfile struct {
-	id          string
-	name        string
-	prov        []byte
-	certPass    string
-	cert        []byte
-	accountName string
-	accountPass string
-	teamId      string
+	id           string
+	name         string
+	prov         []byte
+	certPass     string
+	originalCert []byte
+	fixedCert    []byte
+	accountName  string
+	accountPass  string
+	teamId       string
 }
 
 func (p *envProfile) GetId() string {
@@ -116,8 +118,13 @@ func (p *envProfile) GetFiles() ([]fileGetter, error) {
 			return str, nil
 		}
 	}
+	fromBytes := func(str []byte) func() ([]byte, error) {
+		return func() ([]byte, error) {
+			return str, nil
+		}
+	}
 	var files = []fileGetter{
-		{name: "cert.p12", f2: fromString(string(p.cert))},
+		{name: "cert.p12", f3: fromBytes(p.fixedCert)},
 		{name: "cert_pass.txt", f2: fromString(p.certPass)},
 		{name: "team_id.txt", f2: fromString(p.teamId)},
 	}

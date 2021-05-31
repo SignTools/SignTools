@@ -1,13 +1,16 @@
 package storage
 
 import (
+	"crypto/rand"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/pkcs12"
 	"io/ioutil"
+	"ios-signer-service/src/assets"
 	"os"
+	"path"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 type Profile interface {
@@ -23,66 +26,97 @@ func newProfile(id string) (*profile, error) {
 	if err != nil {
 		return nil, err
 	}
-	p12, err := p.getCert()
+	originalCertFile, err := p.getOriginalCert()
 	if err != nil {
 		return nil, err
 	}
-	p12Bytes, err := ioutil.ReadAll(p12)
+	originalCertBytes, err := ioutil.ReadAll(originalCertFile)
 	if err != nil {
 		return nil, err
 	}
-	teamId, err := validateCertAndGetTeamId(p12Bytes, pass)
+	fixedCert, teamId, err := processP12(originalCertBytes, pass)
 	if err != nil {
 		return nil, errors.WithMessage(err, "validate certificate")
 	}
+	p.fixedCert = fixedCert
 	p.teamId = teamId
 	return &p, nil
 }
 
-func validateCertAndGetTeamId(p12Bytes []byte, pass string) (string, error) {
-	blocks, err := pkcs12.ToPEM(p12Bytes, pass)
+// Validates the input P12 file, adds any missing standard CAs, and returns the new P12 along with the team ID.
+func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
+	blocks, err := pkcs12.ToPEM(originalP12, pass)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
-	keys := 0
-	appleCerts := 0
-	teamId := ""
+	appleCerts, err := assets.AppleCerts.ReadDir("certs")
+	if err != nil {
+		return nil, "", err
+	}
+	for _, cert := range appleCerts {
+		certBytes, err := assets.AppleCerts.ReadFile(path.Join("certs", cert.Name()))
+		if err != nil {
+			return nil, "", err
+		}
+		block, _ := pem.Decode(certBytes)
+		blocks = append(blocks, block)
+	}
+	var keys []interface{}
+	var authorities []*x509.Certificate
+	var certificates []*x509.Certificate
+	serialNumbers := map[string]bool{}
 	for _, block := range blocks {
 		switch block.Type {
 		case "CERTIFICATE":
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
-				return "", err
+				return nil, "", err
 			}
+			serialNumber := cert.SerialNumber.String()
+			if _, ok := serialNumbers[serialNumber]; ok {
+				continue
+			}
+			serialNumbers[serialNumber] = true
 			if cert.IsCA {
-				appleCerts++
+				authorities = append(authorities, cert)
 			} else {
-				if len(cert.Subject.OrganizationalUnit) != 1 {
-					log.Error().Str("serial number", cert.SerialNumber.String()).
-						Msg("certificate has invalid organization unit")
-					continue
-				}
-				teamId = cert.Subject.OrganizationalUnit[0]
+				certificates = append(certificates, cert)
 			}
 		case "PRIVATE KEY":
-			keys++
+			var key interface{}
+			if key, err = x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
+			} else if key, err = x509.ParsePKCS8PrivateKey(block.Bytes); err == nil {
+			} else if key, err = x509.ParseECPrivateKey(block.Bytes); err == nil {
+			} else {
+				return nil, "", errors.New("unknown private key type")
+			}
+			keys = append(keys, key)
 		}
 	}
-	if keys < 1 {
-		return "", errors.New("no private keys found in p12 file")
+	if len(keys) != 1 {
+		return nil, "", errors.Errorf("expected 1 private key, got %d", keys)
 	}
-	if teamId == "" {
-		return "", errors.New("no signing certificates found in p12 file")
+	if len(certificates) != 1 {
+		return nil, "", errors.Errorf("expected 1 signing certificate, got %d", len(certificates))
 	}
-	if appleCerts < 1 {
-		return "", errors.New("no Apple intermediary certificates found in p12 file")
+	if len(authorities) < 1 {
+		return nil, "", errors.New("no certificate authorities found")
 	}
-	return teamId, nil
+	cert := certificates[0]
+	if len(cert.Subject.OrganizationalUnit) != 1 {
+		return nil, "", errors.Errorf("certificate %s has invalid organization unit", cert.SerialNumber.String())
+	}
+	fixedP12, err := pkcs12.Encode(rand.Reader, keys[0], cert, authorities, pass)
+	if err != nil {
+		return nil, "", err
+	}
+	return fixedP12, cert.Subject.OrganizationalUnit[0], nil
 }
 
 type profile struct {
-	id     string
-	teamId string
+	id        string
+	teamId    string
+	fixedCert []byte
 }
 
 type ProfileError struct {
@@ -114,7 +148,7 @@ func (p *profile) GetFiles() ([]fileGetter, error) {
 		return nil, &ProfileError{"is account", p.id, err}
 	}
 	var files = []fileGetter{
-		{name: "cert.p12", f1: p.getCert},
+		{name: "cert.p12", f3: p.getFixedCert},
 		{name: "cert_pass.txt", f2: p.getCertPass},
 		{name: "team_id.txt", f2: p.getTeamId},
 	}
@@ -131,12 +165,16 @@ func (p *profile) GetFiles() ([]fileGetter, error) {
 	return files, nil
 }
 
-func (p *profile) getCert() (ReadonlyFile, error) {
+func (p *profile) getOriginalCert() (ReadonlyFile, error) {
 	file, err := os.Open(profileCertPath(p.id))
 	if err != nil {
 		return nil, &ProfileError{"open ProfilesCertPath", p.id, err}
 	}
 	return file, nil
+}
+
+func (p *profile) getFixedCert() ([]byte, error) {
+	return p.fixedCert, nil
 }
 
 func (p *profile) getProv() (ReadonlyFile, error) {
