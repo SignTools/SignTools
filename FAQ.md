@@ -66,7 +66,7 @@ Technically, everything is supported as long as your iOS device trusts it. This 
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 
-First, make sure you are signing the app correctly and not breaking the entitlements. Read the section just above.
+First, make sure you are signing the app correctly and not breaking the entitlements. Read the [kinds of certificates and profiles](#what-kind-of-certificatesprovisioning-profiles-are-supported) section.
 
 If that doesn't help, you need to figure out what entitlements the app requires. unc0ver 6.0.2 and DolphiniOS emulator need the app debugging (`get-task-allow`) entitlement. Make sure you are using a signing profile with `get-task-allow=true` in its provisioning profile. Also, when you upload such an app to this service, make sure to tick the `Enable app debugging` option. Since this is a potential security issue, it will be disabled by default unless you tick the box.
 
@@ -82,9 +82,9 @@ You can also use `-u YOUR_UDID -n` to run this command over the network. When th
 
 ## "Unable To Install \*.ipa"
 
-This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
+This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the [free account limitations](#free-developer-account-limitations) section.
 
-Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the `This app cannot be installed because its integrity could not be verified` section above.
+Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the [integrity verification error](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified) section.
 
 ## How can I debug a failing builder?
 
