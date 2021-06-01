@@ -48,7 +48,7 @@ The certificate is a file with an extension `.p12`. To obtain it, follow the ins
 </tr>
 </table>
 
-**On Windows:** There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) as a workaround.
+**On Windows:** There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
 
 ## 4. Web service
 
