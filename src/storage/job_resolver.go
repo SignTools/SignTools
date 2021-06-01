@@ -70,11 +70,12 @@ func (r *JobResolver) GetAll() []*ReturnJob {
 	return jobs
 }
 
-func (r *JobResolver) IsPendingForAppId(id string) bool {
+func (r *JobResolver) GetStatusByAppId(id string) (bool, bool) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	_, ok := r.appIdToSignJobMap.Get(id)
-	return ok
+	_, jobPending := r.appIdToSignJobMap.Get(id)
+	_, jobExists := r.appIdToReturnJobMap[id]
+	return jobPending, jobExists
 }
 
 func (r *JobResolver) GetById(id string) (*ReturnJob, bool) {

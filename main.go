@@ -472,8 +472,7 @@ func renderIndex(c echo.Context) error {
 			log.Err(err).Msg("get profile")
 			profileName = "unknown"
 		}
-		jobPending := storage.Jobs.IsPendingForAppId(app.GetId())
-		_, jobExists := storage.Jobs.GetByAppId(app.GetId())
+		jobPending, jobExists := storage.Jobs.GetStatusByAppId(app.GetId())
 		var status int
 		if isSigned {
 			status = assets.AppStatusSigned
