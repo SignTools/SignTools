@@ -48,7 +48,7 @@ The certificate is a file with an extension `.p12`. To obtain it, follow the ins
 </tr>
 </table>
 
-**On all other platforms:** There is no official way to do this. You should be able to use a third-party signing tool like [AltStore](https://altstore.io/) and then you should be able to find the certificate in its app data (`Program Data` on Windows). However, this has not been tested.
+**On Windows:** There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) as a workaround.
 
 ## 4. Web service
 
