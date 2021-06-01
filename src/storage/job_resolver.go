@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/elliotchance/orderedmap"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
 	"sync"
@@ -46,17 +47,19 @@ func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 	elem := r.appIdToSignJobMap.Back()
 	r.appIdToSignJobMap.Delete(elem.Key)
 	job := elem.Value.(signJob)
-	r.mu.Unlock()
-
-	returnJobId, err := job.writeArchive(writer)
-	if err != nil {
-		return errors.WithMessage(err, "write archive")
-	}
+	returnJobId := uuid.NewString()
 	returnJob := ReturnJob{Id: returnJobId, Ts: time.Now(), AppId: job.appId}
-	r.mu.Lock()
 	r.idToReturnJobMap[returnJobId] = &returnJob
 	r.appIdToReturnJobMap[job.appId] = &returnJob
 	r.mu.Unlock()
+
+	if err := job.writeArchive(returnJobId, writer); err != nil {
+		r.mu.Lock()
+		delete(r.idToReturnJobMap, returnJobId)
+		delete(r.appIdToReturnJobMap, job.appId)
+		r.mu.Unlock()
+		return errors.WithMessage(err, "write archive")
+	}
 	return nil
 }
 

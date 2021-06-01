@@ -2,7 +2,6 @@ package storage
 
 import (
 	"archive/tar"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"go.uber.org/atomic"
@@ -26,34 +25,33 @@ type ReturnJob struct {
 	TwoFactorCode atomic.String
 }
 
-func (j *signJob) writeArchive(writer io.Writer) (string, error) {
+func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 	app, ok := Apps.Get(j.appId)
 	if !ok {
-		return "", errors.New("invalid app id")
+		return errors.New("invalid app id")
 	}
 	profile, ok := Profiles.GetById(j.profileId)
 	if !ok {
-		return "", errors.New("invalid profile id")
+		return errors.New("invalid profile id")
 	}
 	w := tar.NewWriter(writer)
 	defer w.Close()
-	id := uuid.NewString()
 	files, err := profile.GetFiles()
 	if err != nil {
-		return "", errors.WithMessage(err, "get profile files")
+		return errors.WithMessage(err, "get profile files")
 	}
 	files = append(files, []fileGetter{
 		{name: "unsigned.ipa", f1: app.GetUnsigned},
-		{name: "id.txt", f2: func() (string, error) { return id, nil }},
+		{name: "id.txt", f2: func() (string, error) { return returnJobId, nil }},
 		{name: "args.txt", f2: app.GetSignArgs},
 		{name: "user_bundle_id.txt", f2: app.GetUserBundleId},
 	}...)
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {
-			return "", errors.WithMessage(err, "tar package")
+			return errors.WithMessage(err, "tar package")
 		}
 	}
-	return id, nil
+	return nil
 }
 
 func tarPackage(w *tar.Writer, fileGen *fileGetter) error {
