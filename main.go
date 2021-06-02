@@ -83,8 +83,10 @@ func main() {
 	cloudflaredPort := flag.Uint64("cloudflared-port", 0, "cloudflared metrics port. "+
 		"Used to automatically parse the server_url")
 	logJson := flag.Bool("log-json", false, "If enabled, outputs logs in JSON instead of pretty printing them.")
+	logLevel := flag.Uint("log-level", 1, "Logging level, 0 (debug) - 5 (panic).")
 	flag.Parse()
 
+	zerolog.SetGlobalLevel(zerolog.Level(*logLevel))
 	if *logJson {
 		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	}
