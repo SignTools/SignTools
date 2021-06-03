@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	log2 "github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -136,7 +137,7 @@ func serve(host string, port uint64) {
 
 	e := echo.New()
 	e.HideBanner = true
-	logger := lecho.From(log.Logger)
+	logger := lecho.From(log.Logger, lecho.WithLevel(log2.INFO))
 	e.Logger = logger
 	e.Use(lecho.Middleware(lecho.Config{Logger: logger}))
 
