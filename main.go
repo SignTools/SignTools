@@ -29,10 +29,6 @@ import (
 	"time"
 )
 
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
-
 var formNames = assets.FormNames{
 	FormFile:         "file",
 	FormProfileId:    "profile_id",
@@ -88,8 +84,8 @@ func main() {
 	flag.Parse()
 
 	zerolog.SetGlobalLevel(zerolog.Level(*logLevel))
-	if *logJson {
-		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+	if !*logJson {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	config.Load(*configFile)
