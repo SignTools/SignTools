@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/base64"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -61,7 +62,7 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			return nil, errors.WithMessage(err, "decode prov base64")
 		}
 		return &envProfile{
-			id:           "imported",
+			id:           uuid.NewString(),
 			name:         cfg.Name,
 			prov:         provBytes,
 			certPass:     cfg.CertPass,
