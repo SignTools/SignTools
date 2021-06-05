@@ -12,7 +12,13 @@ import (
 	"reflect"
 )
 
-var ErrInsufficientData = errors.New("insufficient data")
+type MissingData struct {
+	string
+}
+
+func (e *MissingData) Error() string {
+	return "missing " + e.string
+}
 
 // Attempts to parse a Profile from environment variables.
 // Returns os.ErrNotExist if variables are missing, otherwise any other error.
@@ -35,8 +41,14 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 	if reflect.DeepEqual(cfg, &config.EnvProfile{}) {
 		return nil, os.ErrNotExist
 	}
-	if cfg.Name == "" || cfg.CertBase64 == "" || cfg.CertPass == "" {
-		return nil, ErrInsufficientData
+	requiredMap := map[string]string{
+		cfg.Name:       "name",
+		cfg.CertBase64: "certificate",
+		cfg.CertPass:   "certificate password"}
+	for k, v := range requiredMap {
+		if k == "" {
+			return nil, &MissingData{v}
+		}
 	}
 	if cfg.ProvBase64 != "" {
 		log.Info().Msg("importing cert profile from envvars")
@@ -70,7 +82,7 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			accountPass:  cfg.AccountPass,
 		}, nil
 	} else {
-		return nil, ErrInsufficientData
+		return nil, &MissingData{"provisioning profile or account name and password"}
 	}
 }
 
