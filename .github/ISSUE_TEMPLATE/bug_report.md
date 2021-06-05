@@ -6,6 +6,8 @@ labels: bug
 assignees: ""
 ---
 
+!! Please fill in this template, DO NOT ignore or delete it. !!
+
 **I tried basic troubleshooting first**
 
 - [ ] Updated **both** [ios-signer-service](https://github.com/SignTools/ios-signer-service) **and** the builder ([ios-signer-ci](https://github.com/SignTools/ios-signer-ci) or [ios-signer-builder](https://github.com/SignTools/ios-signer-builder)) to the latest version
