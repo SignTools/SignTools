@@ -75,17 +75,17 @@
       "value": ""
     },
     "PROFILE_PROV_BASE64": {
-      "description": "Your signing profile's provisioning profile (mobileprovision). Not needed if you are using an Apple developer account. You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "description": "Your signing profile's provisioning profile (mobileprovision). If you don't have one, leave this empty and use a developer account instead. You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
       "required": false,
       "value": ""
     },
     "PROFILE_ACCOUNT_NAME": {
-      "description": "Your Apple developer account's username. Not needed if you are using a provisioning profile.",
+      "description": "Your Apple developer account's username. Leave empty if you have a provisioning profile.",
       "required": false,
       "value": ""
     },
     "PROFILE_ACCOUNT_PASS": {
-      "description": "Your Apple developer account's password. Not needed if you are using a provisioning profile.",
+      "description": "Your Apple developer account's password. Leave empty if you have a provisioning profile.",
       "required": false,
       "value": ""
     }
