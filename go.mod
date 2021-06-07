@@ -2,8 +2,6 @@ module ios-signer-service
 
 go 1.16
 
-replace github.com/ziflex/lecho/v2 v2.3.0 => github.com/ViRb3/lecho/v2 v2.3.1-0.20210603000503-a7faa87f0aef
-
 require (
 	github.com/ViRb3/sling/v2 v2.0.2
 	github.com/elliotchance/orderedmap v1.4.0
@@ -15,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.22.0
 	github.com/stretchr/testify v1.7.0
-	github.com/ziflex/lecho/v2 v2.3.0
+	github.com/ziflex/lecho/v2 v2.3.1
 	go.uber.org/atomic v1.7.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
