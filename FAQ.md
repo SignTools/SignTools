@@ -16,6 +16,7 @@
   - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
   - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
   - [How can I debug a failing builder?](#how-can-i-debug-a-failing-builder)
+  - [Install button does not work](#install-button-does-not-work)
 
 ## Free developer account limitations
 
@@ -89,3 +90,11 @@ Otherwise, try installing again, sometimes it's a network problem. If that doesn
 ## How can I debug a failing builder?
 
 Check the builder's logs for any errors. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing or failed.
+
+## Install button does not work
+
+Check your logs for something among these lines:
+
+> WRN using OTA manifest proxy, installation may not work
+
+If you see the warning, then you are trying to access the service over HTTP instead of HTTPS. Apple only allows OTA installation over HTTPS, so to make it work for you, a special manifest proxy is used. The server that delivers the proxy is limited to 100,000 requests per day globally, so unfortunately the limit has likely been reached. Wait one day, or access your service over HTTPS instead.
