@@ -439,6 +439,7 @@ func renderIndex(c echo.Context) error {
 	data := assets.IndexData{
 		FormNames: formNames,
 	}
+	usingManifestProxy := false
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
@@ -491,7 +492,23 @@ func renderIndex(c echo.Context) error {
 				return err
 			}
 		} else {
-			log.Warn().Str("base_url", baseUrl).Msg("disabled installation on non-HTTPS connection")
+			usingManifestProxy = true
+			downloadFullUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
+			if err != nil {
+				return err
+			}
+			proxyUrl := url.URL{
+				Scheme: "https",
+				Host:   "ota.signtools.workers.dev",
+				Path:   "/v1",
+			}
+			query := url.Values{
+				"ipa":   []string{downloadFullUrl},
+				"title": []string{name},
+				"id":    []string{"com.foo.bar"},
+			}
+			proxyUrl.RawQuery = query.Encode()
+			manifestUrl = proxyUrl.String()
 		}
 
 		data.Apps = append(data.Apps, assets.App{
@@ -508,6 +525,9 @@ func renderIndex(c echo.Context) error {
 			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
 			DeleteUrl:    path.Join("/apps", app.GetId(), "delete"),
 		})
+	}
+	if usingManifestProxy {
+		log.Warn().Str("base_url", getBaseUrl(c)).Msg("using OTA manifest proxy, installation may not work")
 	}
 	profiles, err := storage.Profiles.GetAll()
 	if err != nil {
