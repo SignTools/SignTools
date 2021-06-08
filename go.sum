@@ -61,8 +61,8 @@ github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKe
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
-github.com/knadh/koanf v1.0.0 h1:tGQ1L53Tp4uPx6agVGBN1U7A4f83ZpH3SwZNG+BkfqI=
-github.com/knadh/koanf v1.0.0/go.mod h1:vrMMuhIH0k7EoxiMbVfFlRvJYmxcT2Eha3DH8Tx5+X4=
+github.com/knadh/koanf v1.1.0 h1:Qnluc9h+ASKx9VdUqmS0WhFretOztzygb96MY1km8UY=
+github.com/knadh/koanf v1.1.0/go.mod h1:vrMMuhIH0k7EoxiMbVfFlRvJYmxcT2Eha3DH8Tx5+X4=
 github.com/labstack/echo/v4 v4.2.2/go.mod h1:AA49e0DZ8kk5jTOOCKNuPR6oTnBS0dYiM4FW1e6jwpg=
 github.com/labstack/echo/v4 v4.3.0 h1:DCP6cbtT+Zu++K6evHOJzSgA2115cPMuCx0xg55q1EQ=
 github.com/labstack/echo/v4 v4.3.0/go.mod h1:PvmtTvhVqKDzDQy4d3bWzPjZLzom4iQbAZy2sgZ/qI8=
