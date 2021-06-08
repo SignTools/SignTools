@@ -22,7 +22,7 @@ type profileResolver struct {
 func (r *profileResolver) refresh() error {
 	idDirs, err := util.ReadDirNonHidden(profilesPath)
 	if err != nil {
-		return &AppError{"read profiles dir", ".", err}
+		return errors.WithMessage(err, "read profiles dir")
 	}
 	envProfile, err := newEnvProfile(config.Current.EnvProfile)
 	if err == nil {

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/pkg/errors"
 	"io"
 	"ios-signer-service/src/util"
 	"os"
@@ -24,7 +25,7 @@ func (r *appResolver) refresh() error {
 	defer r.mutex.Unlock()
 	idDirs, err := util.ReadDirNonHidden(appsPath)
 	if err != nil {
-		return &AppError{"read apps dir", ".", err}
+		return errors.WithMessage(err, "read apps dir")
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
@@ -62,7 +63,7 @@ func (r *appResolver) Get(id string) (App, bool) {
 func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
 	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId)
 	if err != nil {
-		return nil, &AppError{"new app", ".", err}
+		return nil, err
 	}
 	r.mutex.Lock()
 	r.idToAppMap[app.GetId()] = app
@@ -81,7 +82,7 @@ func (r *appResolver) Delete(id string) error {
 	delete(r.idToAppMap, appId)
 	r.mutex.Unlock()
 	if err := os.RemoveAll(appPath(appId)); err != nil {
-		return &AppError{"delete app", appId, err}
+		return errors.WithMessagef(err, "delete app id=%s", app.GetId())
 	}
 	return nil
 }
