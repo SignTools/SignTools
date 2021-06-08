@@ -236,7 +236,7 @@ The web service cannot work by itself. You have two options:
    ```log
    11:51PM INF using server url url=https://aids-woman-zum-summer.trycloudflare.com
    ```
-   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. If you want faster transfer speeds, you can also use the LAN or localhost IP address. Congratulations!
 
 ### 3.2. Self-hosting on phone
 
@@ -278,7 +278,7 @@ It is highly discouraged to use this method unless you absolutely need to. There
    11:51PM INF using server url url=https://aids-woman-zum-summer.trycloudflare.com
    ```
 
-   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. Congratulations!
+   `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. If you want faster transfer speeds, you can also use the LAN or localhost IP address. Congratulations!
 
    Due to Apple's strict background process policy, iSH will get killed if it uses more than "80% cpu over 60 seconds". This can break any part of the service. To make sure it doesn't happen:
 
