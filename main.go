@@ -435,6 +435,10 @@ func startSign(app storage.App) error {
 	return nil
 }
 
+func logErrApp(err error, app storage.App) *zerolog.Event {
+	return log.Err(err).Str("app_id", app.GetId())
+}
+
 func renderIndex(c echo.Context) error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
@@ -447,33 +451,33 @@ func renderIndex(c echo.Context) error {
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "get is signed")
 		}
 		modTime, err := app.GetModTime()
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "get mod time")
 		}
 		name, err := app.GetName()
 		if err != nil {
-			log.Err(err).Msg("get name")
+			logErrApp(err, app).Msg("get name")
 		}
 		workflowUrl, err := app.GetWorkflowUrl()
 		if err != nil {
-			log.Err(err).Msg("get workflow url")
+			logErrApp(err, app).Msg("get workflow url")
 		}
 		bundleId, _ := app.GetBundleId()
 		profileId, err := app.GetProfileId()
 		if err != nil {
-			log.Err(err).Msg("get profile id")
+			logErrApp(err, app).Msg("get profile id")
 		}
 		var profileName string
 		if profile, ok := storage.Profiles.GetById(profileId); ok {
 			profileName, err = profile.GetName()
 			if err != nil {
-				log.Err(err).Msg("get profile name")
+				logErrApp(err, app).Msg("get profile name")
 			}
 		} else {
-			log.Err(err).Msg("get profile")
+			logErrApp(err, app).Msg("get profile")
 			profileName = "unknown"
 		}
 		jobPending, jobExists := storage.Jobs.GetStatusByAppId(app.GetId())
@@ -493,13 +497,13 @@ func renderIndex(c echo.Context) error {
 			// must be a full URL
 			manifestUrl, err = util.JoinUrls(baseUrl, "/apps", app.GetId(), "manifest")
 			if err != nil {
-				return err
+				return errors.WithMessage(err, "build manifest url")
 			}
 		} else {
 			usingManifestProxy = true
 			downloadFullUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
 			if err != nil {
-				return err
+				return errors.WithMessage(err, "build download url")
 			}
 			proxyUrl := url.URL{
 				Scheme: "https",
