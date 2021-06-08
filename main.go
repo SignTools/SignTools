@@ -306,13 +306,17 @@ func makeManifest(baseUrl string, app storage.App) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	bundleId, err := app.GetBundleId()
+	if err != nil {
+		return nil, err
+	}
 	downloadUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
 	if err != nil {
 		return nil, err
 	}
 	data := assets.ManifestData{
 		DownloadUrl: downloadUrl,
-		BundleId:    "com.foo.bar",
+		BundleId:    bundleId,
 		Title:       appName,
 	}
 	var result bytes.Buffer
@@ -505,7 +509,7 @@ func renderIndex(c echo.Context) error {
 			query := url.Values{
 				"ipa":   []string{downloadFullUrl},
 				"title": []string{name},
-				"id":    []string{"com.foo.bar"},
+				"id":    []string{bundleId},
 			}
 			proxyUrl.RawQuery = query.Encode()
 			manifestUrl = proxyUrl.String()
