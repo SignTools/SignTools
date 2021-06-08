@@ -210,7 +210,7 @@ The web service cannot work by itself. You have two options:
 
 - Requires publicly accessible port 443 (HTTPS)
 - Requires domain with valid certificate
-- Requires manual configuration of reverse proxy with your own authentication.
+- Requires manual configuration of reverse proxy with your own authentication
 - Don't protect the following endpoints:
   ```
   /apps/:id/
