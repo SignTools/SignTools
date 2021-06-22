@@ -26,7 +26,7 @@ func (r *profileResolver) refresh() error {
 	}
 	envProfile, err := newEnvProfile(config.Current.EnvProfile)
 	if err == nil {
-		r.idToProfileMap["imported"] = envProfile
+		r.idToProfileMap[envProfile.GetId()] = envProfile
 	} else if !os.IsNotExist(err) {
 		return errors.WithMessage(err, "import profile from envvars")
 	}

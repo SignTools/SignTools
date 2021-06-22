@@ -75,7 +75,7 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 			return nil, errors.WithMessage(err, "decode cert base64")
 		}
 		return &envProfile{
-			id:           "imported",
+			id:           uuid.NewString(),
 			name:         cfg.Name,
 			certPass:     cfg.CertPass,
 			originalCert: certBytes,
