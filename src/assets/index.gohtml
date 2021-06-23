@@ -65,6 +65,9 @@
                                 <label style="display: inline" class="form-check-label" for="formIdOriginal">
                                     Use the app's original bundle ID
                                 </label>
+                                <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="For developer accounts, the original ID will be encoded into
+                                   a different but constant ID.">?</a>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="formIdProv" name="{{.FormId}}"
@@ -82,6 +85,9 @@
                                 <label style="display: inline" class="form-check-label" for="formIdCustom">
                                     Use custom:
                                 </label>
+                                <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="For developer accounts, the custom ID will be encoded into
+                                   a different but constant ID.">?</a>
                                 <input type="text" class="form-control" name="{{.FormIdCustomText}}" disabled
                                        id="formIdCustomText" placeholder="com.custom.app" required/>
                             </div>
@@ -229,11 +235,11 @@
     formProfile.addEventListener("change", function () {
         const selectedOption = formProfile.options[formProfile.selectedIndex]
         if (selectedOption.getAttribute('account') === 'true') {
-            formIdCustom.click()
-            formIdOriginal.setAttribute('disabled', 'true')
+            if (formIdProv.checked) {
+                formIdOriginal.checked = true
+            }
             formIdProv.setAttribute('disabled', 'true')
         } else {
-            formIdOriginal.removeAttribute('disabled')
             formIdProv.removeAttribute('disabled')
         }
     })
