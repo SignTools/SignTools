@@ -20,35 +20,40 @@ Once you have made your builder, proceed below.
 
 ## 3. Signing profile
 
-You will need to prepare a signing profile for use with the signing service.
+You need a signing profile to be able to sign apps. A signing profile is simply a collection of files and credentials that Apple provides to developers so they can sign apps.
+
 There are two types of signing profiles:
 
-- **Certificate + provisioning profile**
+- **Developer account** (recommended)
 
-  If you have a paid developer account, it is highly recommended to use this method. Doing so will save you from a lot of limitations. To get a provisioning profile (`.mobileprovision` file), [create one](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/CreatingaDevelopmentProvisioningProfile/CreatingaDevelopmentProvisioningProfile.html) from your developer portal and download it. You will probably want it to be a `Development` type and not `Distribution`, so that you can have a `wildcard` application identifier and app debugging entitlement (`get-task-allow`). For the differences, check the [FAQ](FAQ.md) page. Also don't forget to [register the UDID](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/AddingaDeviceIDtoYourDevelopmentTeam/AddingaDeviceIDtoYourDevelopmentTeam.html#//apple_ref/doc/uid/TP40011211-CH1-SW1) of each device that you want to sideload to. Read ahead on how to get your certificate.
+  This method works for both free and paid developer accounts. You only need your Apple account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization. There are no restrictions if you have a paid account. If you have a free account, make sure you read and understand the limitations in the [FAQ](FAQ.md#free-developer-account-limitations) page.
 
-- **Certificate + developer account**
+- **Manual provisioning profile**
 
-  If you don't have a paid developer account, this is your only option. Make sure to read and understand the limitations in the [FAQ](FAQ.md) page before you proceed. Read ahead on how to get your certificate.
+  If you don't have a paid developer account, but you have a manual provisioning profile with a `.mobileprovision` extension, you can use this method instead. Based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-The certificate is a file with an extension `.p12`. To obtain it, follow the instructions below:
+Additionally, you will also need a certificate file with a `.p12` extension. If you are using a manual provisioning profile, you likely received a certificate along with it - use that. Otherwise, follow the instructions below:
 
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
+- **macOS**
 
-<table>
-<tr>
-    <th>A</th>
-    <th>B</th>
-    <th>C</th>
-</tr>
-<tr>
-    <td><img src="img/6.png"/></td>
-    <td><img src="img/7.png"/></td>
-    <td><img src="img/5.png"/></td>
-</tr>
-</table>
+  Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
 
-**On Windows:** There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
+  <table>
+  <tr>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+  </tr>
+  <tr>
+      <td><img src="img/6.png"/></td>
+      <td><img src="img/7.png"/></td>
+      <td><img src="img/5.png"/></td>
+  </tr>
+  </table>
+
+- **Windows**
+
+  There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
 
 ## 4. Web service
 

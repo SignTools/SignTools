@@ -11,7 +11,7 @@ For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). Note that you 
   - [1. Builder](#1-builder)
   - [2. Web service configuration](#2-web-service-configuration)
     - [2.1. Configuration file](#21-configuration-file)
-    - [2.2. Signing profiles](#22-signing-profiles)
+    - [2.2. Signing profile](#22-signing-profile)
   - [3. Web service installation](#3-web-service-installation)
     - [3.1. Self-hosting on computer or server](#31-self-hosting-on-computer-or-server)
       - [3.1.1. Installing](#311-installing)
@@ -101,38 +101,44 @@ basic_auth:
   password: "admin"
 ```
 
-### 2.2. Signing profiles
+### 2.2. Signing profile
+
+You need a signing profile to be able to sign apps. A signing profile is simply a collection of files and credentials that Apple provides to developers so they can sign apps.
 
 There are two types of signing profiles:
 
-- **Certificate + provisioning profile**
+- **Developer account** (recommended)
 
-  If you have a paid developer account, it is highly recommended to use this method. Doing so will save you from a lot of limitations. To get a provisioning profile (`.mobileprovision` file), [create one](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/CreatingaDevelopmentProvisioningProfile/CreatingaDevelopmentProvisioningProfile.html) from your developer portal and download it. You will probably want it to be a `Development` type and not `Distribution`, so that you can have a `wildcard` application identifier and app debugging entitlement (`get-task-allow`). For the differences, check the [FAQ](FAQ.md) page. Also don't forget to [register the UDID](https://developer.apple.com/library/archive/recipes/ProvisioningPortal_Recipes/AddingaDeviceIDtoYourDevelopmentTeam/AddingaDeviceIDtoYourDevelopmentTeam.html#//apple_ref/doc/uid/TP40011211-CH1-SW1) of each device that you want to sideload to. Read ahead on how to get your certificate.
+  This method works for both free and paid developer accounts. You only need your Apple account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization. There are no restrictions if you have a paid account. If you have a free account, make sure you read and understand the limitations in the [FAQ](FAQ.md#free-developer-account-limitations) page.
 
-- **Certificate + developer account**
+- **Manual provisioning profile**
 
-  If you don't have a paid developer account, this is your only option. Make sure to read and understand the limitations in the [FAQ](FAQ.md) page before you proceed. Read ahead on how to get your certificate.
+  If you don't have a paid developer account, but you have a manual provisioning profile with a `.mobileprovision` extension, you can use this method instead. Based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-The certificate is a file with an extension `.p12`. To obtain it, follow the instructions below:
+Additionally, you will also need a certificate file with a `.p12` extension. If you are using a manual provisioning profile, you likely received a certificate along with it - use that. Otherwise, follow the instructions below:
 
-**On macOS:** Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
+- **macOS**
 
-<table>
-<tr>
-    <th>A</th>
-    <th>B</th>
-    <th>C</th>
-</tr>
-<tr>
-    <td><img src="img/6.png"/></td>
-    <td><img src="img/7.png"/></td>
-    <td><img src="img/5.png"/></td>
-</tr>
-</table>
+  Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
 
-**On Windows:** There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
+  <table>
+  <tr>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+  </tr>
+  <tr>
+      <td><img src="img/6.png"/></td>
+      <td><img src="img/7.png"/></td>
+      <td><img src="img/5.png"/></td>
+  </tr>
+  </table>
 
-Once you have your certificate and optionally provisioning profile, you need to create the correct folders for the service to read them:
+- **Windows**
+
+  There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
+
+Once you have your signing profile, you need to create the correct folders for the service to read it:
 
 1. Create a new folder named `data` (if you changed `save_dir` in the config above, use that)
 2. Create another folder named `profiles` inside of it
@@ -142,21 +148,7 @@ Once you have your certificate and optionally provisioning profile, you need to 
 
 > :warning: **You need to match the files names exactly as they are shown below. For an example, your certificate must be named exactly `cert.p12`. Be aware that Windows may hide the extensions by default.**
 
-- **Certificate + provisioning profile**
-
-  ```python
-  data
-  |____profiles
-  | |____my_profile                # any unique string that you want
-  | | |____cert.p12                # the signing certificate
-  | | |____cert_pass.txt           # the signing certificate's password
-  | | |____name.txt                # a name to show in the web interface
-  | | |____prov.mobileprovision    # the signing provisioning profile
-  | |____my_other_profile
-  | | |____...
-  ```
-
-- **Certificate + developer account**
+- **Developer account**
 
   ```python
   data
@@ -167,6 +159,20 @@ Once you have your certificate and optionally provisioning profile, you need to 
   | | |____name.txt                # a name to show in the web interface
   | | |____account_name.txt        # the developer account's name (email)
   | | |____account_pass.txt        # the developer account's password
+  | |____my_other_profile
+  | | |____...
+  ```
+
+- **Manual provisioning profile**
+
+  ```python
+  data
+  |____profiles
+  | |____my_profile                # any unique string that you want
+  | | |____cert.p12                # the signing certificate
+  | | |____cert_pass.txt           # the signing certificate's password
+  | | |____name.txt                # a name to show in the web interface
+  | | |____prov.mobileprovision    # the signing provisioning profile
   | |____my_other_profile
   | | |____...
   ```

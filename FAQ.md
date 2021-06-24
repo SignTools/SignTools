@@ -57,13 +57,12 @@ Technically, everything is supported as long as your iOS device trusts it. This 
 - Wildcard, with app id = `TEAM_ID.*`
 
   - Can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...)
-  - Can't use special entitlements such as app groups (Apple restriction)
+  - Can't use special entitlements such as app groups or iCloud containers (Apple restriction)
 
 - Explicit, with app id = `TEAM_ID.app1`
   - Can properly sign only one app (`TEAM_ID.app1`)
   - Can use any entitlement as long as it's in the provisioning profile
-  - If you properly sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
-  - It appears possible, at least on iOS 14.4, to improperly sign apps by mismatching their bundle id and profile app id, and the apps will still run. For an example, with an app id `TEAM_ID.app1`, you could sign the apps `TEAM_ID.app2` and `TEAM_ID.app3`. This way you can have multiple apps installed at the same time, but all of their entitlements will be broken, including file importing. Does not work with free developer accounts.
+  - If you sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 
