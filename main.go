@@ -294,15 +294,15 @@ func getBaseUrl(c echo.Context) string {
 }
 
 func makeManifest(baseUrl string, app storage.App) ([]byte, error) {
-	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
+	t, err := textTemplate.New("").Funcs(
+		textTemplate.FuncMap{"escape": func(text string) (string, error) {
+			return escapeXML(text)
+		}},
+	).Parse(assets.ManifestPlist)
 	if err != nil {
 		return nil, err
 	}
 	appName, err := app.GetName()
-	if err != nil {
-		return nil, err
-	}
-	appName, err = escapeXML(appName)
 	if err != nil {
 		return nil, err
 	}
