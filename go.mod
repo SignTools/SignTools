@@ -6,7 +6,7 @@ require (
 	github.com/ViRb3/sling/v2 v2.0.2
 	github.com/elliotchance/orderedmap v1.4.0
 	github.com/google/go-github/v33 v33.0.0
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/knadh/koanf v1.1.1
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/labstack/gommon v0.3.0
