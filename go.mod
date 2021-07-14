@@ -8,7 +8,7 @@ require (
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.2.0
 	github.com/knadh/koanf v1.1.1
-	github.com/labstack/echo/v4 v4.3.0
+	github.com/labstack/echo/v4 v4.4.0
 	github.com/labstack/gommon v0.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.23.0
