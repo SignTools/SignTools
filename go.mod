@@ -3,6 +3,7 @@ module ios-signer-service
 go 1.16
 
 require (
+	github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99
 	github.com/ViRb3/sling/v2 v2.0.2
 	github.com/elliotchance/orderedmap v1.4.0
 	github.com/google/go-github/v33 v33.0.0

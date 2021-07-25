@@ -1,5 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99 h1:3xOQDhP/VlRt01ZeIhlGbuVjgF7DosrRO9w9Kbb2WrI=
+github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99/go.mod h1:ZPRu5gf31DvsT2lKAu70+ZdxA5BnwEtWjpZL/Au/Kak=
 github.com/ViRb3/sling/v2 v2.0.2 h1:XPadHD6pQHIuGSI0UYrkgmP7HH/ZLvt9/FM7saboVWs=
 github.com/ViRb3/sling/v2 v2.0.2/go.mod h1:TsPjWWaGty4CDiezzN6f03mHzBRxBNI7o3ikMJ4pTuY=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
