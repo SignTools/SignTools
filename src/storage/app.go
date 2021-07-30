@@ -12,6 +12,7 @@ import (
 type App interface {
 	GetId() string
 	GetSigned() (ReadonlyFile, error)
+	ClearSigned() error
 	SetSigned(reader io.ReadSeeker, bundleId string) error
 	IsSigned() (bool, error)
 	GetUnsigned() (ReadonlyFile, error)
@@ -139,6 +140,12 @@ func (a *app) GetSigned() (ReadonlyFile, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return os.Open(appSignedPath(a.id))
+}
+
+func (a *app) ClearSigned() error {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return os.Remove(appSignedPath(a.id))
 }
 
 func (a *app) SetSigned(reader io.ReadSeeker, bundleId string) error {

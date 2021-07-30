@@ -447,6 +447,12 @@ func restartSign(c echo.Context, app storage.App) error {
 	if !ok {
 		return errors.New("no builder with id " + builderId)
 	}
+	if err := app.ClearSigned(); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err := app.ResetModTime(); err != nil {
+		return err
+	}
 	if err := startSign(app, builder); err != nil {
 		return err
 	}
@@ -454,9 +460,6 @@ func restartSign(c echo.Context, app storage.App) error {
 }
 
 func startSign(app storage.App, builder builders.Builder) error {
-	if err := app.ResetModTime(); err != nil {
-		return err
-	}
 	profileId, err := app.GetProfileId()
 	if err != nil {
 		return err
