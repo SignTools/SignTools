@@ -85,10 +85,8 @@ server_url: https://mywebsite.com
 redirect_https: false
 # where to save data like apps and signing profiles
 save_dir: data
-# apps older than this time will be deleted when a cleanup job is run
-cleanup_mins: 10080
 # how often does the cleanup job run
-cleanup_interval_mins: 5
+cleanup_interval_mins: 1
 # apps that have been processing for more than this time will be marked as failed
 sign_timeout_mins: 15
 # this protects the web ui with a username and password

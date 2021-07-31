@@ -48,33 +48,6 @@ var formNames = assets.FormNames{
 	FormBundleId:     "bundle_id",
 }
 
-func cleanupOld() error {
-	apps, err := storage.Apps.GetAll()
-	if err != nil {
-		return err
-	}
-	now := time.Now()
-	for _, app := range apps {
-		modTime, err := app.GetModTime()
-		if err != nil {
-			return err
-		}
-		if modTime.Add(time.Duration(config.Current.CleanupMins) * time.Minute).Before(now) {
-			if err := storage.Apps.Delete(app.GetId()); err != nil {
-				log.Err(err).Str("id", app.GetId()).Msg("cleanup app")
-			}
-		}
-	}
-	for _, job := range storage.Jobs.GetAll() {
-		if job.Ts.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute).Before(now) {
-			if !storage.Jobs.DeleteById(job.Id) {
-				log.Error().Str("id", job.Id).Msg("cleanup job")
-			}
-		}
-	}
-	return nil
-}
-
 func main() {
 	host := flag.String("host", "", "Listen host, empty for all")
 	port := flag.Uint64("port", 8080, "Listen port")
@@ -119,16 +92,13 @@ func serve(host string, port uint64) {
 		log.Fatal().Err(err).Send()
 	}
 
-	if config.Current.CleanupIntervalMins > 0 && config.Current.CleanupMins > 0 {
-		go func() {
-			for {
-				if err := cleanupOld(); err != nil {
-					log.Err(err).Msg("cleanup old")
-				}
-				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
-			}
-		}()
-	}
+	interval := time.Duration(config.Current.CleanupIntervalMins) * time.Minute
+	timeout := time.Duration(config.Current.SignTimeoutMins) * time.Minute
+	go func() {
+		for range time.Tick(interval) {
+			storage.Jobs.Cleanup(timeout)
+		}
+	}()
 
 	log.Info().Msg("setting builder secrets")
 	for _, builder := range config.Current.Builder {

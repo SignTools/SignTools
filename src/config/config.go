@@ -48,7 +48,6 @@ type File struct {
 	ServerUrl           string    `yaml:"server_url"`
 	RedirectHttps       bool      `yaml:"redirect_https"`
 	SaveDir             string    `yaml:"save_dir"`
-	CleanupMins         uint64    `yaml:"cleanup_mins"`
 	CleanupIntervalMins uint64    `yaml:"cleanup_interval_mins"`
 	SignTimeoutMins     uint64    `yaml:"sign_timeout_mins"`
 	BasicAuth           BasicAuth `yaml:"basic_auth"`
@@ -82,9 +81,8 @@ func createDefaultFile() *File {
 		ServerUrl:           "http://localhost:8080",
 		RedirectHttps:       false,
 		SaveDir:             "data",
-		CleanupMins:         60 * 24 * 7,
-		CleanupIntervalMins: 5,
 		SignTimeoutMins:     15,
+		CleanupIntervalMins: 1,
 		BasicAuth: BasicAuth{
 			Enable:   false,
 			Username: "admin",

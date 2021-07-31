@@ -89,7 +89,6 @@ func TestMain(m *testing.M) {
 		File: &config.File{
 			ServerUrl:           serveAddress,
 			SaveDir:             saveDir,
-			CleanupMins:         0,
 			CleanupIntervalMins: 0,
 		},
 		BuilderKey: builderKey,

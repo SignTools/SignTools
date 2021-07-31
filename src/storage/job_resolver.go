@@ -28,7 +28,7 @@ type JobResolver struct {
 func (r *JobResolver) MakeSignJob(appId string, profileId string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.appIdToSignJobMap.Set(appId, signJob{
+	r.appIdToSignJobMap.Set(appId, &signJob{
 		ts:        time.Now(),
 		appId:     appId,
 		profileId: profileId,
@@ -46,7 +46,7 @@ func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 
 	elem := r.appIdToSignJobMap.Back()
 	r.appIdToSignJobMap.Delete(elem.Key)
-	job := elem.Value.(signJob)
+	job := elem.Value.(*signJob)
 	returnJobId := uuid.NewString()
 	returnJob := ReturnJob{Id: returnJobId, Ts: time.Now(), AppId: job.appId}
 	r.idToReturnJobMap[returnJobId] = &returnJob
@@ -63,14 +63,29 @@ func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 	return nil
 }
 
-func (r *JobResolver) GetAll() []*ReturnJob {
+func (r *JobResolver) Cleanup(timeout time.Duration) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	var jobs []*ReturnJob
-	for _, job := range r.idToReturnJobMap {
-		jobs = append(jobs, job)
+	now := time.Now()
+	var deleteList []interface{}
+	for el := r.appIdToSignJobMap.Front(); el != nil; el = el.Next() {
+		job := el.Value.(*signJob)
+		if now.After(job.ts.Add(timeout)) {
+			deleteList = append(deleteList, el.Key)
+		}
 	}
-	return jobs
+	for _, key := range deleteList {
+		r.appIdToSignJobMap.Delete(key)
+	}
+	var deleteList2 []string
+	for id, job := range r.idToReturnJobMap {
+		if now.After(job.Ts.Add(timeout)) {
+			deleteList2 = append(deleteList2, id)
+		}
+	}
+	for _, id := range deleteList2 {
+		r.deleteById(id)
+	}
 }
 
 func (r *JobResolver) GetStatusByAppId(id string) (bool, bool) {
@@ -98,6 +113,10 @@ func (r *JobResolver) GetByAppId(id string) (*ReturnJob, bool) {
 func (r *JobResolver) DeleteById(id string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	return r.deleteById(id)
+}
+
+func (r *JobResolver) deleteById(id string) bool {
 	job, ok := r.idToReturnJobMap[id]
 	if !ok {
 		return false

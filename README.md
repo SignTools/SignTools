@@ -44,7 +44,6 @@ This project is self-hosted; there is no public service. It does not provide any
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
 - Choose from multiple signing profiles or free developer accounts
 - Configure various aspects of the signing process
-- Periodic old file cleanup
 
 ## Screenshots
 
