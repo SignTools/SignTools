@@ -311,8 +311,8 @@
         uploadForm.reportValidity();
         return;
       }
-      formSubmit.classList.add("disabled");
-      btnModalClose.classList.add("disabled");
+      formSubmit.disabled = true;
+      btnModalClose.disabled = true;
       formFileSpinner.style.display = "inline-block";
 
       // https://github.com/hakimel/Ladda/issues/71
@@ -326,17 +326,17 @@
         if (formIdProv.checked) {
           formIdOriginal.checked = true;
         }
-        formIdProv.setAttribute("disabled", "true");
+        formIdProv.disabled = true;
       } else {
-        formIdProv.removeAttribute("disabled");
+        formIdProv.disabled = false;
       }
     });
     document.querySelectorAll('input[name="{{.FormId}}"]').forEach(function (a) {
       a.addEventListener("change", function () {
         if (formIdCustom.checked) {
-          formIdCustomText.removeAttribute("disabled");
+          formIdCustomText.disabled = false;
         } else {
-          formIdCustomText.setAttribute("disabled", "true");
+          formIdCustomText.disabled = true;
         }
       });
     });
