@@ -37,13 +37,15 @@ This project is self-hosted; there is no public service. It does not provide any
 ## Features
 
 - No jailbreak required
-- All iOS versions supported
+- All modern iOS versions supported
 - No computer required after an initial setup
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
-- Choose from multiple signing profiles or free developer accounts
-- Configure various aspects of the signing process
+- Provisioning profiles, paid and free developer accounts supported
+- Choose from multiple signing profiles for each app
+- Configure the app bundle id, supported devices, iTunes sharing, and debugging entitlement
+- Re-sign apps directly without uploading
 
 ## Screenshots
 
