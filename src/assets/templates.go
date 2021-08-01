@@ -19,6 +19,7 @@ const (
 	AppStatusProcessing = 0
 	AppStatusSigned     = 1
 	AppStatusFailed     = 2
+	AppStatusWaiting    = 3
 )
 
 type Profile struct {

@@ -16,6 +16,7 @@
   - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
   - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
   - [How can I debug a failing builder?](#how-can-i-debug-a-failing-builder)
+  - [Install button does not work](#install-button-does-not-work)
 
 ## Free developer account limitations
 
@@ -56,17 +57,16 @@ Technically, everything is supported as long as your iOS device trusts it. This 
 - Wildcard, with app id = `TEAM_ID.*`
 
   - Can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...)
-  - Can't use special entitlements such as app groups (Apple restriction)
+  - Can't use special entitlements such as app groups or iCloud containers (Apple restriction)
 
 - Explicit, with app id = `TEAM_ID.app1`
   - Can properly sign only one app (`TEAM_ID.app1`)
   - Can use any entitlement as long as it's in the provisioning profile
-  - If you properly sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
-  - It appears possible, at least on iOS 14.4, to improperly sign apps by mismatching their bundle id and profile app id, and the apps will still run. For an example, with an app id `TEAM_ID.app1`, you could sign the apps `TEAM_ID.app2` and `TEAM_ID.app3`. This way you can have multiple apps installed at the same time, but all of their entitlements will be broken, including file importing. Does not work with free developer accounts.
+  - If you sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 
-First, make sure you are signing the app correctly and not breaking the entitlements. Read the section just above.
+First, make sure you are signing the app correctly and not breaking the entitlements. Read the [kinds of certificates and profiles](#what-kind-of-certificatesprovisioning-profiles-are-supported) section.
 
 If that doesn't help, you need to figure out what entitlements the app requires. unc0ver 6.0.2 and DolphiniOS emulator need the app debugging (`get-task-allow`) entitlement. Make sure you are using a signing profile with `get-task-allow=true` in its provisioning profile. Also, when you upload such an app to this service, make sure to tick the `Enable app debugging` option. Since this is a potential security issue, it will be disabled by default unless you tick the box.
 
@@ -82,24 +82,18 @@ You can also use `-u YOUR_UDID -n` to run this command over the network. When th
 
 ## "Unable To Install \*.ipa"
 
-This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the `Free developer account limitations` section above.
+This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the [free account limitations](#free-developer-account-limitations) section.
 
-Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the `This app cannot be installed because its integrity could not be verified` section above.
+Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the [integrity verification error](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified) section.
 
 ## How can I debug a failing builder?
 
-First, check the builder's logs and see if you can find anything helpful there. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing.
+Check the builder's logs for any errors. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing or failed.
 
-If those logs didn't help, edit the `sign.sh` file in **your** builder's repo and remove the output suppression from the failing line. Usually this will be the `xresign.sh` call, so change:
+## Install button does not work
 
-```bash
-./xresign.sh ...  >/dev/null 2>&1
-```
+Check your logs for something among these lines:
 
-To:
+> WRN using OTA manifest proxy, installation may not work
 
-```bash
-./xresign.sh ...
-```
-
-Next time you run a build, the logs will give you full details that you can use to resolve your issue. The reason that the output suppression is there in the first place is to prevent leaks of potentially sensitive information about your certificates and apps.
+If you see the warning, then you are trying to access the service over HTTP instead of HTTPS. Apple only allows OTA installation over HTTPS, so to make it work for you, a special manifest proxy is used. The server that delivers the proxy is limited to 100,000 requests per day globally, so unfortunately the limit has likely been reached. Wait one day, or access your service over HTTPS instead.

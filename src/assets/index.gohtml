@@ -11,8 +11,8 @@
             integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
             crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
-            integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"
-            async></script>
+            integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
+            crossorigin="anonymous"></script>
     <style>
         a, a:hover {
             color: inherit;
@@ -65,6 +65,9 @@
                                 <label style="display: inline" class="form-check-label" for="formIdOriginal">
                                     Use the app's original bundle ID
                                 </label>
+                                <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="For developer accounts, the original ID will be encoded into
+                                   a different but constant ID.">?</a>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="formIdProv" name="{{.FormId}}"
@@ -82,6 +85,9 @@
                                 <label style="display: inline" class="form-check-label" for="formIdCustom">
                                     Use custom:
                                 </label>
+                                <a style="color: blue" href="#" data-bs-toggle="tooltip" data-bs-placement="right"
+                                   title="For developer accounts, the custom ID will be encoded into
+                                   a different but constant ID.">?</a>
                                 <input type="text" class="form-control" name="{{.FormIdCustomText}}" disabled
                                        id="formIdCustomText" placeholder="com.custom.app" required/>
                             </div>
@@ -137,6 +143,7 @@
                     {{if eq $app.Status 0 }} bg-primary
                     {{else if eq $app.Status 1 }} bg-success
                     {{else if eq $app.Status 2 }} bg-danger
+                    {{else if eq $app.Status 3 }} bg-secondary
                     {{end}}">
                     <div class="card-body">
                         <div class="row">
@@ -153,6 +160,7 @@
                             {{if eq $app.Status 0 }} Processing
                             {{else if eq $app.Status 1 }} Signed
                             {{else if eq $app.Status 2 }} Failed
+                            {{else if eq $app.Status 3 }} Waiting
                             {{end}}
                             <br>
                             {{$app.ModTime}}
@@ -227,11 +235,11 @@
     formProfile.addEventListener("change", function () {
         const selectedOption = formProfile.options[formProfile.selectedIndex]
         if (selectedOption.getAttribute('account') === 'true') {
-            formIdCustom.click()
-            formIdOriginal.setAttribute('disabled', 'true')
+            if (formIdProv.checked) {
+                formIdOriginal.checked = true
+            }
             formIdProv.setAttribute('disabled', 'true')
         } else {
-            formIdOriginal.removeAttribute('disabled')
             formIdProv.removeAttribute('disabled')
         }
     })

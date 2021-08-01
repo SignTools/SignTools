@@ -2,4 +2,4 @@ build:
   docker:
     web: Dockerfile.heroku
 run:
-  web: /bin-release -port "$PORT"
+  web: /bin-release -port "$PORT" -log-json

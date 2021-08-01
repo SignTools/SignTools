@@ -41,11 +41,16 @@
       "value": "master"
     },
     "SERVER_URL": {
-      "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the address will be: https://testapp.herokuapp.com",
+      "description": "The public address of your server. This depends on the 'App name' you chose at the top of this page. For example, if you named your Heroku app 'testapp', the server url will be: https://testapp.herokuapp.com",
       "value": ""
     },
+    "REDIRECT_HTTPS": {
+      "description": "Your service will be public, so it must always be encrypted with HTTPS.",
+      "generator": "true",
+      "value": "true"
+    },
     "BASIC_AUTH_ENABLE": {
-      "description": "Your app will be public, so it must be password-protected.",
+      "description": "Your service will be public, so it must be password-protected.",
       "generator": "true",
       "value": "true"
     },
@@ -66,21 +71,21 @@
       "value": ""
     },
     "PROFILE_CERT_BASE64": {
-      "description": "Your signing profile's certificate (p12). You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "description": "Your signing profile's certificate (p12). This is always required, no matter what signing method you use. You have to encode the file as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
       "value": ""
     },
     "PROFILE_PROV_BASE64": {
-      "description": "Your signing profile's provisioning profile (mobileprovision). Not needed if you are using an Apple developer account. You have to encode it as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "description": "Your signing profile's provisioning profile (mobileprovision). If you have a developer account, leave this empty and fill in your account details instead. Otherwise, you have to encode the provisioning profile as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
       "required": false,
       "value": ""
     },
     "PROFILE_ACCOUNT_NAME": {
-      "description": "Your Apple developer account's username. Not needed if you are using a provisioning profile.",
+      "description": "Your Apple developer account's name (e-mail). If you don't have one, but you have a manual provisioning profile, leave this empty and fill in the profile instead.",
       "required": false,
       "value": ""
     },
     "PROFILE_ACCOUNT_PASS": {
-      "description": "Your Apple developer account's password. Not needed if you are using a provisioning profile.",
+      "description": "Your Apple developer account's password. If you don't have one, but you have a manual provisioning profile, leave this empty and fill in the profile instead.",
       "required": false,
       "value": ""
     }

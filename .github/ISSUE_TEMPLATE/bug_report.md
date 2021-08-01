@@ -6,6 +6,8 @@ labels: bug
 assignees: ""
 ---
 
+!! Please fill in this template, DO NOT ignore or delete it. !!
+
 **I tried basic troubleshooting first**
 
 - [ ] Updated **both** [ios-signer-service](https://github.com/SignTools/ios-signer-service) **and** the builder ([ios-signer-ci](https://github.com/SignTools/ios-signer-ci) or [ios-signer-builder](https://github.com/SignTools/ios-signer-builder)) to the latest version
@@ -31,9 +33,9 @@ If applicable, add screenshots to help explain your problem.
 **System configuration**
 
 - ios-signer-service version: [e.g. 2.1.1]
-- Installation type: [e.g. computer, phone; nginx, ngrok, cloudflared]
+- Installation type: [heroku, computer, phone; nginx, ngrok, cloudflared]
 - Builder type: [ios-signer-ci, ios-signer-builder]
-- Builder version: [e.g. 1.0.0 for ios-signer-builder; the latest commit hash of your ios-signer-ci repo, e.g. 03e0ed9]
+- Builder version: [e.g. 1.0.0 for ios-signer-builder; the latest commit hash of your repo for ios-signer-ci, e.g. 03e0ed9]
 
 **Additional context**
 Add any other context about the problem here.

@@ -1,4 +1,4 @@
-FROM golang:1.16-alpine AS builder
+FROM golang:1.16.6-alpine AS builder
 
 WORKDIR /src
 COPY . .
@@ -6,7 +6,7 @@ COPY . .
 RUN go mod download && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o "bin-release"
 
-FROM alpine:3.13.5
+FROM alpine:3.14.0
 
 WORKDIR /
 

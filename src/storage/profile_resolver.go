@@ -2,6 +2,7 @@ package storage
 
 import (
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/util"
 	"os"
@@ -21,17 +22,21 @@ type profileResolver struct {
 func (r *profileResolver) refresh() error {
 	idDirs, err := util.ReadDirNonHidden(profilesPath)
 	if err != nil {
-		return &AppError{"read profiles dir", ".", err}
+		return errors.WithMessage(err, "read profiles dir")
 	}
 	envProfile, err := newEnvProfile(config.Current.EnvProfile)
 	if err == nil {
-		r.idToProfileMap["imported"] = envProfile
+		r.idToProfileMap[envProfile.GetId()] = envProfile
 	} else if !os.IsNotExist(err) {
 		return errors.WithMessage(err, "import profile from envvars")
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
-		profile := newProfile(id)
+		profile, err := newProfile(id)
+		if err != nil {
+			log.Err(err).Str("id", id).Msg("load profile from files")
+			continue
+		}
 		r.idToProfileMap[id] = profile
 	}
 	return nil

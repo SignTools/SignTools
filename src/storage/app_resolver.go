@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"github.com/pkg/errors"
 	"io"
 	"ios-signer-service/src/util"
+	"os"
 	"sort"
 	"sync"
 )
@@ -23,7 +25,7 @@ func (r *appResolver) refresh() error {
 	defer r.mutex.Unlock()
 	idDirs, err := util.ReadDirNonHidden(appsPath)
 	if err != nil {
-		return &AppError{"read apps dir", ".", err}
+		return errors.WithMessage(err, "read apps dir")
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
@@ -59,28 +61,28 @@ func (r *appResolver) Get(id string) (App, bool) {
 }
 
 func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
 	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId)
 	if err != nil {
-		return nil, &AppError{"new app", ".", err}
+		return nil, err
 	}
-
+	r.mutex.Lock()
 	r.idToAppMap[app.GetId()] = app
+	r.mutex.Unlock()
 	return app, nil
 }
 
 func (r *appResolver) Delete(id string) error {
 	r.mutex.Lock()
-	defer r.mutex.Unlock()
 	app, ok := r.idToAppMap[id]
 	if !ok {
+		r.mutex.Unlock()
 		return nil
 	}
-	if err := app._prune(); err != nil {
-		return &AppError{"prune app", ".", err}
+	appId := app.GetId()
+	delete(r.idToAppMap, appId)
+	r.mutex.Unlock()
+	if err := os.RemoveAll(appPath(appId)); err != nil {
+		return errors.WithMessagef(err, "delete app id=%s", app.GetId())
 	}
-	delete(r.idToAppMap, app.GetId())
 	return nil
 }

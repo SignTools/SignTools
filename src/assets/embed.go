@@ -18,6 +18,9 @@ var ManifestPlist string
 //go:embed favicon.png
 var favIconFS embed.FS
 
+//go:embed certs
+var AppleCerts embed.FS
+
 var FavIconFile, _ = favIconFS.Open("favicon.png")
 var FavIconBytes, _ = ioutil.ReadAll(FavIconFile)
 var FavIconStat, _ = FavIconFile.Stat()

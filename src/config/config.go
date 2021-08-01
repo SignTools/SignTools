@@ -47,6 +47,7 @@ func (b *Builder) MakeFirstEnabled() builders.Builder {
 type File struct {
 	Builder             Builder   `yaml:"builder"`
 	ServerUrl           string    `yaml:"server_url"`
+	RedirectHttps       bool      `yaml:"redirect_https"`
 	SaveDir             string    `yaml:"save_dir"`
 	CleanupMins         uint64    `yaml:"cleanup_mins"`
 	CleanupIntervalMins uint64    `yaml:"cleanup_interval_mins"`
@@ -80,9 +81,10 @@ func createDefaultFile() *File {
 			},
 		},
 		ServerUrl:           "http://localhost:8080",
+		RedirectHttps:       false,
 		SaveDir:             "data",
 		CleanupMins:         60 * 24 * 7,
-		CleanupIntervalMins: 30,
+		CleanupIntervalMins: 5,
 		SignTimeoutMins:     15,
 		BasicAuth: BasicAuth{
 			Enable:   false,
@@ -108,7 +110,6 @@ type ProfileBox struct {
 type Config struct {
 	Builder    builders.Builder
 	BuilderKey string
-	PublicUrl  string
 	*File
 	EnvProfile *EnvProfile
 }
@@ -183,7 +184,7 @@ func getFile(mapDelim rune, fileName string) (*File, error) {
 		return nil, errors.WithMessage(err, "load default")
 	}
 	if err := k.Load(kfile.Provider(fileName), kyaml.Parser()); os.IsNotExist(err) {
-		log.Info().Str("name", fileName).Msg("config file created")
+		log.Info().Str("name", fileName).Msg("creating config file")
 	} else if err != nil {
 		return nil, errors.WithMessage(err, "load existing")
 	}

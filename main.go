@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	log2 "github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -14,22 +15,19 @@ import (
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/src/assets"
-	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/tunnel"
 	"ios-signer-service/src/util"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"strings"
 	textTemplate "text/template"
 	"time"
 )
-
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
 
 var formNames = assets.FormNames{
 	FormFile:         "file",
@@ -46,7 +44,7 @@ var formNames = assets.FormNames{
 	FormBundleId:     "bundle_id",
 }
 
-func cleanupApps() error {
+func cleanupOld() error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
 		return err
@@ -59,7 +57,14 @@ func cleanupApps() error {
 		}
 		if modTime.Add(time.Duration(config.Current.CleanupMins) * time.Minute).Before(now) {
 			if err := storage.Apps.Delete(app.GetId()); err != nil {
-				return err
+				log.Err(err).Str("id", app.GetId()).Msg("cleanup app")
+			}
+		}
+	}
+	for _, job := range storage.Jobs.GetAll() {
+		if job.Ts.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute).Before(now) {
+			if !storage.Jobs.DeleteById(job.Id) {
+				log.Error().Str("id", job.Id).Msg("cleanup job")
 			}
 		}
 	}
@@ -75,34 +80,34 @@ func main() {
 	cloudflaredPort := flag.Uint64("cloudflared-port", 0, "cloudflared metrics port. "+
 		"Used to automatically parse the server_url")
 	logJson := flag.Bool("log-json", false, "If enabled, outputs logs in JSON instead of pretty printing them.")
+	logLevel := flag.Uint("log-level", uint(zerolog.InfoLevel), "Logging level, 0 (debug) - 5 (panic).")
 	flag.Parse()
 
-	if *logJson {
-		log.Logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.Level(*logLevel))
+	if !*logJson {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	config.Load(*configFile)
 	storage.Load()
 	switch {
 	case *ngrokPort != 0:
-		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
 	case *cloudflaredPort != 0:
-		config.Current.PublicUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
-	default:
-		config.Current.PublicUrl = config.Current.ServerUrl
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
 	}
 
+	log.Info().Str("url", config.Current.ServerUrl).Msg("using server url")
 	serve(*host, *port)
 }
 
 func getPublicUrlFatal(provider tunnel.Provider) string {
-	log.Info().Str("state", "obtaining public url").Send()
-	publicUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
+	log.Info().Msg("obtaining server url")
+	serverUrl, err := tunnel.GetPublicUrl(provider, 15*time.Second)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
-	log.Info().Str("state", "obtained public url").Str("url", publicUrl).Send()
-	return publicUrl
+	return serverUrl
 }
 
 func serve(host string, port uint64) {
@@ -113,22 +118,22 @@ func serve(host string, port uint64) {
 	if config.Current.CleanupIntervalMins > 0 && config.Current.CleanupMins > 0 {
 		go func() {
 			for {
-				if err := cleanupApps(); err != nil {
-					log.Err(err).Msg("cleanup apps")
+				if err := cleanupOld(); err != nil {
+					log.Err(err).Msg("cleanup old")
 				}
 				time.Sleep(time.Duration(config.Current.CleanupIntervalMins) * time.Minute)
 			}
 		}()
 	}
 
-	log.Info().Str("state", "setting builder secrets").Send()
+	log.Info().Msg("setting builder secrets")
 	if err := setBuilderSecrets(); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 
 	e := echo.New()
 	e.HideBanner = true
-	logger := lecho.From(log.Logger)
+	logger := lecho.From(log.Logger, lecho.WithLevel(log2.INFO))
 	e.Logger = logger
 	e.Use(lecho.Middleware(lecho.Config{Logger: logger}))
 
@@ -146,12 +151,11 @@ func serve(host string, port uint64) {
 		return s == config.Current.BuilderKey, nil
 	})
 
-	e.Pre(middleware.HTTPSRedirectWithConfig(middleware.RedirectConfig{
-		Skipper: func(echo.Context) bool {
-			return !strings.HasPrefix(config.Current.PublicUrl, "https")
-		},
-		Code: 302,
-	}))
+	if config.Current.RedirectHttps {
+		e.Pre(middleware.HTTPSRedirectWithConfig(middleware.RedirectConfig{
+			Code: 302,
+		}))
+	}
 
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
@@ -165,22 +169,22 @@ func serve(host string, port uint64) {
 	e.GET("/jobs", getLastJob, workflowKeyAuth)
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
+	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
-	log.Info().Str("state", "started http server").Send()
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
-func setBuilderSecrets() error {
-	var secretUrl string
-	if _, ok := config.Current.Builder.(*builders.SelfHosted); ok {
-		// use internal IP between builder and service
-		secretUrl = config.Current.ServerUrl
-	} else {
-		secretUrl = config.Current.PublicUrl
+func failJob(c echo.Context, job *storage.ReturnJob) error {
+	if !storage.Jobs.DeleteById(job.Id) {
+		return errors.New("unable to delete return job " + job.Id)
 	}
+	return c.NoContent(200)
+}
+
+func setBuilderSecrets() error {
 	return config.Current.Builder.SetSecrets(map[string]string{
 		"SECRET_KEY": config.Current.BuilderKey,
-		"SECRET_URL": secretUrl,
+		"SECRET_URL": config.Current.ServerUrl,
 	})
 }
 
@@ -190,9 +194,6 @@ func getFavIcon(c echo.Context) error {
 }
 
 func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
-	if !storage.Jobs.DeleteById(job.Id) {
-		return errors.New("unable to delete return job " + job.Id)
-	}
 	app, ok := storage.Apps.Get(job.AppId)
 	if !ok {
 		return errors.New(fmt.Sprintf("return job %s appid %s not resolved", job.Id, job.AppId))
@@ -208,6 +209,9 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 	defer file.Close()
 	if err := app.SetSigned(file, c.FormValue(formNames.FormBundleId)); err != nil {
 		return err
+	}
+	if !storage.Jobs.DeleteById(job.Id) {
+		return errors.New("unable to delete return job " + job.Id)
 	}
 	return c.NoContent(200)
 }
@@ -274,15 +278,27 @@ func deleteApp(c echo.Context, app storage.App) error {
 }
 
 func getManifest(c echo.Context, app storage.App) error {
-	manifestBytes, err := makeManifest(app)
+	manifestBytes, err := makeManifest(getBaseUrl(c), app)
 	if err != nil {
 		return err
 	}
 	return c.Blob(200, "text/plain", manifestBytes)
 }
 
-func makeManifest(app storage.App) ([]byte, error) {
-	t, err := textTemplate.New("").Parse(assets.ManifestPlist)
+func getBaseUrl(c echo.Context) string {
+	serverUrl := url.URL{
+		Scheme: c.Scheme(),
+		Host:   c.Request().Host,
+	}
+	return serverUrl.String()
+}
+
+func makeManifest(baseUrl string, app storage.App) ([]byte, error) {
+	t, err := textTemplate.New("").Funcs(
+		textTemplate.FuncMap{"escape": func(text string) (string, error) {
+			return escapeXML(text)
+		}},
+	).Parse(assets.ManifestPlist)
 	if err != nil {
 		return nil, err
 	}
@@ -290,13 +306,17 @@ func makeManifest(app storage.App) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	appName, err = escapeXML(appName)
+	bundleId, err := app.GetBundleId()
+	if err != nil {
+		return nil, err
+	}
+	downloadUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
 	if err != nil {
 		return nil, err
 	}
 	data := assets.ManifestData{
-		DownloadUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
-		BundleId:    "com.foo.bar",
+		DownloadUrl: downloadUrl,
+		BundleId:    bundleId,
 		Title:       appName,
 	}
 	var result bytes.Buffer
@@ -415,6 +435,10 @@ func startSign(app storage.App) error {
 	return nil
 }
 
+func logErrApp(err error, app storage.App) *zerolog.Event {
+	return log.Err(err).Str("app_id", app.GetId())
+}
+
 func renderIndex(c echo.Context) error {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
@@ -423,44 +447,76 @@ func renderIndex(c echo.Context) error {
 	data := assets.IndexData{
 		FormNames: formNames,
 	}
+	usingManifestProxy := false
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "get is signed")
 		}
 		modTime, err := app.GetModTime()
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "get mod time")
 		}
 		name, err := app.GetName()
 		if err != nil {
-			log.Err(err).Msg("get name")
+			logErrApp(err, app).Msg("get name")
 		}
 		workflowUrl, err := app.GetWorkflowUrl()
 		if err != nil {
-			log.Err(err).Msg("get workflow url")
+			logErrApp(err, app).Msg("get workflow url")
 		}
 		bundleId, _ := app.GetBundleId()
 		profileId, err := app.GetProfileId()
 		if err != nil {
-			log.Err(err).Msg("get profile id")
+			logErrApp(err, app).Msg("get profile id")
 		}
 		var profileName string
 		if profile, ok := storage.Profiles.GetById(profileId); ok {
 			profileName, err = profile.GetName()
 			if err != nil {
-				log.Err(err).Msg("get profile name")
+				logErrApp(err, app).Msg("get profile name")
 			}
 		} else {
-			log.Err(err).Msg("get profile")
+			logErrApp(err, app).Msg("get profile")
 			profileName = "unknown"
 		}
-		appTimeoutTime := modTime.Add(time.Duration(config.Current.SignTimeoutMins) * time.Minute)
-		status := assets.AppStatusFailed
+		jobPending, jobExists := storage.Jobs.GetStatusByAppId(app.GetId())
+		var status int
 		if isSigned {
 			status = assets.AppStatusSigned
-		} else if time.Now().Before(appTimeoutTime) {
+		} else if jobPending {
+			status = assets.AppStatusWaiting
+		} else if jobExists {
 			status = assets.AppStatusProcessing
+		} else {
+			status = assets.AppStatusFailed
+		}
+		baseUrl := getBaseUrl(c)
+		manifestUrl := ""
+		if strings.HasPrefix(baseUrl, "https") {
+			// must be a full URL
+			manifestUrl, err = util.JoinUrls(baseUrl, "/apps", app.GetId(), "manifest")
+			if err != nil {
+				return errors.WithMessage(err, "build manifest url")
+			}
+		} else {
+			usingManifestProxy = true
+			downloadFullUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
+			if err != nil {
+				return errors.WithMessage(err, "build download url")
+			}
+			proxyUrl := url.URL{
+				Scheme: "https",
+				Host:   "ota.signtools.workers.dev",
+				Path:   "/v1",
+			}
+			query := url.Values{
+				"ipa":   []string{downloadFullUrl},
+				"title": []string{name},
+				"id":    []string{bundleId},
+			}
+			proxyUrl.RawQuery = query.Encode()
+			manifestUrl = proxyUrl.String()
 		}
 
 		data.Apps = append(data.Apps, assets.App{
@@ -471,12 +527,15 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:  workflowUrl,
 			ProfileName:  profileName,
 			BundleId:     bundleId,
-			ManifestUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "manifest"),
-			DownloadUrl:  util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "signed"),
-			TwoFactorUrl: util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "2fa"),
-			RestartUrl:   util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "restart"),
-			DeleteUrl:    util.JoinUrlsFatal(config.Current.PublicUrl, "apps", app.GetId(), "delete"),
+			ManifestUrl:  manifestUrl,
+			DownloadUrl:  path.Join("/apps", app.GetId(), "signed"),
+			TwoFactorUrl: path.Join("/apps", app.GetId(), "2fa"),
+			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
+			DeleteUrl:    path.Join("/apps", app.GetId(), "delete"),
 		})
+	}
+	if usingManifestProxy {
+		log.Warn().Str("base_url", getBaseUrl(c)).Msg("using OTA manifest proxy, installation may not work")
 	}
 	profiles, err := storage.Profiles.GetAll()
 	if err != nil {
