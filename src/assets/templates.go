@@ -11,6 +11,7 @@ type App struct {
 	TwoFactorUrl string
 	RestartUrl   string
 	DeleteUrl    string
+	RenameUrl    string
 	ProfileName  string
 	BundleId     string
 }
@@ -60,4 +61,8 @@ type ManifestData struct {
 	DownloadUrl string
 	BundleId    string
 	Title       string
+}
+
+type RenameData struct {
+	AppName string
 }

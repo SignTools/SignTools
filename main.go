@@ -168,6 +168,8 @@ func serve(host string, port uint64) {
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/restart", appResolver(restartSign), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
+	e.GET("/apps/:id/rename", appResolver(renderRenameApp), basicAuth)
+	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
 	e.GET("/jobs", getLastJob, workflowKeyAuth)
@@ -176,6 +178,30 @@ func serve(host string, port uint64) {
 	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+func renderRenameApp(c echo.Context, app storage.App) error {
+	appName, err := app.GetName()
+	if err != nil {
+		return err
+	}
+	data := assets.RenameData{AppName: appName}
+	t, err := htmlTemplate.New("").Parse(assets.RenameHtml)
+	if err != nil {
+		return err
+	}
+	var result bytes.Buffer
+	if err := t.Execute(&result, data); err != nil {
+		return err
+	}
+	return c.HTMLBlob(200, result.Bytes())
+}
+
+func renameApp(c echo.Context, app storage.App) error {
+	if err := app.SetName(c.FormValue("name")); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/")
 }
 
 func failJob(c echo.Context, job *storage.ReturnJob) error {
@@ -549,6 +575,7 @@ func renderIndex(c echo.Context) error {
 			TwoFactorUrl: path.Join("/apps", app.GetId(), "2fa"),
 			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
 			DeleteUrl:    path.Join("/apps", app.GetId(), "delete"),
+			RenameUrl:    path.Join("/apps", app.GetId(), "rename"),
 		})
 	}
 	if usingManifestProxy {

@@ -16,6 +16,7 @@ type App interface {
 	IsSigned() (bool, error)
 	GetUnsigned() (ReadonlyFile, error)
 	GetName() (string, error)
+	SetName(name string) error
 	GetSignArgs() (string, error)
 	GetBundleId() (string, error)
 	GetUserBundleId() (string, error)
@@ -178,6 +179,12 @@ func (a *app) GetName() (string, error) {
 		return "", err
 	}
 	return data, nil
+}
+
+func (a *app) SetName(name string) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.setName(name)
 }
 
 func (a *app) GetWorkflowUrl() (string, error) {
