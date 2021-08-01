@@ -226,9 +226,15 @@
       </div>
     </div>
     <div class="container py-4 py-xxl-5 py-xl-5 px-4">
-      <div class="row" data-masonry='{"percentPosition": true, "horizontalOrder": true}'>
+      <div class="row col-md-8 col-l-7 col-xl-6 px-0 mx-auto pb-3">
+        <div class="input-group px-0">
+          <input type="text" id="inputSearchFilter" class="form-control" placeholder="Search app name" autofocus />
+          <button class="btn btn-outline-secondary" id="btnSearchClear">Clear</button>
+        </div>
+      </div>
+      <div class="row" id="masonryRow">
         {{range $_, $app := .Apps}}
-        <div class="col-sm-6 col-lg-4 col-xl-3 p-2">
+        <div class="col-sm-6 col-lg-4 col-xl-3 p-2 appItem">
           <div
             class="card text-white
                     {{if eq $app.Status 0 }} bg-primary
@@ -316,6 +322,10 @@
     const formIdCustom = document.getElementById("formIdCustom");
     const formIdCustomText = document.getElementById("formIdCustomText");
     const dropdownResign = document.getElementsByClassName("dropdownResign");
+    const inputSearchFilter = document.getElementById("inputSearchFilter");
+    const btnSearchClear = document.getElementById("btnSearchClear");
+    const masonryRow = document.getElementById("masonryRow");
+    const masonry = new Masonry(masonryRow, { percentPosition: true, horizontalOrder: true });
     let canRefresh = true;
 
     for (let item of dropdownResign) {
@@ -378,6 +388,40 @@
         }
       });
     });
+
+    inputSearchFilter.addEventListener("input", function () {
+      window.location.hash = inputSearchFilter.value;
+      if (inputSearchFilter.value === "") {
+        for (let app of document.getElementsByClassName("appItem")) {
+          app.hidden = false;
+        }
+        masonry.layout();
+        return;
+      }
+      let searchText = inputSearchFilter.value.toLowerCase();
+      for (let app of document.getElementsByClassName("appItem")) {
+        if (app.querySelector(".card-title").textContent.toLowerCase().includes(searchText)) {
+          app.hidden = false;
+        } else {
+          app.hidden = true;
+        }
+      }
+      masonry.layout();
+    });
+    if (window.location.hash) {
+      inputSearchFilter.value = window.location.hash.substring(1);
+      inputSearchFilter.dispatchEvent(new Event("input"));
+    }
+    const searchClearHandler = function () {
+      inputSearchFilter.value = "";
+      inputSearchFilter.dispatchEvent(new Event("input"));
+    };
+    inputSearchFilter.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        searchClearHandler();
+      }
+    });
+    btnSearchClear.addEventListener("click", searchClearHandler);
 
     // enable all tooltips
     let tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
