@@ -22,6 +22,7 @@ var (
 	appSignArgsPath     func(id string) string
 	appBundleIdPath     func(id string) string
 	appUserBundleIdPath func(id string) string
+	appBuilderIdPath    func(id string) string
 
 	profilesPath           string
 	profileCertPath        func(id string) string
@@ -52,6 +53,7 @@ func Load() {
 	appSignArgsPath = resolveLocationWithId(appsPath, "sign_args")
 	appBundleIdPath = resolveLocationWithId(appsPath, "bundle_id")
 	appUserBundleIdPath = resolveLocationWithId(appsPath, "user_bundle_id")
+	appBuilderIdPath = resolveLocationWithId(appsPath, "builder_id")
 
 	profilesPath = filepath.Join(config.Current.SaveDir, "profiles")
 	profileCertPath = resolveLocationWithId(profilesPath, "cert.p12")

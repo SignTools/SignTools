@@ -47,17 +47,27 @@
               <button id="btnModalClose" type="button" class="btn-close"></button>
             </div>
             <div class="modal-body">
-              <div class="mb-3">
+              <div class="mb-2">
                 <label for="formFile" class="form-label">App file</label>
                 <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required />
               </div>
-              <div class="mb-3">
+              <div class="mb-2">
                 <div class="col-md-8">
                   <label for="formProfile" class="form-label">Signing profile</label>
                   <select class="form-select" id="formProfile" name="{{.FormProfileId}}" required>
                     <option selected disabled value="">Choose...</option>
                     {{range $_, $profile := .Profiles}}
                     <option value="{{$profile.Id}}" account="{{$profile.IsAccount}}">{{$profile.Name}}</option>
+                    {{end}}
+                  </select>
+                </div>
+              </div>
+              <div class="mb-2">
+                <div class="col-md-8">
+                  <label for="formBuilder" class="form-label">Builder</label>
+                  <select class="form-select" id="formBuilder" name="{{.FormBuilderId}}" required>
+                    {{range $_, $builder := .Builders}}
+                    <option value="{{$builder.Id}}">{{$builder.Name}}</option>
                     {{end}}
                   </select>
                 </div>

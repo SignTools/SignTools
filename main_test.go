@@ -79,11 +79,13 @@ func TestMain(m *testing.M) {
 	}
 
 	config.Current = config.Config{
-		Builder: builders.MakeSelfHosted(&builders.SelfHostedData{
-			Enable: true,
-			Url:    workflowAddress,
-			Key:    workflowKey,
-		}),
+		Builder: map[string]builders.Builder{
+			"selfhosted": builders.MakeSelfHosted(&builders.SelfHostedData{
+				Enable: true,
+				Url:    workflowAddress,
+				Key:    workflowKey,
+			}),
+		},
 		File: &config.File{
 			ServerUrl:           serveAddress,
 			SaveDir:             saveDir,
@@ -257,6 +259,7 @@ func uploadUnsigned(t *testing.T) {
 		formNames.FormAllDevices: {"true"},
 		formNames.FormAppDebug:   {"true"},
 		formNames.FormFileShare:  {"true"},
+		formNames.FormBuilderId:  {"selfhosted"},
 	}
 	for key, val := range formData {
 		var field io.Writer

@@ -24,13 +24,14 @@ type App interface {
 	GetModTime() (time.Time, error)
 	ResetModTime() error
 	GetProfileId() (string, error)
+	GetBuilderId() (string, error)
 }
 
 func loadAppFromId(id string) App {
 	return &app{id: id}
 }
 
-func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
+func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string) (App, error) {
 	id := uuid.NewString()
 	app := &app{id: id}
 
@@ -51,6 +52,9 @@ func newApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs s
 	}
 	if err := app.setUserBundleId(userBundleId); err != nil {
 		return nil, errors.New("set user bundle id")
+	}
+	if err := app.setBuilderId(builderId); err != nil {
+		return nil, errors.New("set builder id")
 	}
 	return app, nil
 }
@@ -94,6 +98,16 @@ func (a *app) GetProfileId() (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	data, err := readTrimSpace(appProfileIdPath(a.id))
+	if err != nil {
+		return "", err
+	}
+	return data, nil
+}
+
+func (a *app) GetBuilderId() (string, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	data, err := readTrimSpace(appBuilderIdPath(a.id))
 	if err != nil {
 		return "", err
 	}
@@ -246,6 +260,13 @@ func (a *app) setBundleId(id string) error {
 
 func (a *app) setUserBundleId(id string) error {
 	if err := writeTrimSpace(appUserBundleIdPath(a.id), id); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *app) setBuilderId(id string) error {
+	if err := writeTrimSpace(appBuilderIdPath(a.id), id); err != nil {
 		return err
 	}
 	return nil

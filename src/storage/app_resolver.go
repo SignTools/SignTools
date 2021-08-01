@@ -60,8 +60,8 @@ func (r *appResolver) Get(id string) (App, bool) {
 	return app, true
 }
 
-func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string) (App, error) {
-	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId)
+func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string) (App, error) {
+	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId, builderId)
 	if err != nil {
 		return nil, err
 	}

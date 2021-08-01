@@ -29,17 +29,18 @@ type Builder struct {
 	SelfHosted builders.SelfHostedData `yaml:"selfhosted"`
 }
 
-func (b *Builder) MakeFirstEnabled() builders.Builder {
+func (b *Builder) MakeEnabled() map[string]builders.Builder {
+	results := map[string]builders.Builder{}
 	if b.GitHub.Enable {
-		return builders.MakeGitHub(&b.GitHub)
+		results["GitHub"] = builders.MakeGitHub(&b.GitHub)
 	}
 	if b.Semaphore.Enable {
-		return builders.MakeSemaphore(&b.Semaphore)
+		results["Semaphore"] = builders.MakeSemaphore(&b.Semaphore)
 	}
 	if b.SelfHosted.Enable {
-		return builders.MakeSelfHosted(&b.SelfHosted)
+		results["SelfHosted"] = builders.MakeSelfHosted(&b.SelfHosted)
 	}
-	return nil
+	return results
 }
 
 type File struct {
@@ -106,7 +107,7 @@ type ProfileBox struct {
 }
 
 type Config struct {
-	Builder    builders.Builder
+	Builder    map[string]builders.Builder
 	BuilderKey string
 	*File
 	EnvProfile *EnvProfile
@@ -124,9 +125,9 @@ func Load(fileName string) {
 	if err != nil {
 		log.Fatal().Err(err).Msg("get config")
 	}
-	builder := fileConfig.Builder.MakeFirstEnabled()
-	if builder == nil {
-		log.Fatal().Msg("init: no builder defined")
+	builderMap := fileConfig.Builder.MakeEnabled()
+	if len(builderMap) < 1 {
+		log.Fatal().Msg("init: no builders defined")
 	}
 	builderKey := make([]byte, 32)
 	if _, err := rand.Read(builderKey); err != nil {
@@ -137,7 +138,7 @@ func Load(fileName string) {
 		log.Fatal().Err(err).Msg("init: error checking for signing profile from envvars")
 	}
 	Current = Config{
-		Builder:    builder,
+		Builder:    builderMap,
 		BuilderKey: hex.EncodeToString(builderKey),
 		File:       fileConfig,
 		EnvProfile: profile,

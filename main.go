@@ -15,6 +15,7 @@ import (
 	htmlTemplate "html/template"
 	"io"
 	"ios-signer-service/src/assets"
+	"ios-signer-service/src/builders"
 	"ios-signer-service/src/config"
 	"ios-signer-service/src/storage"
 	"ios-signer-service/src/tunnel"
@@ -32,6 +33,7 @@ import (
 var formNames = assets.FormNames{
 	FormFile:         "file",
 	FormProfileId:    "profile_id",
+	FormBuilderId:    "builder_id",
 	FormAppDebug:     "all_devices",
 	FormAllDevices:   "app_debug",
 	FormFileShare:    "file_share",
@@ -127,8 +129,10 @@ func serve(host string, port uint64) {
 	}
 
 	log.Info().Msg("setting builder secrets")
-	if err := setBuilderSecrets(); err != nil {
-		log.Fatal().Err(err).Send()
+	for _, builder := range config.Current.Builder {
+		if err := setBuilderSecrets(builder); err != nil {
+			log.Fatal().Err(err).Send()
+		}
 	}
 
 	e := echo.New()
@@ -181,8 +185,8 @@ func failJob(c echo.Context, job *storage.ReturnJob) error {
 	return c.NoContent(200)
 }
 
-func setBuilderSecrets() error {
-	return config.Current.Builder.SetSecrets(map[string]string{
+func setBuilderSecrets(builder builders.Builder) error {
+	return builder.SetSecrets(map[string]string{
 		"SECRET_KEY": config.Current.BuilderKey,
 		"SECRET_URL": config.Current.ServerUrl,
 	})
@@ -367,6 +371,11 @@ func uploadUnsignedApp(c echo.Context) error {
 	if !ok {
 		return errors.New("no profile with id " + profileId)
 	}
+	builderId := c.FormValue(formNames.FormBuilderId)
+	builder, ok := config.Current.Builder[builderId]
+	if !ok {
+		return errors.New("no builder with id " + builderId)
+	}
 	header, err := c.FormFile(formNames.FormFile)
 	if err != nil {
 		return err
@@ -393,24 +402,32 @@ func uploadUnsignedApp(c echo.Context) error {
 	} else if idType == formNames.FormIdCustom {
 		signArgs += " -b " + userBundleId
 	}
-	app, err := storage.Apps.New(file, header.Filename, profile, signArgs, userBundleId)
+	app, err := storage.Apps.New(file, header.Filename, profile, signArgs, userBundleId, builderId)
 	if err != nil {
 		return err
 	}
-	if err := startSign(app); err != nil {
+	if err := startSign(app, builder); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
 }
 
 func restartSign(c echo.Context, app storage.App) error {
-	if err := startSign(app); err != nil {
+	builderId, err := app.GetBuilderId()
+	if err != nil {
+		return err
+	}
+	builder, ok := config.Current.Builder[builderId]
+	if !ok {
+		return errors.New("no builder with id " + builderId)
+	}
+	if err := startSign(app, builder); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
 }
 
-func startSign(app storage.App) error {
+func startSign(app storage.App, builder builders.Builder) error {
 	if err := app.ResetModTime(); err != nil {
 		return err
 	}
@@ -419,13 +436,13 @@ func startSign(app storage.App) error {
 		return err
 	}
 	storage.Jobs.MakeSignJob(app.GetId(), profileId)
-	if err := setBuilderSecrets(); err != nil {
+	if err := setBuilderSecrets(builder); err != nil {
 		return err
 	}
-	if err := config.Current.Builder.Trigger(); err != nil {
+	if err := builder.Trigger(); err != nil {
 		return err
 	}
-	statusUrl, err := config.Current.Builder.GetStatusUrl()
+	statusUrl, err := builder.GetStatusUrl()
 	if err != nil {
 		return err
 	}
@@ -554,6 +571,12 @@ func renderIndex(c echo.Context) error {
 			Id:        profile.GetId(),
 			Name:      name,
 			IsAccount: isAccount,
+		})
+	}
+	for builderId := range config.Current.Builder {
+		data.Builders = append(data.Builders, assets.Builder{
+			Id:   builderId,
+			Name: builderId,
 		})
 	}
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)

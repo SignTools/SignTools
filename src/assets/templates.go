@@ -28,9 +28,15 @@ type Profile struct {
 	IsAccount bool
 }
 
+type Builder struct {
+	Id   string
+	Name string
+}
+
 type FormNames struct {
 	FormFile         string
 	FormProfileId    string
+	FormBuilderId    string
 	FormAppDebug     string
 	FormAllDevices   string
 	FormFileShare    string
@@ -46,6 +52,7 @@ type FormNames struct {
 type IndexData struct {
 	Apps     []App
 	Profiles []Profile
+	Builders []Builder
 	FormNames
 }
 

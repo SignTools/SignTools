@@ -30,7 +30,7 @@ You can create a builder in one of two ways:
 
 - **Use your own Mac machine**. This method is only recommended if you already have a server Mac, you are somewhat experienced in server management, and you would like to host your truly own builder. Go to [ios-signer-builder](https://github.com/SignTools/ios-signer-builder) for instructions.
 
-Once you have made your builder, proceed below.
+Only one builder is necessary, but you can have more if needed. Once done, proceed below.
 
 ## 2. Web service configuration
 
@@ -47,8 +47,7 @@ You need to create a configuration file which links the web service to your buil
 > :warning: **Don't forget to set "`enable: true`" on the builder that you are configuring!**
 
 ```yml
-# here you define the builder you created in the previous section
-# configure only the one that matches yours
+# configure the builder(s) you created in the previous section
 builder:
   # GitHub Actions
   github:
