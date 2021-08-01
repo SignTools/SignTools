@@ -3,15 +3,7 @@
   "description": "A self-hosted, cross-platform service to sign and install iOS apps, all without a computer.",
   "repository": "https://github.com/SignTools/ios-signer-service",
   "logo": "https://github.com/SignTools/ios-signer-service/raw/master/img/logo.png",
-  "keywords": [
-    "ios",
-    "cross-platform",
-    "signing",
-    "ci",
-    "apps",
-    "ipa",
-    "sideload"
-  ],
+  "keywords": ["ios", "cross-platform", "signing", "ci", "apps", "ipa", "sideload"],
   "stack": "container",
   "image": "signtools/ios-signer-service",
   "env": {
