@@ -50,7 +50,7 @@
           <form id="uploadForm" action="/apps" method="post" enctype="multipart/form-data">
             <div class="modal-header">
               <h5 class="modal-title">Upload App</h5>
-              <button id="btnModalClose" type="button" class="btn-close"></button>
+              <button id="btnModalClose" type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <div class="mb-2">
@@ -316,11 +316,9 @@
     const formIdCustom = document.getElementById("formIdCustom");
     const formIdCustomText = document.getElementById("formIdCustomText");
     const dropdownResign = document.getElementsByClassName("dropdownResign");
-    let canRefresh = true;
 
     for (let item of dropdownResign) {
       item.addEventListener("click", function () {
-        canRefresh = false;
         formFileId.value = item.getAttribute("x-app-id");
         formFileText.hidden = false;
         formFileText.required = true;
@@ -331,7 +329,6 @@
       });
     }
     btnUploadApp.addEventListener("click", function () {
-      canRefresh = false;
       formFileId.value = "";
       formFileText.hidden = true;
       formFileText.required = false;
@@ -339,10 +336,6 @@
       formFileSelect.hidden = false;
       formFileSelect.required = true;
       modal.show();
-    });
-    btnModalClose.addEventListener("click", function () {
-      modal.hide();
-      canRefresh = true;
     });
     formSubmit.addEventListener("click", function () {
       if (!uploadForm.checkValidity()) {
@@ -384,11 +377,5 @@
     let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-
-    setInterval(function () {
-      if (canRefresh) {
-        window.location.reload(1);
-      }
-    }, 10_000);
   </script>
 </html>
