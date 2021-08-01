@@ -39,7 +39,7 @@
         </ol>
       </div>
     </nav>
-    <div class="modal fade show" id="uploadModal" tabindex="-1">
+    <div class="modal show" id="uploadModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form id="uploadForm" method="post" enctype="multipart/form-data">
@@ -64,11 +64,13 @@
 
   <script>
     const modalElem = document.getElementById("uploadModal");
+    const formName = document.getElementById("formName");
+
     const modal = new bootstrap.Modal(modalElem, {
       backdrop: "static",
       keyboard: false,
     });
-
     modal.show();
+    formName.focus();
   </script>
 </html>

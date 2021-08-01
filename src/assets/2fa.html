@@ -39,7 +39,7 @@
         </ol>
       </div>
     </nav>
-    <div class="modal fade show" id="uploadModal" tabindex="-1">
+    <div class="modal show" id="uploadModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form id="uploadForm" method="post" enctype="multipart/form-data" novalidate>
@@ -62,6 +62,7 @@
                   pattern="[0-9]*"
                   autocomplete="one-time-code"
                   placeholder="123456"
+                  autofocus
                 />
                 <div class="invalid-feedback">Please enter a valid 6-digit 2FA code.</div>
               </div>
@@ -99,5 +100,6 @@
     );
 
     modal.show();
+    formToken.focus();
   </script>
 </html>
