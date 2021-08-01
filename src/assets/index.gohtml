@@ -385,10 +385,29 @@
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    setInterval(function () {
-      if (canRefresh) {
+    function debounce(func, wait, immediate) {
+      let timeout;
+      return function executedFunction() {
+        const context = this;
+        const args = arguments;
+        const later = function () {
+          timeout = null;
+          if (!immediate && canRefresh) func.apply(context, args);
+        };
+        const callNow = immediate && !timeout && canRefresh;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+      };
+    }
+
+    setTimeout(function () {
+      const refresh = debounce(function () {
         window.location.reload(1);
-      }
-    }, 10_000);
+      }, 3_000);
+      document.onclick = refresh;
+      document.onkeydown = refresh;
+      refresh();
+    }, 7_000);
   </script>
 </html>
