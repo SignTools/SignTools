@@ -21,6 +21,12 @@
       integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
       crossorigin="anonymous"
     ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+      integrity="sha256-PDJQdTN7dolQWDASIoBVrjkuOEaI137FI15sqI3Oxu8="
+      crossorigin="anonymous"
+    />
     <style>
       a,
       a:hover {
@@ -223,11 +229,17 @@
           >
             <div class="card-body">
               <div class="row">
-                <div class="col">
+                <div class="col pe-0">
                   <h5 class="card-title" style="word-break: break-all">{{$app.Name}}</h5>
                 </div>
                 <div class="col-auto">
-                  <a class="btn-close btn-close-white p-2" href="{{$app.DeleteUrl}}"></a>
+                  <div class="dropdown">
+                    <a class="bi bi-three-dots-vertical py-1 px-2" href="#" data-bs-toggle="dropdown"></a>
+                    <div class="dropdown-menu">
+                      <a class="dropdown-item" href="{{$app.RestartUrl}}">Restart</a>
+                      <a class="dropdown-item" href="{{$app.DeleteUrl}}">Delete</a>
+                    </div>
+                  </div>
                 </div>
               </div>
               <p class="card-text mb-2">
@@ -250,7 +262,6 @@
                 <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
                 {{end}}
                 <div class="d-flex">
-                  <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.RestartUrl}}">Restart</a>
                   <a
                     class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
                     href="{{$app.WorkflowUrl}}"
