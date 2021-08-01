@@ -54,8 +54,18 @@
             </div>
             <div class="modal-body">
               <div class="mb-2">
-                <label for="formFile" class="form-label">App file</label>
+                <label class="form-label">App file</label>
                 <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required />
+                <input class="form-control" type="text" id="formFileText" hidden disabled />
+                <input
+                  class="form-control"
+                  type="text"
+                  id="formFileId"
+                  name="{{.FormFileId}}"
+                  hidden
+                  required
+                  readonly
+                />
               </div>
               <div class="mb-2">
                 <div class="col-md-8">
@@ -236,6 +246,13 @@
                   <div class="dropdown">
                     <a class="bi bi-three-dots-vertical py-1 px-2" href="#" data-bs-toggle="dropdown"></a>
                     <div class="dropdown-menu">
+                      <a
+                        class="dropdown-item dropdownResign"
+                        href="#"
+                        x-app-name="{{$app.Name}}"
+                        x-app-id="{{$app.Id}}"
+                        >Re-sign</a
+                      >
                       <a class="dropdown-item" href="{{$app.RenameUrl}}">Rename</a>
                       <a class="dropdown-item" href="{{$app.RestartUrl}}">Restart</a>
                       <a class="dropdown-item" href="{{$app.DeleteUrl}}">Delete</a>
@@ -282,6 +299,8 @@
   <script>
     const btnUploadApp = document.getElementById("btnUploadApp");
     const formFileSelect = document.getElementById("formFileSelect");
+    const formFileId = document.getElementById("formFileId");
+    const formFileText = document.getElementById("formFileText");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
     const formFileSpinner = document.getElementById("formFileSpinner");
@@ -296,10 +315,29 @@
     const formIdProv = document.getElementById("formIdProv");
     const formIdCustom = document.getElementById("formIdCustom");
     const formIdCustomText = document.getElementById("formIdCustomText");
+    const dropdownResign = document.getElementsByClassName("dropdownResign");
     let canRefresh = true;
 
+    for (let item of dropdownResign) {
+      item.addEventListener("click", function () {
+        canRefresh = false;
+        formFileId.value = item.getAttribute("x-app-id");
+        formFileText.hidden = false;
+        formFileText.required = true;
+        formFileText.value = item.getAttribute("x-app-name");
+        formFileSelect.hidden = true;
+        formFileSelect.required = false;
+        modal.show();
+      });
+    }
     btnUploadApp.addEventListener("click", function () {
       canRefresh = false;
+      formFileId.value = "";
+      formFileText.hidden = true;
+      formFileText.required = false;
+      formFileText.value = "";
+      formFileSelect.hidden = false;
+      formFileSelect.required = true;
       modal.show();
     });
     btnModalClose.addEventListener("click", function () {

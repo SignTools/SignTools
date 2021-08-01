@@ -36,6 +36,7 @@ type Builder struct {
 
 type FormNames struct {
 	FormFile         string
+	FormFileId       string
 	FormProfileId    string
 	FormBuilderId    string
 	FormAppDebug     string

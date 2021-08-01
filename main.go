@@ -21,6 +21,7 @@ import (
 	"ios-signer-service/src/tunnel"
 	"ios-signer-service/src/util"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,6 +33,7 @@ import (
 
 var formNames = assets.FormNames{
 	FormFile:         "file",
+	FormFileId:       "file_id",
 	FormProfileId:    "profile_id",
 	FormBuilderId:    "builder_id",
 	FormAppDebug:     "all_devices",
@@ -402,15 +404,36 @@ func uploadUnsignedApp(c echo.Context) error {
 	if !ok {
 		return errors.New("no builder with id " + builderId)
 	}
-	header, err := c.FormFile(formNames.FormFile)
-	if err != nil {
-		return err
+	var file multipart.File
+	var fileName string
+	fileId := c.FormValue(formNames.FormFileId)
+	if fileId != "" {
+		app, ok := storage.Apps.Get(fileId)
+		if !ok {
+			return errors.New("no app with id " + fileId)
+		}
+		readonlyFile, err := app.GetUnsigned()
+		if err != nil {
+			return err
+		}
+		file = readonlyFile
+		defer file.Close()
+		fileName, err = app.GetName()
+		if err != nil {
+			return err
+		}
+	} else {
+		header, err := c.FormFile(formNames.FormFile)
+		if err != nil {
+			return err
+		}
+		file, err = header.Open()
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		fileName = header.Filename
 	}
-	file, err := header.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
 	signArgs := ""
 	if c.FormValue(formNames.FormAllDevices) != "" {
 		signArgs += " -a"
@@ -428,7 +451,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	} else if idType == formNames.FormIdCustom {
 		signArgs += " -b " + userBundleId
 	}
-	app, err := storage.Apps.New(file, header.Filename, profile, signArgs, userBundleId, builderId)
+	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId)
 	if err != nil {
 		return err
 	}

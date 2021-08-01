@@ -35,6 +35,7 @@ var (
 
 type ReadonlyFile interface {
 	io.ReadSeekCloser
+	io.ReaderAt
 	Stat() (os.FileInfo, error)
 }
 
