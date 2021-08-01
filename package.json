@@ -1,0 +1,20 @@
+{
+  "devDependencies": {
+    "husky": "^7.0.1",
+    "prettier": "^2.3.2"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "prettier": {
+    "overrides": [
+      {
+        "files": "*.gohtml",
+        "options": {
+          "parser": "html"
+        }
+      }
+    ],
+    "printWidth": 119
+  }
+}

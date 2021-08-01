@@ -1,0 +1,9 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+for file in $(git diff --cached --name-only --diff-filter=ACMRTUXB)
+do
+  gofmt -w "$file" || true
+  npx prettier --write "$file" || true
+  git add "$file"
+done
