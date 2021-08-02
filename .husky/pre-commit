@@ -3,7 +3,6 @@
 
 for file in $(git diff --cached --name-only --diff-filter=ACMRTUXB)
 do
-  gofmt -w "$file" || true
-  npx prettier --write "$file" || true
+  gofmt -w "$file" || npx prettier --write "$file" || true
   git add "$file"
 done
