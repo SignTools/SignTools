@@ -409,7 +409,7 @@
       masonry.layout();
     });
     if (window.location.hash) {
-      inputSearchFilter.value = window.location.hash.substring(1);
+      inputSearchFilter.value = decodeURIComponent(window.location.hash.substring(1));
       inputSearchFilter.dispatchEvent(new Event("input"));
     }
     const searchClearHandler = function () {
