@@ -436,22 +436,32 @@
         const args = arguments;
         const later = function () {
           timeout = null;
-          if (!immediate && canRefresh) func.apply(context, args);
+          if (!immediate && canRefresh && !document.hidden) {
+            func.apply(context, args);
+          }
         };
-        const callNow = immediate && !timeout && canRefresh;
+        const callNow = immediate && !timeout && canRefresh && !document.hidden;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
+        if (callNow) {
+          func.apply(context, args);
+        }
       };
     }
 
     setTimeout(function () {
-      const refresh = debounce(function () {
+      const refresh = function () {
         window.location.reload(1);
-      }, 3_000);
-      document.onclick = refresh;
-      document.onkeydown = refresh;
-      refresh();
+      };
+      const refreshDebounce = debounce(refresh, 3_000);
+      document.addEventListener("click", refreshDebounce);
+      document.addEventListener("keydown", refreshDebounce);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) {
+          refresh();
+        }
+      });
+      refreshDebounce();
     }, 7_000);
   </script>
 </html>
