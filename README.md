@@ -37,7 +37,7 @@ This project is self-hosted; there is no public service. It does not provide any
 ## Features
 
 - No jailbreak required
-- All modern iOS versions supported
+- iOS, iPadOS, macOS (M1) supported
 - No computer required after an initial setup
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
