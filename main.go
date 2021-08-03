@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	textTemplate "text/template"
 	"time"
@@ -602,6 +603,11 @@ func renderIndex(c echo.Context) error {
 			Name: builderId,
 		})
 	}
+	sort.Slice(data.Builders, func(i, j int) bool {
+		name1 := data.Builders[i].Name
+		name2 := data.Builders[j].Name
+		return name1 < name2
+	})
 	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)
 	if err != nil {
 		return err
