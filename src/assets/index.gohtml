@@ -101,17 +101,8 @@
                       checked
                     />
                     <label style="display: inline" class="form-check-label" for="formIdOriginal">
-                      Use the app's original bundle ID
+                      Use app's original bundle ID
                     </label>
-                    <a
-                      style="color: blue"
-                      href="#"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="For developer accounts, the original ID will be encoded into
-                                   a different but constant ID."
-                      >?</a
-                    >
                   </div>
                   <div class="form-check">
                     <input
@@ -129,8 +120,8 @@
                       href="#"
                       data-bs-toggle="tooltip"
                       data-bs-placement="right"
-                      title="Fixes entitlements on explicit provisioning profiles.
-                                    For each profile, only one app signed this way can be installed at a time."
+                      title="Fixes entitlements with explicit provisioning profiles.
+                                For each profile, only one app signed this way can be installed at a time."
                       >?</a
                     >
                   </div>
@@ -143,15 +134,6 @@
                       value="{{.FormIdCustom}}"
                     />
                     <label style="display: inline" class="form-check-label" for="formIdCustom"> Use custom: </label>
-                    <a
-                      style="color: blue"
-                      href="#"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="For developer accounts, the custom ID will be encoded into
-                                   a different but constant ID."
-                      >?</a
-                    >
                     <input
                       type="text"
                       class="form-control"
@@ -167,6 +149,46 @@
               <div class="mb-0">
                 <label class="form-label">Signing options</label>
                 <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="formIdEncode"
+                    name="{{.FormIdEncode}}"
+                    disabled
+                  />
+                  <label style="display: inline" class="form-check-label" for="formIdEncode">
+                    Encode original IDs to unique IDs
+                  </label>
+                  <a
+                    style="color: blue"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="right"
+                    title="If you do not own the original bundle, group, or iCloud IDs, signing will fail.
+                          Use this option to fix that."
+                    >?</a
+                  >
+                </div>
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="formIdForceOriginal"
+                    name="{{.FormIdForceOriginal}}"
+                  />
+                  <label style="display: inline" class="form-check-label" for="formIdForceOriginal">
+                    Force original bundle ID
+                  </label>
+                  <a
+                    style="color: blue"
+                    href="#"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="right"
+                    title="Breaks all entitlements. Fixes push notifications on distribution certificate."
+                    >?</a
+                  >
+                </div>
+                <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="formAppDebug" name="{{.FormAppDebug}}" />
                   <label style="display: inline" class="form-check-label" for="formAppDebug">
                     Enable app debugging
@@ -176,9 +198,7 @@
                     href="#"
                     data-bs-toggle="tooltip"
                     data-bs-placement="right"
-                    title="Enables the get-task-allow entitlement.
-                               Required by some emulators and jailbreaks.
-                               Your provisioning profile must support this entitlement."
+                    title="Only works with development certificate. Required by some emulators and jailbreaks."
                     >?</a
                   >
                 </div>
@@ -199,14 +219,14 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="formFileShare" name="{{.FormFileShare}}" />
                   <label style="display: inline" class="form-check-label" for="formFileShare">
-                    Force enable file sharing through iTunes
+                    Force enable file sharing
                   </label>
                   <a
                     style="color: blue"
                     href="#"
                     data-bs-toggle="tooltip"
                     data-bs-placement="right"
-                    title="Allows you to access the app's data via iTunes and other file managers."
+                    title="Allows you to access the app's data via the Files app, iTunes, and other file managers."
                     >?</a
                   >
                 </div>
@@ -321,6 +341,7 @@
     const formIdProv = document.getElementById("formIdProv");
     const formIdCustom = document.getElementById("formIdCustom");
     const formIdCustomText = document.getElementById("formIdCustomText");
+    const formIdEncode = document.getElementById("formIdEncode");
     const dropdownResign = document.getElementsByClassName("dropdownResign");
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
@@ -376,8 +397,12 @@
           formIdOriginal.checked = true;
         }
         formIdProv.disabled = true;
+        formIdEncode.checked = true;
+        formIdEncode.disabled = false;
       } else {
         formIdProv.disabled = false;
+        formIdEncode.checked = false;
+        formIdEncode.disabled = true;
       }
     });
     document.querySelectorAll('input[name="{{.FormId}}"]').forEach(function (a) {

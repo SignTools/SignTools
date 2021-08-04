@@ -33,20 +33,22 @@ import (
 )
 
 var formNames = assets.FormNames{
-	FormFile:         "file",
-	FormFileId:       "file_id",
-	FormProfileId:    "profile_id",
-	FormBuilderId:    "builder_id",
-	FormAppDebug:     "all_devices",
-	FormAllDevices:   "app_debug",
-	FormFileShare:    "file_share",
-	FormToken:        "align_app_id",
-	FormId:           "id",
-	FormIdOriginal:   "id_original",
-	FormIdProv:       "id_prov",
-	FormIdCustom:     "id_custom",
-	FormIdCustomText: "id_custom_text",
-	FormBundleId:     "bundle_id",
+	FormFile:            "file",
+	FormFileId:          "file_id",
+	FormProfileId:       "profile_id",
+	FormBuilderId:       "builder_id",
+	FormAppDebug:        "app_debug",
+	FormAllDevices:      "all_devices",
+	FormFileShare:       "file_share",
+	FormToken:           "token",
+	FormId:              "id",
+	FormIdOriginal:      "id_original",
+	FormIdProv:          "id_prov",
+	FormIdCustom:        "id_custom",
+	FormIdCustomText:    "id_custom_text",
+	FormIdEncode:        "id_encode",
+	FormIdForceOriginal: "id_force_original",
+	FormBundleId:        "bundle_id",
 }
 
 func main() {
@@ -414,6 +416,12 @@ func uploadUnsignedApp(c echo.Context) error {
 	}
 	if c.FormValue(formNames.FormFileShare) != "" {
 		signArgs += " -s"
+	}
+	if c.FormValue(formNames.FormIdEncode) != "" {
+		signArgs += " -e"
+	}
+	if c.FormValue(formNames.FormIdForceOriginal) != "" {
+		signArgs += " -o"
 	}
 	idType := c.FormValue(formNames.FormId)
 	userBundleId := c.FormValue(formNames.FormIdCustomText)

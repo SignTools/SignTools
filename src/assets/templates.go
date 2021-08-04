@@ -35,20 +35,22 @@ type Builder struct {
 }
 
 type FormNames struct {
-	FormFile         string
-	FormFileId       string
-	FormProfileId    string
-	FormBuilderId    string
-	FormAppDebug     string
-	FormAllDevices   string
-	FormFileShare    string
-	FormToken        string
-	FormId           string
-	FormIdOriginal   string
-	FormIdProv       string
-	FormIdCustom     string
-	FormIdCustomText string
-	FormBundleId     string
+	FormFile            string
+	FormFileId          string
+	FormProfileId       string
+	FormBuilderId       string
+	FormAppDebug        string
+	FormAllDevices      string
+	FormFileShare       string
+	FormToken           string
+	FormId              string
+	FormIdOriginal      string
+	FormIdProv          string
+	FormIdCustom        string
+	FormIdCustomText    string
+	FormIdEncode        string
+	FormIdForceOriginal string
+	FormBundleId        string
 }
 
 type IndexData struct {
