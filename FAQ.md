@@ -12,6 +12,8 @@
     - [5. A maximum of 10 app ids can be registered per 7 days](#5-a-maximum-of-10-app-ids-can-be-registered-per-7-days)
     - [6. You cannot use an existing app's bundle id](#6-you-cannot-use-an-existing-apps-bundle-id)
   - [What kind of certificates/provisioning profiles are supported?](#what-kind-of-certificatesprovisioning-profiles-are-supported)
+    - [Certificates](#certificates)
+    - [Provisioning profiles](#provisioning-profiles)
   - [App runs, but malfunctions due to invalid signing/entitlements](#app-runs-but-malfunctions-due-to-invalid-signingentitlements)
   - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
   - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
@@ -52,17 +54,25 @@ Say you were feeling adventurous and wanted to sign an app with the same bundle 
 
 ## What kind of certificates/provisioning profiles are supported?
 
-Technically, everything is supported as long as your iOS device trusts it. This includes free signing profiles, but of course, they expire after a week. The only major difference between signing profiles is based on the provisioning profile's `application-identifier`. There are two types:
+### Certificates
 
-- Wildcard, with app id = `TEAM_ID.*`
+- **Apple Development**
 
-  - Can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...)
-  - Can't use special entitlements such as app groups or iCloud containers (Apple restriction)
+  This is the default certificate type. If you have a free developer account, it grants you access to some standard entitlements, including app debugging (get-task-allow), which is necessary for some jailbreaks and emulators. If you have a paid developer account, it grants you access to all standard entitlements. This is the recommended type of certificate to use.
 
-- Explicit, with app id = `TEAM_ID.app1`
-  - Can properly sign only one app (`TEAM_ID.app1`)
-  - Can use any entitlement as long as it's in the provisioning profile
-  - If you sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
+- **Apple Distribution**
+
+  This certificate type is only available to paid developer accounts, as it is used when publishing an app. It grants you access to every standard entitlement, except for app debugging (get-task-allow). Additionally, it allows you to use production entitlements such as push notifications. Only use this type of certificate if you need those extra entitlements.
+
+### Provisioning profiles
+
+- **Wildcard**
+
+  Its `application-identifier` looks like `TEAM_ID.*`. It can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...), but it can't use most standard entitlements such as app groups or iCloud containers.
+
+- **Explicit**
+
+  Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can use any standard entitlement as long as it's in the provisioning profile. If you sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 

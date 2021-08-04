@@ -16,19 +16,15 @@
 
 ## Introduction
 
-There are many reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered by Apple and unrealistic for the average user. This is where iOS Signer Service comes to the rescue. No more terminal, no more computer. Sideload any app directly from your phone through a simple web interface.
+There are countless reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered and out of reach for most people. Here iOS Signer Service comes to the rescue. No more terminal, half-working scripts, or even computer. Sideload any app directly from your phone through a simple web interface.
 
-What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can be hosted on any machine or **even a free server**.
+What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can also be hosted on any **free** server or one of your own.
 
 More information and examples can be found in the installation section.
 
 ## :raised_hands: Community
 
 Come join the official Discord to get more interactive support and have general conversations about this project: https://discord.gg/A4T6npnRCk
-
-## :rocket: Free developer accounts
-
-As of v2.0.0 this service now supports **free developer accounts**! Although with some [severe limitations](FAQ.md), this is a huge milestone not only for the project but for the sideloading community as a whole. The signing process is achieved **without any** reverse engineering or third-party tools - only Apple's very own operating system and developer tools are used, just in a clever way.
 
 ## Disclaimer
 
@@ -43,25 +39,17 @@ This project is self-hosted; there is no public service. It does not provide any
 - Upload unsigned apps, download signed apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
 - Provisioning profiles, paid and free developer accounts supported
+- Every possible signing method supported
 - Choose from multiple signing profiles for each app
-- Configure the app bundle id, supported devices, iTunes sharing, and debugging entitlement
 - Re-sign apps directly without uploading
 
 ## Screenshots
 
 <table>
 <tr>
-    <th>Mobile</th>
-    <th>Desktop</th>
-</tr>
-<tr>
     <td>
-        <img src="img/3.png"/>
-        <img src="img/4.png"/>
-    </td>
-    <td>
-        <img src="img/1.png"/>
-        <img src="img/2.png"/>
+        <img height="600px" src="img/3.png"/>
+        <img height="600px" src="img/4.png"/>
     </td>
 </tr>
 </table>

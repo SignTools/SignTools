@@ -10,7 +10,7 @@ This installation guide uses [Heroku](https://www.heroku.com/) to host your sign
 - HOWEVER, your service will automatically turn off after 30 minutes of inactivity. When off, usage is not counted. If you access the service when it is off, it will automatically turn on again.
 - Storage is deleted every time the service is turned off. This effectively means that signed apps are kept for 30 minutes.
 
-For more information, check the [pricing page](https://www.heroku.com/pricing).
+For more information, check their [pricing page](https://www.heroku.com/pricing).
 
 ## 2. Builder
 
@@ -24,15 +24,17 @@ You need a signing profile to be able to sign apps. A signing profile is simply 
 
 There are two types of signing profiles:
 
-- **Developer account** (recommended)
+- **Developer account**
 
   This method works for both free and paid developer accounts. You only need your Apple account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization. There are no restrictions if you have a paid account. If you have a free account, make sure you read and understand the limitations in the [FAQ](FAQ.md#free-developer-account-limitations) page.
 
 - **Manual provisioning profile**
 
-  If you don't have a paid developer account, but you have a manual provisioning profile with a `.mobileprovision` extension, you can use this method instead. Based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
+  If you have a provisioning profile with a `.mobileprovision` extension, you can use this method as well. There is no 6-digit code, so signing will be faster than a developer account. However, based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-Additionally, you will also need a certificate file with a `.p12` extension. If you are using a manual provisioning profile, you likely received a certificate along with it - use that. Otherwise, follow the instructions below:
+Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. You can either use an `Apple Development` certificate, or both `Apple Development` and `Apple Distribution` if you want to use production entitlements. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
+
+If you are using a manual provisioning profile, you likely received a certificate archive along with it - use that. Otherwise, follow the instructions below:
 
 - **macOS**
 
