@@ -324,13 +324,14 @@
     const dropdownResign = document.getElementsByClassName("dropdownResign");
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
+    const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
     const masonry = new Masonry(masonryRow, { percentPosition: true, horizontalOrder: true });
-    let canRefresh = true;
+    let actionsActive = 0;
 
     for (let item of dropdownResign) {
       item.addEventListener("click", function () {
-        canRefresh = false;
+        actionsActive++;
         formFileId.value = item.getAttribute("x-app-id");
         formFileText.hidden = false;
         formFileText.required = true;
@@ -341,7 +342,7 @@
       });
     }
     btnUploadApp.addEventListener("click", function () {
-      canRefresh = false;
+      actionsActive++;
       formFileId.value = "";
       formFileText.hidden = true;
       formFileText.required = false;
@@ -352,7 +353,7 @@
     });
     btnModalClose.addEventListener("click", function () {
       modal.hide();
-      canRefresh = true;
+      actionsActive--;
     });
     formSubmit.addEventListener("click", function () {
       if (!uploadForm.checkValidity()) {
@@ -388,6 +389,14 @@
         }
       });
     });
+    for (let dropdown of dropdowns) {
+      dropdown.addEventListener("show.bs.dropdown", function () {
+        actionsActive++;
+      });
+      dropdown.addEventListener("hidden.bs.dropdown", function () {
+        actionsActive--;
+      });
+    }
 
     inputSearchFilter.addEventListener("input", function () {
       window.location.hash = inputSearchFilter.value;
@@ -429,26 +438,6 @@
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    function debounce(func, wait, immediate) {
-      let timeout;
-      return function executedFunction() {
-        const context = this;
-        const args = arguments;
-        const later = function () {
-          timeout = null;
-          if (!immediate && canRefresh && !document.hidden) {
-            func.apply(context, args);
-          }
-        };
-        const callNow = immediate && !timeout && canRefresh && !document.hidden;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) {
-          func.apply(context, args);
-        }
-      };
-    }
-
     document.addEventListener("DOMContentLoaded", function () {
       const scrollpos = localStorage.getItem("scrollpos");
       if (scrollpos) {
@@ -457,20 +446,18 @@
       }
     });
 
-    setTimeout(function () {
-      const refresh = function () {
+    function tryRefresh(refreshHandle) {
+      if (!document.hidden && actionsActive === 0) {
+        clearInterval(refreshHandle);
         localStorage.setItem("scrollpos", window.scrollY);
         window.location.reload();
-      };
-      const refreshDebounce = debounce(refresh, 3_000);
-      document.addEventListener("click", refreshDebounce);
-      document.addEventListener("keydown", refreshDebounce);
-      document.addEventListener("visibilitychange", function () {
-        if (!document.hidden) {
-          refresh();
-        }
-      });
-      refreshDebounce();
-    }, 7_000);
+      }
+    }
+
+    setTimeout(function () {
+      const refreshHandle = setInterval(function () {
+        tryRefresh(refreshHandle);
+      }, 500);
+    }, 9_500);
   </script>
 </html>
