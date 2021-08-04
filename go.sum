@@ -1,5 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/ViRb3/go-pkcs12 v0.0.0-20210804161449-c4ae4db848ce h1:WL3sKdSGk/7oLx5BPNwHcivJh7E4LkswKS/E7D+c6Hs=
+github.com/ViRb3/go-pkcs12 v0.0.0-20210804161449-c4ae4db848ce/go.mod h1:f5d0/8+ncelR5tHipEhJe2x1EaR/vPpw8/htP9zlJVA=
 github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99 h1:3xOQDhP/VlRt01ZeIhlGbuVjgF7DosrRO9w9Kbb2WrI=
 github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99/go.mod h1:ZPRu5gf31DvsT2lKAu70+ZdxA5BnwEtWjpZL/Au/Kak=
 github.com/ViRb3/sling/v2 v2.0.2 h1:XPadHD6pQHIuGSI0UYrkgmP7HH/ZLvt9/FM7saboVWs=
@@ -217,5 +219,3 @@ gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b h1:h8qDotaEPuJATrMmW04NCwg7v
 gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
-software.sslmate.com/src/go-pkcs12 v0.0.0-20210415151418-c5206de65a78 h1:SqYE5+A2qvRhErbsXFfUEUmpWEKxxRSMgGLkvRAFOV4=
-software.sslmate.com/src/go-pkcs12 v0.0.0-20210415151418-c5206de65a78/go.mod h1:B7Wf0Ya4DHF9Yw+qfZuJijQYkWicqDa+79Ytmmq3Kjg=

@@ -3,6 +3,7 @@ module ios-signer-service
 go 1.16
 
 require (
+	github.com/ViRb3/go-pkcs12 v0.0.0-20210804161449-c4ae4db848ce
 	github.com/ViRb3/koanf-extra v0.0.0-20210725212605-9dabe6cc2b99
 	github.com/ViRb3/sling/v2 v2.0.2
 	github.com/elliotchance/orderedmap v1.4.0
@@ -19,5 +20,4 @@ require (
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	software.sslmate.com/src/go-pkcs12 v0.0.0-20210415151418-c5206de65a78
 )
