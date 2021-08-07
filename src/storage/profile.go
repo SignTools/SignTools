@@ -46,6 +46,7 @@ func loadProfile(id string) (*profile, error) {
 	if err != nil {
 		return nil, errors.WithMessagef(err, "get %s", ProfileCert)
 	}
+	defer origCertFile.Close()
 	origCertBytes, err := ioutil.ReadAll(origCertFile)
 	if err != nil {
 		return nil, errors.WithMessage(err, "read cert file")
