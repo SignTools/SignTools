@@ -183,8 +183,8 @@
                         style="color: blue"
                         data-bs-toggle="tooltip"
                         data-bs-placement="right"
-                        title="If you do not own the original bundle, group, or iCloud IDs, signing will fail.
-                        Use this option to fix that."
+                        title="Fixes signing if you don't own the app.
+                        If this option causes issues, disable it and use a unique custom bundle ID."
                         >?</a
                       >
                     </div>
@@ -202,7 +202,7 @@
                         style="color: blue"
                         data-bs-toggle="tooltip"
                         data-bs-placement="right"
-                        title="Breaks all entitlements. Fixes push notifications on distribution certificate."
+                        title="Fixes push notifications. Requires distribution certificate. Breaks all entitlements."
                         >?</a
                       >
                     </div>
@@ -211,6 +211,13 @@
                 <div class="tab-pane pt-2" id="nav-advanced" role="tabpanel">
                   <div class="mb-2 col-md-8">
                     <label for="formBundleName" class="form-label">Custom bundle name</label>
+                    <a
+                      style="color: blue"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="right"
+                      title="This is how the app will show on your home screen."
+                      >?</a
+                    >
                     <input
                       type="text"
                       class="form-control"
@@ -230,7 +237,7 @@
                         style="color: blue"
                         data-bs-toggle="tooltip"
                         data-bs-placement="right"
-                        title="Only works with development certificate. Required by some emulators and jailbreaks."
+                        title="Necessary for some emulators and jailbreaks. Requires development certificate."
                         >?</a
                       >
                     </div>
