@@ -46,7 +46,7 @@
         <a id="btnUploadApp" class="btn btn-outline-light my-0 ms-auto"> Upload App </a>
       </div>
     </nav>
-    <div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal" id="uploadModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form id="uploadForm" action="/apps" method="post" enctype="multipart/form-data">
@@ -55,176 +55,202 @@
               <button id="btnModalClose" type="button" class="btn-close"></button>
             </div>
             <div class="modal-body">
-              <div class="mb-2">
-                <label class="form-label">App file</label>
-                <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required />
-                <input class="form-control" type="text" id="formFileText" hidden disabled />
-                <input
-                  class="form-control"
-                  type="text"
-                  id="formFileId"
-                  name="{{.FormFileId}}"
-                  hidden
-                  required
-                  readonly
-                />
-              </div>
-              <div class="mb-2">
-                <div class="col-md-8">
-                  <label for="formProfile" class="form-label">Signing profile</label>
-                  <select class="form-select" id="formProfile" name="{{.FormProfileId}}" required>
-                    <option selected disabled value="">Choose...</option>
-                    {{range $_, $profile := .Profiles}}
-                    <option value="{{$profile.Id}}" account="{{$profile.IsAccount}}">{{$profile.Name}}</option>
-                    {{end}}
-                  </select>
+              <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                  <button
+                    class="nav-link active"
+                    id="nav-main-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#nav-main"
+                    type="button"
+                    role="tab"
+                  >
+                    Main
+                  </button>
+                  <button
+                    class="nav-link"
+                    id="nav-advanced-tab"
+                    data-bs-toggle="tab"
+                    data-bs-target="#nav-advanced"
+                    type="button"
+                    role="tab"
+                  >
+                    Advanced
+                  </button>
                 </div>
-              </div>
-              <div class="mb-2">
-                <div class="col-md-8">
-                  <label for="formBuilder" class="form-label">Builder</label>
-                  <select class="form-select" id="formBuilder" name="{{.FormBuilderId}}" required>
-                    {{range $_, $builder := .Builders}}
-                    <option value="{{$builder.Id}}">{{$builder.Name}}</option>
-                    {{end}}
-                  </select>
-                </div>
-              </div>
-              <div class="mb-2">
-                <div class="col-md-9">
-                  <label class="form-label">Bundle identifier</label>
-                  <div class="form-check">
+              </nav>
+              <div class="tab-content" id="nav-tabContent">
+                <div class="tab-pane active pt-2" id="nav-main" role="tabpanel">
+                  <div class="mb-2">
+                    <label class="form-label">App file</label>
+                    <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required />
+                    <input class="form-control" type="text" id="formFileText" hidden disabled />
                     <input
-                      class="form-check-input"
-                      type="radio"
-                      id="formIdOriginal"
-                      name="{{.FormId}}"
-                      value="{{.FormIdOriginal}}"
-                      checked
-                    />
-                    <label style="display: inline" class="form-check-label" for="formIdOriginal">
-                      Use app's original bundle ID
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      id="formIdProv"
-                      name="{{.FormId}}"
-                      value="{{.FormIdProv}}"
-                    />
-                    <label style="display: inline" class="form-check-label" for="formIdProv">
-                      Use provisioning profile's application ID
-                    </label>
-                    <a
-                      style="color: blue"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="Fixes entitlements with explicit provisioning profiles.
-                                For each profile, only one app signed this way can be installed at a time."
-                      >?</a
-                    >
-                  </div>
-                  <div class="form-check">
-                    <input
-                      class="form-check-input"
-                      type="radio"
-                      id="formIdCustom"
-                      name="{{.FormId}}"
-                      value="{{.FormIdCustom}}"
-                    />
-                    <label style="display: inline" class="form-check-label" for="formIdCustom"> Use custom: </label>
-                    <input
-                      type="text"
                       class="form-control"
-                      name="{{.FormIdCustomText}}"
-                      disabled
-                      id="formIdCustomText"
-                      placeholder="com.custom.app"
+                      type="text"
+                      id="formFileId"
+                      name="{{.FormFileId}}"
+                      hidden
                       required
+                      readonly
                     />
                   </div>
+                  <div class="mb-2 col-md-8">
+                    <label for="formProfile" class="form-label">Signing profile</label>
+                    <select class="form-select" id="formProfile" name="{{.FormProfileId}}" required>
+                      <option selected disabled value="">Choose...</option>
+                      {{range $_, $profile := .Profiles}}
+                      <option value="{{$profile.Id}}" account="{{$profile.IsAccount}}">{{$profile.Name}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                  <div class="mb-2 col-md-8">
+                    <label for="formBuilder" class="form-label">Builder</label>
+                    <select class="form-select" id="formBuilder" name="{{.FormBuilderId}}" required>
+                      {{range $_, $builder := .Builders}}
+                      <option value="{{$builder.Id}}">{{$builder.Name}}</option>
+                      {{end}}
+                    </select>
+                  </div>
+                  <div class="mb-2 col-md-9">
+                    <label class="form-label">Bundle identifier</label>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        id="formIdOriginal"
+                        name="{{.FormId}}"
+                        value="{{.FormIdOriginal}}"
+                        checked
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdOriginal">
+                        Use app's original bundle ID
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        id="formIdProv"
+                        name="{{.FormId}}"
+                        value="{{.FormIdProv}}"
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdProv">
+                        Use provisioning profile's application ID
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Fixes entitlements with explicit provisioning profiles.
+                                For each profile, only one app signed this way can be installed at a time."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        id="formIdCustom"
+                        name="{{.FormId}}"
+                        value="{{.FormIdCustom}}"
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdCustom"> Use custom: </label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="{{.FormIdCustomText}}"
+                        disabled
+                        id="formIdCustomText"
+                        placeholder="com.custom.app"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="mb-0">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="formIdEncode"
+                        name="{{.FormIdEncode}}"
+                        disabled
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdEncode">
+                        Encode original IDs to unique IDs
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="If you do not own the original bundle, group, or iCloud IDs, signing will fail.
+                        Use this option to fix that."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="formIdForceOriginal"
+                        name="{{.FormIdForceOriginal}}"
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdForceOriginal">
+                        Force original bundle ID
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Breaks all entitlements. Fixes push notifications on distribution certificate."
+                        >?</a
+                      >
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="mb-0">
-                <label class="form-label">Signing options</label>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="formIdEncode"
-                    name="{{.FormIdEncode}}"
-                    disabled
-                  />
-                  <label style="display: inline" class="form-check-label" for="formIdEncode">
-                    Encode original IDs to unique IDs
-                  </label>
-                  <a
-                    style="color: blue"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="right"
-                    title="If you do not own the original bundle, group, or iCloud IDs, signing will fail.
-                          Use this option to fix that."
-                    >?</a
-                  >
-                </div>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="formIdForceOriginal"
-                    name="{{.FormIdForceOriginal}}"
-                  />
-                  <label style="display: inline" class="form-check-label" for="formIdForceOriginal">
-                    Force original bundle ID
-                  </label>
-                  <a
-                    style="color: blue"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="right"
-                    title="Breaks all entitlements. Fixes push notifications on distribution certificate."
-                    >?</a
-                  >
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="formAppDebug" name="{{.FormAppDebug}}" />
-                  <label style="display: inline" class="form-check-label" for="formAppDebug">
-                    Enable app debugging
-                  </label>
-                  <a
-                    style="color: blue"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="right"
-                    title="Only works with development certificate. Required by some emulators and jailbreaks."
-                    >?</a
-                  >
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="formAllDevices" name="{{.FormAllDevices}}" />
-                  <label style="display: inline" class="form-check-label" for="formAllDevices">
-                    Force enable support for all devices
-                  </label>
-                  <a
-                    style="color: blue"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="right"
-                    title="Removes any iOS version or device model restrictions from the app."
-                    >?</a
-                  >
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="formFileShare" name="{{.FormFileShare}}" />
-                  <label style="display: inline" class="form-check-label" for="formFileShare">
-                    Force enable file sharing
-                  </label>
-                  <a
-                    style="color: blue"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="right"
-                    title="Allows you to access the app's data via the Files app, iTunes, and other file managers."
-                    >?</a
-                  >
+                <div class="tab-pane pt-2" id="nav-advanced" role="tabpanel">
+                  <div class="mb-0">
+                    <label class="form-label">Signing options</label>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="formAppDebug" name="{{.FormAppDebug}}" />
+                      <label style="display: inline" class="form-check-label" for="formAppDebug">
+                        Enable app debugging
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Only works with development certificate. Required by some emulators and jailbreaks."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="formAllDevices" name="{{.FormAllDevices}}" />
+                      <label style="display: inline" class="form-check-label" for="formAllDevices">
+                        Force enable support for all devices
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Removes any iOS version or device model restrictions from the app."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="formFileShare" name="{{.FormFileShare}}" />
+                      <label style="display: inline" class="form-check-label" for="formFileShare">
+                        Force enable file sharing
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Allows you to access the app's data via the Files app, iTunes, and other file managers."
+                        >?</a
+                      >
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -340,6 +366,7 @@
     const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
     const masonry = new Masonry(masonryRow, { percentPosition: true, horizontalOrder: true });
+    const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
     let actionsActive = 0;
 
     for (let item of dropdownResign) {
@@ -370,6 +397,8 @@
     });
     formSubmit.addEventListener("click", function () {
       if (!uploadForm.checkValidity()) {
+        // only first tab has required inputs
+        navMain.show();
         uploadForm.reportValidity();
         return;
       }
