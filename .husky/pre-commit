@@ -1,8 +1,5 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-for file in $(git diff --cached --name-only --diff-filter=ACMRTUXB)
-do
-  gofmt -w "$file" || npx prettier --write "$file" || true
-  git add "$file"
-done
+npx git-format-staged --formatter 'npx prettier --stdin --stdin-filepath "{}"' '*.*html'
+npx git-format-staged --formatter 'gofmt' '*.go'
