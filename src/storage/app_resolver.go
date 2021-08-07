@@ -4,7 +4,6 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"ios-signer-service/src/util"
-	"os"
 	"sort"
 	"sync"
 )
@@ -29,7 +28,7 @@ func (r *appResolver) refresh() error {
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
-		r.idToAppMap[id] = loadAppFromId(id)
+		r.idToAppMap[id] = loadApp(id)
 	}
 	return nil
 }
@@ -61,7 +60,7 @@ func (r *appResolver) Get(id string) (App, bool) {
 }
 
 func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string) (App, error) {
-	app, err := newApp(unsignedFile, name, profile, signArgs, userBundleId, builderId)
+	app, err := createApp(unsignedFile, name, profile, signArgs, userBundleId, builderId)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +80,7 @@ func (r *appResolver) Delete(id string) error {
 	appId := app.GetId()
 	delete(r.idToAppMap, appId)
 	r.mutex.Unlock()
-	if err := os.RemoveAll(appPath(appId)); err != nil {
+	if err := app.Delete(); err != nil {
 		return errors.WithMessagef(err, "delete app id=%s", app.GetId())
 	}
 	return nil

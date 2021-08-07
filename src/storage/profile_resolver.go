@@ -32,7 +32,7 @@ func (r *profileResolver) refresh() error {
 	}
 	for _, idDir := range idDirs {
 		id := idDir.Name()
-		profile, err := newProfile(id)
+		profile, err := loadProfile(id)
 		if err != nil {
 			log.Err(err).Str("id", id).Msg("load profile from files")
 			continue
@@ -48,8 +48,8 @@ func (r *profileResolver) GetAll() ([]Profile, error) {
 		profiles = append(profiles, profile)
 	}
 	sort.Slice(profiles, func(i, j int) bool {
-		name1, _ := profiles[i].GetName()
-		name2, _ := profiles[j].GetName()
+		name1, _ := profiles[i].GetString(ProfileName)
+		name2, _ := profiles[j].GetString(ProfileName)
 		return name1 < name2
 	})
 	return profiles, nil

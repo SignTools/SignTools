@@ -160,12 +160,12 @@ func TestIntegration(t *testing.T) {
 	assert.True(t, triggerHit)
 	assert.True(t, secretsHit)
 	validateFile(t, unsignedData, func(app storage.App) (storage.ReadonlyFile, error) {
-		return app.GetUnsigned()
+		return app.GetFile(storage.AppUnsignedFile)
 	})
 	returnId := takeJob(t)
 	uploadSignedFile(t, returnId)
 	validateFile(t, signedData, func(app storage.App) (storage.ReadonlyFile, error) {
-		return app.GetSigned()
+		return app.GetFile(storage.AppSignedFile)
 	})
 	validateManifest(t)
 }

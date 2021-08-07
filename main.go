@@ -48,6 +48,7 @@ var formNames = assets.FormNames{
 	FormIdCustomText:    "id_custom_text",
 	FormIdEncode:        "id_encode",
 	FormIdForceOriginal: "id_force_original",
+	FormBundleName:      "bundle_name",
 }
 
 func main() {
@@ -155,7 +156,7 @@ func serve(host string, port uint64) {
 }
 
 func renderRenameApp(c echo.Context, app storage.App) error {
-	appName, err := app.GetName()
+	appName, err := app.GetString(storage.AppName)
 	if err != nil {
 		return err
 	}
@@ -172,7 +173,7 @@ func renderRenameApp(c echo.Context, app storage.App) error {
 }
 
 func renameApp(c echo.Context, app storage.App) error {
-	if err := app.SetName(c.FormValue("name")); err != nil {
+	if err := app.SetString(storage.AppName, c.FormValue("name")); err != nil {
 		return err
 	}
 	return c.Redirect(302, "/")
@@ -211,7 +212,10 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 		return err
 	}
 	defer file.Close()
-	if err := app.SetSigned(file, c.FormValue("bundle_id")); err != nil {
+	if err := app.SetFile(storage.AppSignedFile, file); err != nil {
+		return err
+	}
+	if err := app.SetString(storage.AppBundleId, c.FormValue("bundle_id")); err != nil {
 		return err
 	}
 	if !storage.Jobs.DeleteById(job.Id) {
@@ -306,11 +310,11 @@ func makeManifest(baseUrl string, app storage.App) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	appName, err := app.GetName()
+	appName, err := app.GetString(storage.AppName)
 	if err != nil {
 		return nil, err
 	}
-	bundleId, err := app.GetBundleId()
+	bundleId, err := app.GetString(storage.AppBundleId)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +343,7 @@ func escapeXML(str string) (string, error) {
 }
 
 func getSignedApp(c echo.Context, app storage.App) error {
-	file, err := app.GetSigned()
+	file, err := app.GetFile(storage.AppSignedFile)
 	if err != nil {
 		return err
 	}
@@ -351,7 +355,7 @@ func getSignedApp(c echo.Context, app storage.App) error {
 }
 
 func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) error {
-	name, err := app.GetName()
+	name, err := app.GetString(storage.AppName)
 	if err != nil {
 		return err
 	}
@@ -384,13 +388,13 @@ func uploadUnsignedApp(c echo.Context) error {
 		if !ok {
 			return errors.New("no app with id " + fileId)
 		}
-		readonlyFile, err := app.GetUnsigned()
+		readonlyFile, err := app.GetFile(storage.AppUnsignedFile)
 		if err != nil {
 			return err
 		}
 		file = readonlyFile
 		defer file.Close()
-		fileName, err = app.GetName()
+		fileName, err = app.GetString(storage.AppName)
 		if err != nil {
 			return err
 		}
@@ -440,7 +444,7 @@ func uploadUnsignedApp(c echo.Context) error {
 }
 
 func restartSign(c echo.Context, app storage.App) error {
-	builderId, err := app.GetBuilderId()
+	builderId, err := app.GetString(storage.AppBuilderId)
 	if err != nil {
 		return err
 	}
@@ -448,7 +452,7 @@ func restartSign(c echo.Context, app storage.App) error {
 	if !ok {
 		return errors.New("no builder with id " + builderId)
 	}
-	if err := app.ClearSigned(); err != nil && !os.IsNotExist(err) {
+	if err := app.RemoveFile(storage.AppSignedFile); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 	if err := app.ResetModTime(); err != nil {
@@ -461,7 +465,7 @@ func restartSign(c echo.Context, app storage.App) error {
 }
 
 func startSign(app storage.App, builder builders.Builder) error {
-	profileId, err := app.GetProfileId()
+	profileId, err := app.GetString(storage.AppProfileId)
 	if err != nil {
 		return err
 	}
@@ -476,7 +480,7 @@ func startSign(app storage.App, builder builders.Builder) error {
 	if err != nil {
 		return err
 	}
-	if err := app.SetWorkflowUrl(statusUrl); err != nil {
+	if err := app.SetString(storage.AppWorkflowUrl, statusUrl); err != nil {
 		return err
 	}
 	return nil
@@ -504,22 +508,22 @@ func renderIndex(c echo.Context) error {
 		if err != nil {
 			return errors.WithMessage(err, "get mod time")
 		}
-		name, err := app.GetName()
+		name, err := app.GetString(storage.AppName)
 		if err != nil {
 			logErrApp(err, app).Msg("get name")
 		}
-		workflowUrl, err := app.GetWorkflowUrl()
+		workflowUrl, err := app.GetString(storage.AppWorkflowUrl)
 		if err != nil {
 			logErrApp(err, app).Msg("get workflow url")
 		}
-		bundleId, _ := app.GetBundleId()
-		profileId, err := app.GetProfileId()
+		bundleId, _ := app.GetString(storage.AppBundleId)
+		profileId, err := app.GetString(storage.AppProfileId)
 		if err != nil {
 			logErrApp(err, app).Msg("get profile id")
 		}
 		var profileName string
 		if profile, ok := storage.Profiles.GetById(profileId); ok {
-			profileName, err = profile.GetName()
+			profileName, err = profile.GetString(storage.ProfileName)
 			if err != nil {
 				logErrApp(err, app).Msg("get profile name")
 			}
@@ -590,7 +594,7 @@ func renderIndex(c echo.Context) error {
 		return err
 	}
 	for _, profile := range profiles {
-		name, err := profile.GetName()
+		name, err := profile.GetString(storage.ProfileName)
 		if err != nil {
 			return err
 		}

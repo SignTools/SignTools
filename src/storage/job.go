@@ -41,10 +41,10 @@ func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 		return errors.WithMessage(err, "get profile files")
 	}
 	files = append(files, []fileGetter{
-		{name: "unsigned.ipa", f1: app.GetUnsigned},
+		{name: "unsigned.ipa", f1: func() (ReadonlyFile, error) { return app.GetFile(AppUnsignedFile) }},
 		{name: "id.txt", f2: func() (string, error) { return returnJobId, nil }},
-		{name: "args.txt", f2: app.GetSignArgs},
-		{name: "user_bundle_id.txt", f2: app.GetUserBundleId},
+		{name: "args.txt", f2: func() (string, error) { return app.GetString(AppSignArgs) }},
+		{name: "user_bundle_id.txt", f2: func() (string, error) { return app.GetString(AppUserBundleId) }},
 	}...)
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"io"
 	"io/ioutil"
 	"ios-signer-service/src/config"
 	"os"
@@ -52,7 +53,7 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 		}
 	}
 	if cfg.ProvBase64 != "" {
-		log.Info().Msg("importing cert profile from envvars")
+		log.Info().Msg("importing prov profile from envvars")
 		certBytes, err := decodeVar(cfg.CertBase64)
 		if err != nil {
 			return nil, errors.WithMessage(err, "decode cert base64")
@@ -61,27 +62,14 @@ func parseEnvProfile(cfg *config.EnvProfile) (*envProfile, error) {
 		if err != nil {
 			return nil, errors.WithMessage(err, "decode prov base64")
 		}
-		return &envProfile{
-			id:           uuid.NewString(),
-			name:         cfg.Name,
-			prov:         provBytes,
-			certPass:     cfg.CertPass,
-			originalCert: certBytes,
-		}, nil
+		return newEnvProfileProv(uuid.NewString(), cfg, certBytes, provBytes), nil
 	} else if cfg.AccountName != "" && cfg.AccountPass != "" {
 		log.Info().Msg("importing account profile from envvars")
 		certBytes, err := decodeVar(cfg.CertBase64)
 		if err != nil {
 			return nil, errors.WithMessage(err, "decode cert base64")
 		}
-		return &envProfile{
-			id:           uuid.NewString(),
-			name:         cfg.Name,
-			certPass:     cfg.CertPass,
-			originalCert: certBytes,
-			accountName:  cfg.AccountName,
-			accountPass:  cfg.AccountPass,
-		}, nil
+		return newEnvProfileAccount(uuid.NewString(), cfg, certBytes), nil
 	} else {
 		return nil, &MissingData{"provisioning profile or account name and password"}
 	}
@@ -115,6 +103,52 @@ type envProfile struct {
 	accountName  string
 	accountPass  string
 	teamId       string
+}
+
+func (p *envProfile) GetString(name FSName) (string, error) {
+	switch name {
+	case ProfileName:
+		return p.name, nil
+	default:
+		return "", errors.New("unknown file name")
+	}
+}
+
+func (p *envProfile) GetFile(name FSName) (ReadonlyFile, error) {
+	return nil, errors.New("unsupported operation")
+}
+
+func (p *envProfile) SetString(name FSName, s string) error {
+	return errors.New("unsupported operation")
+}
+
+func (p *envProfile) SetFile(name FSName, seeker io.ReadSeeker) error {
+	return errors.New("unsupported operation")
+}
+
+func (p *envProfile) RemoveFile(name FSName) error {
+	return errors.New("unsupported operation")
+}
+
+func newEnvProfileProv(id string, cfg *config.EnvProfile, certBytes []byte, provBytes []byte) *envProfile {
+	return &envProfile{
+		id:           id,
+		name:         cfg.Name,
+		prov:         provBytes,
+		certPass:     cfg.CertPass,
+		originalCert: certBytes,
+	}
+}
+
+func newEnvProfileAccount(id string, cfg *config.EnvProfile, certBytes []byte) *envProfile {
+	return &envProfile{
+		id:           id,
+		name:         cfg.Name,
+		certPass:     cfg.CertPass,
+		originalCert: certBytes,
+		accountName:  cfg.AccountName,
+		accountPass:  cfg.AccountPass,
+	}
 }
 
 func (p *envProfile) GetId() string {
@@ -152,10 +186,6 @@ func (p *envProfile) GetFiles() ([]fileGetter, error) {
 		}...)
 	}
 	return files, nil
-}
-
-func (p *envProfile) GetName() (string, error) {
-	return p.name, nil
 }
 
 func (p *envProfile) IsAccount() (bool, error) {

@@ -8,54 +8,71 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"ios-signer-service/src/assets"
+	"ios-signer-service/src/util"
 	"os"
 	"path"
+)
+
+const (
+	ProfileRoot        = ""
+	ProfileCert        = "cert.p12"
+	ProfileCertPass    = "cert_pass.txt"
+	ProfileProv        = "prov.mobileprovision"
+	ProfileName        = "name.txt"
+	ProfileAccountName = "account_name.txt"
+	ProfileAccountPass = "account_pass.txt"
 )
 
 type Profile interface {
 	GetId() string
 	GetFiles() ([]fileGetter, error)
-	GetName() (string, error)
 	IsAccount() (bool, error)
+	FileSystem
 }
 
-func newProfile(id string) (*profile, error) {
-	p := profile{id: id}
-	pass, err := p.getCertPass()
+func newProfile(id string) *profile {
+	return &profile{id: id, FileSystemBase: FileSystemBase{resolvePath: func(name FSName) string {
+		return util.SafeJoinFilePaths(profilesPath, id, string(name))
+	}}}
+}
+
+func loadProfile(id string) (*profile, error) {
+	p := newProfile(id)
+	pass, err := p.getString(ProfileCertPass)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessagef(err, "get %s", ProfileCertPass)
 	}
-	originalCertFile, err := p.getOriginalCert()
+	origCertFile, err := p.getFile(ProfileCert)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessagef(err, "get %s", ProfileCert)
 	}
-	originalCertBytes, err := ioutil.ReadAll(originalCertFile)
+	origCertBytes, err := ioutil.ReadAll(origCertFile)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithMessage(err, "read cert file")
 	}
-	fixedCert, teamId, err := processP12(originalCertBytes, pass)
+	fixedCert, teamId, err := processP12(origCertBytes, pass)
 	if err != nil {
 		return nil, errors.WithMessage(err, "validate certificate")
 	}
 	p.fixedCert = fixedCert
 	p.teamId = teamId
-	return &p, nil
+	return p, nil
 }
 
 // Validates the input P12 file, adds any missing standard CAs, and returns the new P12 along with the team ID.
 func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 	blocks, err := pkcs12.ToPEM(originalP12, pass)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.WithMessage(err, "p12 to pem")
 	}
 	appleCerts, err := assets.AppleCerts.ReadDir("certs")
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.WithMessage(err, "read certs dir")
 	}
 	for _, cert := range appleCerts {
 		certBytes, err := assets.AppleCerts.ReadFile(path.Join("certs", cert.Name()))
 		if err != nil {
-			return nil, "", err
+			return nil, "", errors.WithMessagef(err, "read cert %s", cert.Name())
 		}
 		block, _ := pem.Decode(certBytes)
 		blocks = append(blocks, block)
@@ -69,7 +86,7 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 		case "CERTIFICATE":
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
-				return nil, "", err
+				return nil, "", errors.WithMessage(err, "parse certificate")
 			}
 			serialNumber := cert.SerialNumber.String()
 			if _, ok := serialNumbers[serialNumber]; ok {
@@ -114,7 +131,7 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 	}
 	fixedP12, err := pkcs12.Encode(rand.Reader, keys, certificates, authorities, pass)
 	if err != nil {
-		return nil, "", err
+		return nil, "", errors.WithMessage(err, "encode final p12")
 	}
 	return fixedP12, orgUnit, nil
 }
@@ -123,6 +140,7 @@ type profile struct {
 	id        string
 	teamId    string
 	fixedCert []byte
+	FileSystemBase
 }
 
 func (p *profile) GetId() string {
@@ -130,7 +148,7 @@ func (p *profile) GetId() string {
 }
 
 func (p *profile) IsAccount() (bool, error) {
-	if _, err := os.Stat(profileAccountNamePath(p.id)); os.IsNotExist(err) {
+	if _, err := os.Stat(p.resolvePath(ProfileAccountName)); os.IsNotExist(err) {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -145,74 +163,26 @@ func (p *profile) GetFiles() ([]fileGetter, error) {
 	}
 	var files = []fileGetter{
 		{name: "cert.p12", f3: p.getFixedCert},
-		{name: "cert_pass.txt", f2: p.getCertPass},
+		{name: "cert_pass.txt", f2: func() (string, error) { return p.getString(ProfileCertPass) }},
 		{name: "team_id.txt", f2: p.getTeamId},
 	}
 	if isAccount {
 		files = append(files, []fileGetter{
-			{name: "account_name.txt", f2: p.getAccountName},
-			{name: "account_pass.txt", f2: p.getAccountPass},
+			{name: "account_name.txt", f2: func() (string, error) { return p.getString(ProfileAccountName) }},
+			{name: "account_pass.txt", f2: func() (string, error) { return p.getString(ProfileAccountPass) }},
 		}...)
 	} else {
 		files = append(files, []fileGetter{
-			{name: "prov.mobileprovision", f1: p.getProv},
+			{name: "prov.mobileprovision", f1: func() (ReadonlyFile, error) { return p.getFile(ProfileProv) }},
 		}...)
 	}
 	return files, nil
-}
-
-func (p *profile) getOriginalCert() (ReadonlyFile, error) {
-	file, err := os.Open(profileCertPath(p.id))
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
 }
 
 func (p *profile) getFixedCert() ([]byte, error) {
 	return p.fixedCert, nil
 }
 
-func (p *profile) getProv() (ReadonlyFile, error) {
-	file, err := os.Open(profileProvPath(p.id))
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
-}
-
-func (p *profile) getAccountName() (string, error) {
-	data, err := readTrimSpace(profileAccountNamePath(p.id))
-	if err != nil {
-		return "", err
-	}
-	return data, nil
-}
-
-func (p *profile) getAccountPass() (string, error) {
-	data, err := readTrimSpace(profileAccountPassPath(p.id))
-	if err != nil {
-		return "", err
-	}
-	return data, nil
-}
-
-func (p *profile) getCertPass() (string, error) {
-	data, err := readTrimSpace(profileCertPassPath(p.id))
-	if err != nil {
-		return "", err
-	}
-	return data, nil
-}
-
 func (p *profile) getTeamId() (string, error) {
 	return p.teamId, nil
-}
-
-func (p *profile) GetName() (string, error) {
-	data, err := readTrimSpace(profileNamePath(p.id))
-	if err != nil {
-		return "", err
-	}
-	return data, nil
 }
