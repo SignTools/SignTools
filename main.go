@@ -48,7 +48,6 @@ var formNames = assets.FormNames{
 	FormIdCustomText:    "id_custom_text",
 	FormIdEncode:        "id_encode",
 	FormIdForceOriginal: "id_force_original",
-	FormBundleId:        "bundle_id",
 }
 
 func main() {
@@ -212,7 +211,7 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 		return err
 	}
 	defer file.Close()
-	if err := app.SetSigned(file, c.FormValue(formNames.FormBundleId)); err != nil {
+	if err := app.SetSigned(file, c.FormValue("bundle_id")); err != nil {
 		return err
 	}
 	if !storage.Jobs.DeleteById(job.Id) {
