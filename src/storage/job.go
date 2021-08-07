@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.uber.org/atomic"
 	"io"
+	"os"
 	"time"
 )
 
@@ -46,6 +47,11 @@ func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 		{name: "args.txt", f2: func() (string, error) { return app.GetString(AppSignArgs) }},
 		{name: "user_bundle_id.txt", f2: func() (string, error) { return app.GetString(AppUserBundleId) }},
 	}...)
+	if bundleName, err := app.GetString(AppBundleName); err == nil {
+		files = append(files, fileGetter{name: "bundle_name.txt", f2: func() (string, error) { return bundleName, nil }})
+	} else if !os.IsNotExist(err) {
+		return err
+	}
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {
 			return errors.WithMessage(err, "tar package")

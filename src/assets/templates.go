@@ -50,6 +50,7 @@ type FormNames struct {
 	FormIdCustomText    string
 	FormIdEncode        string
 	FormIdForceOriginal string
+	FormBundleName      string
 }
 
 type IndexData struct {

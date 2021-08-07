@@ -21,6 +21,7 @@ const (
 	AppWorkflowUrl  = FSName("workflow_url")
 	AppProfileId    = FSName("profile_id")
 	AppBuilderId    = FSName("builder_id")
+	AppBundleName   = FSName("bundle_name")
 )
 
 type App interface {

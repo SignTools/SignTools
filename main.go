@@ -437,6 +437,12 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	bundleName := c.FormValue(formNames.FormBundleName)
+	if bundleName != "" {
+		if err := app.SetString(storage.AppBundleName, bundleName); err != nil {
+			return err
+		}
+	}
 	if err := startSign(app, builder); err != nil {
 		return err
 	}
