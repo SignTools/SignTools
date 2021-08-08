@@ -54,7 +54,7 @@
               <h5 class="modal-title">Upload App</h5>
               <button id="btnModalClose" type="button" class="btn-close"></button>
             </div>
-            <div class="modal-body">
+            <div id="modalBody" class="modal-body">
               <nav>
                 <div class="nav nav-tabs" id="nav-tab" role="tablist">
                   <button
@@ -364,6 +364,7 @@
     const formFileText = document.getElementById("formFileText");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
+    const modalBody = document.getElementById("modalBody");
     const formFileSpinner = document.getElementById("formFileSpinner");
     const modalElem = document.getElementById("uploadModal");
     const modal = new bootstrap.Modal(modalElem, {
@@ -386,6 +387,9 @@
     const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
     let actionsActive = 0;
 
+    modalElem.addEventListener("shown.bs.modal", function () {
+      modalBody.style.minHeight = `${modalBody.offsetHeight}px`;
+    });
     for (let item of dropdownResign) {
       item.addEventListener("click", function () {
         actionsActive++;
