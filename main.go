@@ -47,6 +47,7 @@ var formNames = assets.FormNames{
 	FormIdCustom:        "id_custom",
 	FormIdCustomText:    "id_custom_text",
 	FormIdEncode:        "id_encode",
+	FormIdPatch:         "id_patch",
 	FormIdForceOriginal: "id_force_original",
 	FormBundleName:      "bundle_name",
 }
@@ -425,6 +426,9 @@ func uploadUnsignedApp(c echo.Context) error {
 	}
 	if c.FormValue(formNames.FormIdForceOriginal) != "" {
 		signArgs += " -o"
+	}
+	if c.FormValue(formNames.FormIdPatch) != "" {
+		signArgs += " -p"
 	}
 	idType := c.FormValue(formNames.FormId)
 	userBundleId := c.FormValue(formNames.FormIdCustomText)

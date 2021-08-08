@@ -49,6 +49,7 @@ type FormNames struct {
 	FormIdCustom        string
 	FormIdCustomText    string
 	FormIdEncode        string
+	FormIdPatch         string
 	FormIdForceOriginal string
 	FormBundleName      string
 }

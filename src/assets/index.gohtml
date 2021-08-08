@@ -167,7 +167,27 @@
                       />
                     </div>
                   </div>
-                  <div class="mb-0">
+                </div>
+                <div class="tab-pane pt-2" id="nav-advanced" role="tabpanel">
+                  <div class="mb-2 col-md-8">
+                    <label for="formBundleName" class="form-label">Bundle name (optional)</label>
+                    <a
+                      style="color: blue"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="right"
+                      title="The app's name on the home screen. Leave empty for unchanged."
+                      >?</a
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="{{.FormBundleName}}"
+                      id="formBundleName"
+                      placeholder="My Custom App"
+                    />
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">ID options</label>
                     <div class="form-check">
                       <input
                         class="form-check-input"
@@ -183,8 +203,26 @@
                         style="color: blue"
                         data-bs-toggle="tooltip"
                         data-bs-placement="right"
-                        title="Fixes signing if you don't own the app.
-                        If this option causes issues, disable it and use a unique custom bundle ID."
+                        title="Allows you to sign apps whose IDs you do not own."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        id="formIdPatch"
+                        name="{{.FormIdPatch}}"
+                        disabled
+                      />
+                      <label style="display: inline" class="form-check-label" for="formIdPatch">
+                        Patch new IDs into app's binaries
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Fixes cases where the app expects its old IDs. Disable this if you have issues."
                         >?</a
                       >
                     </div>
@@ -207,27 +245,8 @@
                       >
                     </div>
                   </div>
-                </div>
-                <div class="tab-pane pt-2" id="nav-advanced" role="tabpanel">
-                  <div class="mb-2 col-md-8">
-                    <label for="formBundleName" class="form-label">Custom bundle name</label>
-                    <a
-                      style="color: blue"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="This is how the app will show on your home screen."
-                      >?</a
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      name="{{.FormBundleName}}"
-                      id="formBundleName"
-                      placeholder="My Custom App"
-                    />
-                  </div>
                   <div class="mb-0">
-                    <label class="form-label">Signing options</label>
+                    <label class="form-label">Additional options</label>
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="formAppDebug" name="{{.FormAppDebug}}" />
                       <label style="display: inline" class="form-check-label" for="formAppDebug">
@@ -378,6 +397,7 @@
     const formIdCustom = document.getElementById("formIdCustom");
     const formIdCustomText = document.getElementById("formIdCustomText");
     const formIdEncode = document.getElementById("formIdEncode");
+    const formIdPatch = document.getElementById("formIdPatch");
     const dropdownResign = document.getElementsByClassName("dropdownResign");
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
@@ -439,12 +459,16 @@
           formIdOriginal.checked = true;
         }
         formIdProv.disabled = true;
-        formIdEncode.checked = true;
-        formIdEncode.disabled = false;
+        for (let item of [formIdEncode, formIdPatch]) {
+          item.checked = true;
+          item.disabled = false;
+        }
       } else {
         formIdProv.disabled = false;
-        formIdEncode.checked = false;
-        formIdEncode.disabled = true;
+        for (let item of [formIdEncode, formIdPatch]) {
+          item.checked = false;
+          item.disabled = true;
+        }
       }
     });
     document.querySelectorAll('input[name="{{.FormId}}"]').forEach(function (a) {
