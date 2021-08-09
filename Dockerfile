@@ -6,7 +6,7 @@ COPY . .
 RUN go mod download && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o "bin-release"
 
-FROM alpine:3.14.0
+FROM alpine:3.14.1
 
 WORKDIR /
 
