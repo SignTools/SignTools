@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	textTemplate "text/template"
@@ -437,11 +438,15 @@ func uploadUnsignedApp(c echo.Context) error {
 	} else if idType == formNames.FormIdCustom {
 		signArgs += " -b " + userBundleId
 	}
+	bundleName := c.FormValue(formNames.FormBundleName)
+	if bundleName != "" {
+		fileName = fmt.Sprintf("%s (%s)%s",
+			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
+	}
 	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId)
 	if err != nil {
 		return err
 	}
-	bundleName := c.FormValue(formNames.FormBundleName)
 	if bundleName != "" {
 		if err := app.SetString(storage.AppBundleName, bundleName); err != nil {
 			return err
