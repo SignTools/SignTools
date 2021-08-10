@@ -38,11 +38,11 @@ func newProfile(id string) *profile {
 
 func loadProfile(id string) (*profile, error) {
 	p := newProfile(id)
-	pass, err := p.getString(ProfileCertPass)
+	pass, err := p.GetString(ProfileCertPass)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "get %s", ProfileCertPass)
 	}
-	origCertFile, err := p.getFile(ProfileCert)
+	origCertFile, err := p.GetFile(ProfileCert)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "get %s", ProfileCert)
 	}
@@ -164,17 +164,17 @@ func (p *profile) GetFiles() ([]fileGetter, error) {
 	}
 	var files = []fileGetter{
 		{name: "cert.p12", f3: p.getFixedCert},
-		{name: "cert_pass.txt", f2: func() (string, error) { return p.getString(ProfileCertPass) }},
+		{name: "cert_pass.txt", f2: func() (string, error) { return p.GetString(ProfileCertPass) }},
 		{name: "team_id.txt", f2: p.getTeamId},
 	}
 	if isAccount {
 		files = append(files, []fileGetter{
-			{name: "account_name.txt", f2: func() (string, error) { return p.getString(ProfileAccountName) }},
-			{name: "account_pass.txt", f2: func() (string, error) { return p.getString(ProfileAccountPass) }},
+			{name: "account_name.txt", f2: func() (string, error) { return p.GetString(ProfileAccountName) }},
+			{name: "account_pass.txt", f2: func() (string, error) { return p.GetString(ProfileAccountPass) }},
 		}...)
 	} else {
 		files = append(files, []fileGetter{
-			{name: "prov.mobileprovision", f1: func() (ReadonlyFile, error) { return p.getFile(ProfileProv) }},
+			{name: "prov.mobileprovision", f1: func() (ReadonlyFile, error) { return p.GetFile(ProfileProv) }},
 		}...)
 	}
 	return files, nil

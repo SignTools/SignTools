@@ -30,10 +30,6 @@ type FileSystemBase struct {
 func (a *FileSystemBase) GetString(name FSName) (string, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.getString(name)
-}
-
-func (a *FileSystemBase) getString(name FSName) (string, error) {
 	data, err := ioutil.ReadFile(a.resolvePath(name))
 	if err != nil {
 		return "", err
@@ -44,10 +40,6 @@ func (a *FileSystemBase) getString(name FSName) (string, error) {
 func (a *FileSystemBase) SetString(name FSName, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	return a.setString(name, value)
-}
-
-func (a *FileSystemBase) setString(name FSName, value string) error {
 	reader := bytes.NewReader([]byte(strings.TrimSpace(value)))
 	return atomic.WriteFile(a.resolvePath(name), reader)
 }
@@ -55,18 +47,10 @@ func (a *FileSystemBase) setString(name FSName, value string) error {
 func (a *FileSystemBase) GetFile(name FSName) (ReadonlyFile, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.getFile(name)
-}
-
-func (a *FileSystemBase) getFile(name FSName) (ReadonlyFile, error) {
 	return os.Open(a.resolvePath(name))
 }
 
 func (a *FileSystemBase) SetFile(name FSName, value io.ReadSeeker) error {
-	return a.setFile(name, value, true)
-}
-
-func (a *FileSystemBase) setFile(name FSName, value io.ReadSeeker, block bool) error {
 	dir, file := filepath.Split(a.resolvePath(name))
 	if dir == "" {
 		dir = "."
@@ -86,10 +70,8 @@ func (a *FileSystemBase) setFile(name FSName, value io.ReadSeeker, block bool) e
 	if err := f.Close(); err != nil {
 		return errors.WithMessage(err, "close file")
 	}
-	if block {
-		a.mu.Lock()
-		defer a.mu.Unlock()
-	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if err := atomic.ReplaceFile(f.Name(), a.resolvePath(name)); err != nil {
 		return errors.WithMessage(err, "replace file")
 	}
@@ -99,9 +81,5 @@ func (a *FileSystemBase) setFile(name FSName, value io.ReadSeeker, block bool) e
 func (a *FileSystemBase) RemoveFile(name FSName) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	return a.removeFile(name)
-}
-
-func (a *FileSystemBase) removeFile(name FSName) error {
 	return os.Remove(a.resolvePath(name))
 }

@@ -50,11 +50,11 @@ func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArg
 		AppProfileId:    profile.GetId(),
 	}
 	for fileType, value := range pairs {
-		if err := app.setString(fileType, value); err != nil {
+		if err := app.SetString(fileType, value); err != nil {
 			return nil, errors.WithMessagef(err, "set %s", fileType)
 		}
 	}
-	if err := app.setFile(AppUnsignedFile, unsignedFile, false); err != nil {
+	if err := app.SetFile(AppUnsignedFile, unsignedFile); err != nil {
 		return nil, errors.WithMessagef(err, "set %s", AppUnsignedFile)
 	}
 	return app, nil
