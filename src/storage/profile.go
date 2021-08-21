@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	ProfileRoot        = ""
-	ProfileCert        = "cert.p12"
-	ProfileCertPass    = "cert_pass.txt"
-	ProfileProv        = "prov.mobileprovision"
-	ProfileName        = "name.txt"
-	ProfileAccountName = "account_name.txt"
-	ProfileAccountPass = "account_pass.txt"
+	ProfileRoot        = FSName("")
+	ProfileCert        = FSName("cert.p12")
+	ProfileCertPass    = FSName("cert_pass.txt")
+	ProfileProv        = FSName("prov.mobileprovision")
+	ProfileName        = FSName("name.txt")
+	ProfileAccountName = FSName("account_name.txt")
+	ProfileAccountPass = FSName("account_pass.txt")
 )
 
 type Profile interface {
