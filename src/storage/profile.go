@@ -13,6 +13,8 @@ import (
 	"path"
 )
 
+var ProfilePaths = []FSName{ProfileCert, ProfileCertPass, ProfileProv, ProfileName, ProfileAccountName, ProfileAccountPass}
+
 const (
 	ProfileRoot        = FSName("")
 	ProfileCert        = FSName("cert.p12")
@@ -38,6 +40,21 @@ func newProfile(id string) *profile {
 
 func loadProfile(id string) (*profile, error) {
 	p := newProfile(id)
+	isAccount, err := p.IsAccount()
+	if err != nil {
+		return nil, errors.WithMessage(err, "is account")
+	}
+	for _, file := range ProfilePaths {
+		if !isAccount && (file == ProfileAccountName || file == ProfileAccountPass) {
+			continue
+		}
+		if isAccount && file == ProfileProv {
+			continue
+		}
+		if _, err := p.Stat(file); err != nil {
+			return nil, errors.WithMessagef(err, "check required file %s", file)
+		}
+	}
 	pass, err := p.GetString(ProfileCertPass)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "get %s", ProfileCertPass)

@@ -105,6 +105,10 @@ type envProfile struct {
 	teamId       string
 }
 
+func (p *envProfile) Stat(name FSName) (os.FileInfo, error) {
+	return nil, errors.New("unsupported operation")
+}
+
 func (p *envProfile) GetString(name FSName) (string, error) {
 	switch name {
 	case ProfileName:

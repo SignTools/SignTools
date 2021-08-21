@@ -20,6 +20,7 @@ type FileSystem interface {
 	SetString(FSName, string) error
 	SetFile(FSName, io.ReadSeeker) error
 	RemoveFile(FSName) error
+	Stat(name FSName) (os.FileInfo, error)
 }
 
 type FileSystemBase struct {
@@ -82,4 +83,10 @@ func (a *FileSystemBase) RemoveFile(name FSName) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return os.Remove(a.resolvePath(name))
+}
+
+func (a *FileSystemBase) Stat(name FSName) (os.FileInfo, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return os.Stat(a.resolvePath(name))
 }
