@@ -34,8 +34,7 @@ func (r *profileResolver) refresh() error {
 		id := idDir.Name()
 		profile, err := loadProfile(id)
 		if err != nil {
-			log.Err(err).Str("id", id).Msg("load profile from files")
-			continue
+			log.Fatal().Err(err).Str("id", id).Msg("load profile from files")
 		}
 		r.idToProfileMap[id] = profile
 	}
