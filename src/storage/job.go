@@ -54,6 +54,12 @@ func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 	}
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {
+			// sabotage the archive to nudge the client that something is wrong
+			w.WriteHeader(&tar.Header{
+				Name: "ERROR",
+				Mode: 0600,
+				Size: 1024,
+			})
 			return errors.WithMessage(err, "tar package")
 		}
 	}
