@@ -17,7 +17,7 @@ type Ngrok struct {
 func (n *Ngrok) getPublicUrl(timeout time.Duration) (string, error) {
 	ngrokUrl := fmt.Sprintf("http://localhost:%d/api/tunnels", n.Port)
 	if err := util.WaitForServer(ngrokUrl, timeout); err != nil {
-		return "", errors.WithMessage(err, "connecting to ngrok")
+		return "", errors.WithMessage(err, "connect to ngrok")
 	}
 	var tunnels Tunnels
 	response, err := sling.New().Get(ngrokUrl).ReceiveSuccess(&tunnels)

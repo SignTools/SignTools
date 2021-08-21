@@ -19,7 +19,7 @@ var publicUrlRegex = regexp.MustCompile(`cloudflared_tunnel_user_hostnames_count
 func (c *Cloudflare) getPublicUrl(timeout time.Duration) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/metrics", c.Port)
 	if err := util.WaitForServer(url, timeout); err != nil {
-		return "", errors.WithMessage(err, "connecting to cloudflared")
+		return "", errors.WithMessage(err, "connect to cloudflared")
 	}
 	response, err := sling.New().Get(url).ReceiveBody()
 	if err != nil {

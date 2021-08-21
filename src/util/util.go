@@ -55,7 +55,7 @@ func WaitForServer(url string, timeout time.Duration) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return errors.New("reaching server timed out: " + url)
+			return errors.New("reach server timed out: " + url)
 		default:
 			if _, err := http.Get(url); err == nil {
 				return nil
