@@ -10,7 +10,6 @@
     - [3. Two-factor authentication (2FA)](#3-two-factor-authentication-2fa)
     - [4. Each signed app will expire in 7 days](#4-each-signed-app-will-expire-in-7-days)
     - [5. A maximum of 10 app ids can be registered per 7 days](#5-a-maximum-of-10-app-ids-can-be-registered-per-7-days)
-    - [6. You cannot use an existing app's bundle id](#6-you-cannot-use-an-existing-apps-bundle-id)
   - [What kind of certificates/provisioning profiles are supported?](#what-kind-of-certificatesprovisioning-profiles-are-supported)
     - [Certificates](#certificates)
     - [Provisioning profiles](#provisioning-profiles)
@@ -47,10 +46,6 @@ Re-sign it and you will get another 7 days.
 ### 5. A maximum of 10 app ids can be registered per 7 days
 
 Re-use an existing app's bundle id if you hit the limit. Note that the old app will be replaced with the new one when you install it. Otherwise, wait for an app id to expire.
-
-### 6. You cannot use an existing app's bundle id
-
-Say you were feeling adventurous and wanted to sign an app with the same bundle id as YouTube. You can't do that with a free developer account. Apple checks if the bundle id is already registered anywhere else before providing you with a provisioning profile for that id.
 
 ## What kind of certificates/provisioning profiles are supported?
 
