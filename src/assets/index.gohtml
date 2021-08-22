@@ -355,7 +355,13 @@
                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}"
                   >Install</a
                 >
-                <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.DownloadUrl}}">Download</a>
+                <div class="dropdown">
+                  <a class="btn btn-outline-light mt-2 ms-2 dropdown-toggle" data-bs-toggle="dropdown">Download</a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
+                    <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
+                  </ul>
+                </div>
                 {{else}} {{if eq $app.Status 0 }}
                 <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
                 {{end}}

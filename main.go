@@ -142,6 +142,7 @@ func serve(host string, port uint64) {
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
+	e.GET("/apps/:id/unsigned", appResolver(getUnsignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/restart", appResolver(restartSign), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
@@ -346,6 +347,18 @@ func escapeXML(str string) (string, error) {
 
 func getSignedApp(c echo.Context, app storage.App) error {
 	file, err := app.GetFile(storage.AppSignedFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := writeFileResponse(c, file, app); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getUnsignedApp(c echo.Context, app storage.App) error {
+	file, err := app.GetFile(storage.AppUnsignedFile)
 	if err != nil {
 		return err
 	}
@@ -586,19 +599,20 @@ func renderIndex(c echo.Context) error {
 		}
 
 		data.Apps = append(data.Apps, assets.App{
-			Id:           app.GetId(),
-			Status:       status,
-			Name:         name,
-			ModTime:      modTime.Format(time.RFC822),
-			WorkflowUrl:  workflowUrl,
-			ProfileName:  profileName,
-			BundleId:     bundleId,
-			ManifestUrl:  manifestUrl,
-			DownloadUrl:  path.Join("/apps", app.GetId(), "signed"),
-			TwoFactorUrl: path.Join("/apps", app.GetId(), "2fa"),
-			RestartUrl:   path.Join("/apps", app.GetId(), "restart"),
-			DeleteUrl:    path.Join("/apps", app.GetId(), "delete"),
-			RenameUrl:    path.Join("/apps", app.GetId(), "rename"),
+			Id:                  app.GetId(),
+			Status:              status,
+			Name:                name,
+			ModTime:             modTime.Format(time.RFC822),
+			WorkflowUrl:         workflowUrl,
+			ProfileName:         profileName,
+			BundleId:            bundleId,
+			ManifestUrl:         manifestUrl,
+			DownloadSignedUrl:   path.Join("/apps", app.GetId(), "signed"),
+			DownloadUnsignedUrl: path.Join("/apps", app.GetId(), "unsigned"),
+			TwoFactorUrl:        path.Join("/apps", app.GetId(), "2fa"),
+			RestartUrl:          path.Join("/apps", app.GetId(), "restart"),
+			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),
+			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
 		})
 	}
 	if usingManifestProxy {

@@ -1,19 +1,20 @@
 package assets
 
 type App struct {
-	Id           string
-	Status       int
-	Name         string
-	ModTime      string
-	WorkflowUrl  string
-	ManifestUrl  string
-	DownloadUrl  string
-	TwoFactorUrl string
-	RestartUrl   string
-	DeleteUrl    string
-	RenameUrl    string
-	ProfileName  string
-	BundleId     string
+	Id                  string
+	Status              int
+	Name                string
+	ModTime             string
+	WorkflowUrl         string
+	ManifestUrl         string
+	DownloadSignedUrl   string
+	DownloadUnsignedUrl string
+	TwoFactorUrl        string
+	RestartUrl          string
+	DeleteUrl           string
+	RenameUrl           string
+	ProfileName         string
+	BundleId            string
 }
 
 const (
