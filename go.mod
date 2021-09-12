@@ -14,7 +14,7 @@ require (
 	github.com/labstack/gommon v0.3.0
 	github.com/natefinch/atomic v1.0.1
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.23.0
+	github.com/rs/zerolog v1.24.0
 	github.com/stretchr/testify v1.7.0
 	github.com/ziflex/lecho/v2 v2.5.0
 	go.uber.org/atomic v1.9.0
