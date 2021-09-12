@@ -9,14 +9,14 @@ require (
 	github.com/elliotchance/orderedmap v1.4.0
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.3.0
-	github.com/knadh/koanf v1.2.1
+	github.com/knadh/koanf v1.2.2
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/labstack/gommon v0.3.0
 	github.com/natefinch/atomic v1.0.1
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.24.0
+	github.com/rs/zerolog v1.25.0
 	github.com/stretchr/testify v1.7.0
-	github.com/ziflex/lecho/v2 v2.5.0
+	github.com/ziflex/lecho/v2 v2.5.1
 	go.uber.org/atomic v1.9.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
