@@ -41,7 +41,7 @@ If you use one of the CI builders, each time you sign an app a new computer will
 
 ### 4. Each signed app will expire in 7 days
 
-Re-sign it and you will get another 7 days.
+Resign it and you will get another 7 days.
 
 ### 5. A maximum of 10 app ids can be registered per 7 days
 

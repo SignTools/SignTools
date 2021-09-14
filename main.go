@@ -144,7 +144,7 @@ func serve(host string, port uint64) {
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
 	e.GET("/apps/:id/unsigned", appResolver(getUnsignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
-	e.GET("/apps/:id/restart", appResolver(restartSign), basicAuth)
+	e.GET("/apps/:id/resign", appResolver(resignApp), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
 	e.GET("/apps/:id/rename", appResolver(renderRenameApp), basicAuth)
 	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
@@ -471,7 +471,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	return c.Redirect(302, "/")
 }
 
-func restartSign(c echo.Context, app storage.App) error {
+func resignApp(c echo.Context, app storage.App) error {
 	builderId, err := app.GetString(storage.AppBuilderId)
 	if err != nil {
 		return err
@@ -610,7 +610,7 @@ func renderIndex(c echo.Context) error {
 			DownloadSignedUrl:   path.Join("/apps", app.GetId(), "signed"),
 			DownloadUnsignedUrl: path.Join("/apps", app.GetId(), "unsigned"),
 			TwoFactorUrl:        path.Join("/apps", app.GetId(), "2fa"),
-			RestartUrl:          path.Join("/apps", app.GetId(), "restart"),
+			ResignUrl:           path.Join("/apps", app.GetId(), "resign"),
 			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),
 			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
 		})

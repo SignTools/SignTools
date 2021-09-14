@@ -336,11 +336,11 @@
                   <div class="dropdown">
                     <a class="bi bi-three-dots-vertical py-1 px-2" data-bs-toggle="dropdown"></a>
                     <div class="dropdown-menu">
-                      <a class="dropdown-item dropdownResign" x-app-name="{{$app.Name}}" x-app-id="{{$app.Id}}"
-                        >Re-sign</a
+                      <a class="dropdown-item dropdownCreateFrom" x-app-name="{{$app.Name}}" x-app-id="{{$app.Id}}"
+                        >Create from...</a
                       >
-                      <a class="dropdown-item" href="{{$app.RenameUrl}}">Rename</a>
-                      <a class="dropdown-item" href="{{$app.RestartUrl}}">Restart</a>
+                      <a class="dropdown-item" href="{{$app.RenameUrl}}">Rename...</a>
+                      <a class="dropdown-item" href="{{$app.ResignUrl}}">Resign</a>
                       <a class="dropdown-item" href="{{$app.DeleteUrl}}">Delete</a>
                     </div>
                   </div>
@@ -410,7 +410,7 @@
     const formIdCustomText = document.getElementById("formIdCustomText");
     const formIdEncode = document.getElementById("formIdEncode");
     const formIdPatch = document.getElementById("formIdPatch");
-    const dropdownResign = document.getElementsByClassName("dropdownResign");
+    const dropdownCreateFrom = document.getElementsByClassName("dropdownCreateFrom");
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
     const dropdowns = document.getElementsByClassName("dropdown");
@@ -422,7 +422,7 @@
     modalElem.addEventListener("shown.bs.modal", function () {
       modalBody.style.minHeight = `${modalBody.offsetHeight}px`;
     });
-    for (let item of dropdownResign) {
+    for (let item of dropdownCreateFrom) {
       item.addEventListener("click", function () {
         actionsActive++;
         formFileId.value = item.getAttribute("x-app-id");

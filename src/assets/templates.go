@@ -10,7 +10,7 @@ type App struct {
 	DownloadSignedUrl   string
 	DownloadUnsignedUrl string
 	TwoFactorUrl        string
-	RestartUrl          string
+	ResignUrl           string
 	DeleteUrl           string
 	RenameUrl           string
 	ProfileName         string
