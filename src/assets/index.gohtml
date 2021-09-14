@@ -213,7 +213,7 @@
                         type="checkbox"
                         id="formIdPatch"
                         name="{{.FormIdPatch}}"
-                        disabled
+                        checked
                       />
                       <label style="display: inline" class="form-check-label" for="formIdPatch">
                         Patch new IDs into app's binaries
@@ -471,16 +471,12 @@
           formIdOriginal.checked = true;
         }
         formIdProv.disabled = true;
-        for (let item of [formIdEncode, formIdPatch]) {
-          item.checked = true;
-          item.disabled = false;
-        }
+        formIdEncode.checked = true;
+        formIdEncode.disabled = false;
       } else {
         formIdProv.disabled = false;
-        for (let item of [formIdEncode, formIdPatch]) {
-          item.checked = false;
-          item.disabled = true;
-        }
+        formIdEncode.checked = false;
+        formIdEncode.disabled = true;
       }
     });
     document.querySelectorAll('input[name="{{.FormId}}"]').forEach(function (a) {
