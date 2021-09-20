@@ -317,6 +317,7 @@
         </div>
       </div>
       <div class="row" id="masonryRow">
+        <div class="col-sm-6 col-lg-4 col-xl-3 p-2" id="appSizeItem"></div>
         {{range $_, $app := .Apps}}
         <div class="col-sm-6 col-lg-4 col-xl-3 p-2 appItem">
           <div
@@ -415,7 +416,12 @@
     const btnSearchClear = document.getElementById("btnSearchClear");
     const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
-    const masonry = new Masonry(masonryRow, { percentPosition: true, horizontalOrder: true });
+    const masonry = new Masonry(masonryRow, {
+      percentPosition: true,
+      horizontalOrder: true,
+      itemSelector: ".appItem",
+      columnWidth: "#appSizeItem",
+    });
     const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
     let actionsActive = 0;
 
