@@ -565,9 +565,31 @@
     }
 
     setTimeout(function () {
+      const actionInput = debounceAction(3000);
+      const actionScroll = debounceAction(300);
+      inputSearchFilter.addEventListener("input", function () {
+        actionInput();
+      });
+      document.addEventListener("scroll", function () {
+        actionScroll();
+      });
+
       const refreshHandle = setInterval(function () {
         tryRefresh(refreshHandle);
       }, 500);
-    }, 9_500);
+    }, 6_500);
+
+    function debounceAction(timeout) {
+      actionsActive++;
+      let timer;
+      const result = () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          actionsActive--;
+        }, timeout);
+      };
+      result();
+      return result;
+    }
   </script>
 </html>
