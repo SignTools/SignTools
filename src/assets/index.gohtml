@@ -499,7 +499,6 @@
     }
 
     inputSearchFilter.addEventListener("input", function () {
-      window.location.hash = inputSearchFilter.value;
       if (inputSearchFilter.value === "") {
         for (let app of document.getElementsByClassName("appItem")) {
           app.hidden = false;
@@ -532,6 +531,7 @@
 
     const searchClearHandler = function () {
       inputSearchFilter.value = "";
+      window.location.hash = "";
       inputSearchFilter.dispatchEvent(new Event("input"));
     };
     inputSearchFilter.addEventListener("keydown", function (e) {
@@ -558,6 +558,7 @@
     function tryRefresh(refreshHandle) {
       if (!document.hidden && actionsActive === 0) {
         clearInterval(refreshHandle);
+        window.location.hash = inputSearchFilter.value;
         localStorage.setItem("scrollpos", window.scrollY);
         window.location.reload();
       }
