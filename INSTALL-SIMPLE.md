@@ -2,7 +2,7 @@
 
 ## Video tutorial
 
-For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
+For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). **You still need this written guide** - the video is somewhat outdated, and it does not cover everything.
 
 ## 1. Limitations
 
@@ -16,7 +16,7 @@ For more information, check their [pricing page](https://www.heroku.com/pricing)
 
 ## 2. Builder
 
-You will have to create a builder. Currently, only GitHub Actions is supported. Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the GitHub Actions instructions.
+You will have to create a builder. Currently, only GitHub Actions is supported. Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the **GitHub Actions** instructions.
 
 Once you have made your builder, proceed below.
 

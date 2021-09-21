@@ -4,11 +4,12 @@ Before you begin, it is recommended to understand exactly how this project works
 
 ## Video tutorial
 
-For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
+For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still need this written guide** - the video is somewhat outdated, and it does not cover everything.
 
 ## Table of Contents
 
 - [Advanced Installation](#advanced-installation)
+  - [Video tutorial](#video-tutorial)
   - [Table of Contents](#table-of-contents)
   - [1. Builder](#1-builder)
   - [2. Web service configuration](#2-web-service-configuration)
