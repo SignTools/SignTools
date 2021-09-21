@@ -2,6 +2,8 @@
 
 Before you begin, it is recommended to understand exactly how this project works. Knowing what is happening at each point will help you troubleshoot any issues far better. Check out the [How does this all work?](DETAILS.md) page.
 
+## Video tutorial
+
 For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
 
 ## Table of Contents

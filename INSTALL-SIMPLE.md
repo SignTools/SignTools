@@ -1,5 +1,7 @@
 # Simple Installation
 
+## Video tutorial
+
 For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). Note that you still need this written guide - use the video as an addition, but not substitution for the instructions below.
 
 ## 1. Limitations
