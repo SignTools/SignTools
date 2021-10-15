@@ -580,11 +580,16 @@
     }, 6_500);
 
     function debounceAction(timeout) {
-      actionsActive++;
+      let active = false;
       let timer;
       const result = () => {
+        if (!active) {
+          active = true;
+          actionsActive++;
+        }
         clearTimeout(timer);
         timer = setTimeout(() => {
+          active = false;
           actionsActive--;
         }, timeout);
       };
