@@ -21,6 +21,8 @@ type FileSystem interface {
 	SetFile(FSName, io.ReadSeeker) error
 	RemoveFile(FSName) error
 	Stat(name FSName) (os.FileInfo, error)
+	MkDir(name FSName) error
+	ReadDir(name FSName) ([]os.DirEntry, error)
 }
 
 type FileSystemBase struct {
@@ -89,4 +91,14 @@ func (a *FileSystemBase) Stat(name FSName) (os.FileInfo, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return os.Stat(a.resolvePath(name))
+}
+
+func (a *FileSystemBase) MkDir(name FSName) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return os.MkdirAll(a.resolvePath(name), 700)
+}
+
+func (a *FileSystemBase) ReadDir(name FSName) ([]os.DirEntry, error) {
+	return os.ReadDir(a.resolvePath(name))
 }

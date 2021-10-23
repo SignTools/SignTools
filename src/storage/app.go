@@ -5,7 +5,9 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"ios-signer-service/src/util"
+	"mime/multipart"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -22,6 +24,7 @@ const (
 	AppProfileId    = FSName("profile_id")
 	AppBuilderId    = FSName("builder_id")
 	AppBundleName   = FSName("bundle_name")
+	TweaksDir       = FSName("tweaks")
 )
 
 type App interface {
@@ -37,7 +40,7 @@ func loadApp(id string) App {
 	return newApp(id)
 }
 
-func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string) (App, error) {
+func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweaks []*multipart.FileHeader) (App, error) {
 	app := newApp(uuid.NewString())
 	if err := os.MkdirAll(app.resolvePath(AppRoot), os.ModePerm); err != nil {
 		return nil, errors.New("make app dir")
@@ -56,6 +59,22 @@ func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArg
 	}
 	if err := app.SetFile(AppUnsignedFile, unsignedFile); err != nil {
 		return nil, errors.WithMessagef(err, "set %s", AppUnsignedFile)
+	}
+	if tweaks != nil {
+		if err := app.MkDir(TweaksDir); err != nil {
+			return nil, err
+		}
+	}
+	for _, tweak := range tweaks {
+		tweakName := FSName(filepath.Join(string(TweaksDir), tweak.Filename))
+		tweakFile, err := tweak.Open()
+		if err != nil {
+			return nil, err
+		}
+		defer tweakFile.Close()
+		if err := app.SetFile(tweakName, tweakFile); err != nil {
+			return nil, errors.WithMessagef(err, "set %s", tweakName)
+		}
 	}
 	return app, nil
 }

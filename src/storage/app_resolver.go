@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"ios-signer-service/src/util"
+	"mime/multipart"
 	"sort"
 	"sync"
 )
@@ -59,8 +60,8 @@ func (r *appResolver) Get(id string) (App, bool) {
 	return app, true
 }
 
-func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string) (App, error) {
-	app, err := createApp(unsignedFile, name, profile, signArgs, userBundleId, builderId)
+func (r *appResolver) New(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweaks []*multipart.FileHeader) (App, error) {
+	app, err := createApp(unsignedFile, name, profile, signArgs, userBundleId, builderId, tweaks)
 	if err != nil {
 		return nil, err
 	}

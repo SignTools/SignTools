@@ -7,6 +7,7 @@ import (
 	"go.uber.org/atomic"
 	"io"
 	"os"
+	"path"
 	"time"
 )
 
@@ -52,6 +53,24 @@ func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 	} else if !os.IsNotExist(err) {
 		return err
 	}
+	if tweaks, err := app.ReadDir(TweaksDir); err == nil {
+		if err := w.WriteHeader(&tar.Header{
+			Name:     string(TweaksDir),
+			Typeflag: tar.TypeDir,
+			Mode:     0700,
+		}); err != nil {
+			return err
+		}
+		for _, tweak := range tweaks {
+			tweakName := FSName(path.Join(string(TweaksDir), tweak.Name()))
+			files = append(files, []fileGetter{
+				{name: string(tweakName), f1: func() (ReadonlyFile, error) { return app.GetFile(tweakName) }},
+			}...)
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
 	for _, file := range files {
 		if err := tarPackage(w, &file); err != nil {
 			// sabotage the archive to nudge the client that something is wrong

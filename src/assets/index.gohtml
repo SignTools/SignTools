@@ -245,7 +245,7 @@
                       >
                     </div>
                   </div>
-                  <div class="mb-0">
+                  <div class="mb-2">
                     <label class="form-label">Additional options</label>
                     <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="formAppDebug" name="{{.FormAppDebug}}" />
@@ -292,6 +292,23 @@
                         >?</a
                       >
                     </div>
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label">Tweaks (optional)</label>
+                    <a
+                      style="color: blue"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="right"
+                      title="Injects tweaks into the app. Does not always work."
+                      >?</a
+                    >
+                    <input
+                      class="form-control"
+                      type="file"
+                      id="formTweaksSelect"
+                      name="{{.FormTweakFiles}}"
+                      multiple
+                    />
                   </div>
                 </div>
               </div>

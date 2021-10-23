@@ -105,6 +105,14 @@ type envProfile struct {
 	teamId       string
 }
 
+func (p *envProfile) MkDir(name FSName) error {
+	return errors.New("unsupported operation")
+}
+
+func (p *envProfile) ReadDir(name FSName) ([]os.DirEntry, error) {
+	return nil, errors.New("unsupported operation")
+}
+
 func (p *envProfile) Stat(name FSName) (os.FileInfo, error) {
 	return nil, errors.New("unsupported operation")
 }

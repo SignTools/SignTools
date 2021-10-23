@@ -51,6 +51,7 @@ var formNames = assets.FormNames{
 	FormIdPatch:         "id_patch",
 	FormIdForceOriginal: "id_force_original",
 	FormBundleName:      "bundle_name",
+	FormTweakFiles:      "tweaks[]",
 }
 
 func main() {
@@ -456,7 +457,12 @@ func uploadUnsignedApp(c echo.Context) error {
 		fileName = fmt.Sprintf("%s (%s)%s",
 			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
 	}
-	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId)
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	tweaks := form.File[formNames.FormTweakFiles]
+	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId, tweaks)
 	if err != nil {
 		return err
 	}

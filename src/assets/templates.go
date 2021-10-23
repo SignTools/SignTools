@@ -53,6 +53,7 @@ type FormNames struct {
 	FormIdPatch         string
 	FormIdForceOriginal string
 	FormBundleName      string
+	FormTweakFiles      string
 }
 
 type IndexData struct {
