@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"SignTools/src/config"
 	"bytes"
 	"compress/zlib"
 	"encoding/base64"
@@ -9,7 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	"io/ioutil"
-	"ios-signer-service/src/config"
 	"os"
 	"reflect"
 )

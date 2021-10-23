@@ -1,22 +1,22 @@
 <p align="center">
     <img width="256" heigth="256" src="img/logo.png">
-    <h1 align="center">iOS Signer Service</h1>
+    <h1 align="center">SignTools</h1>
     <p align="center">
         A self-hosted, cross-platform service to sign and install iOS apps, all <b>without a computer</b>.
     </p>
     <p align="center">
-        <img alt="GitHub" src="https://img.shields.io/github/license/signtools/ios-signer-service">
-        <img alt="GitHub issues" src="https://img.shields.io/github/issues/signtools/ios-signer-service">
-        <img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/signtools/ios-signer-service">
-        <img alt="Docker Image Version (latest semver)" src="https://img.shields.io/docker/v/signtools/ios-signer-service">
-        <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/signtools/ios-signer-service/total">
-        <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/signtools/ios-signer-service">
+        <img alt="GitHub" src="https://img.shields.io/github/license/signtools/SignTools">
+        <img alt="GitHub issues" src="https://img.shields.io/github/issues/signtools/SignTools">
+        <img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/signtools/signtools">
+        <img alt="Docker Image Version (latest semver)" src="https://img.shields.io/docker/v/signtools/signtools">
+        <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/signtools/SignTools/total">
+        <img alt="GitHub release (latest SemVer)" src="https://img.shields.io/github/v/release/signtools/SignTools">
     </p>
 </p>
 
 ## Introduction
 
-There are countless reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered and out of reach for most people. Here iOS Signer Service comes to the rescue. No more terminal, half-working scripts, or even computer. Sideload any app directly from your phone through a simple web interface.
+There are countless reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered and out of reach for most people. Here SignTools comes to the rescue. No more terminal, half-working scripts, or even computer. Sideload any app directly from your phone through a simple web interface.
 
 What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can also be hosted on any **free** server or one of your own.
 

@@ -29,9 +29,9 @@ For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still ne
 
 You can create a builder in one of two ways:
 
-- **Use a Continuous Integration (CI) service** such as GitHub Actions or Semaphore CI. This method is the easiest, fastest, and most recommended way to make a builder. Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the instructions.
+- **Use a Continuous Integration (CI) service** such as GitHub Actions or Semaphore CI. This method is the easiest, fastest, and most recommended way to make a builder. Head over to [SignTools-CI](https://github.com/SignTools/SignTools-CI) and follow the instructions.
 
-- **Use your own Mac machine**. This method is only recommended if you already have a server Mac, you are somewhat experienced in server management, and you would like to host your truly own builder. Go to [ios-signer-builder](https://github.com/SignTools/ios-signer-builder) for instructions.
+- **Use your own Mac machine**. This method is only recommended if you already have a server Mac, you are somewhat experienced in server management, and you would like to host your truly own builder. Go to [SignTools-Builder](https://github.com/SignTools/SignTools-Builder) for instructions.
 
 Only one builder is necessary, but you can have more if needed. Once done, proceed below.
 
@@ -43,7 +43,7 @@ It's easier if you use your personal computer for the initial configuration. Thi
 
 You need to create a configuration file which links the web service to your builder.
 
-1. Download the correct [binary release](https://github.com/SignTools/ios-signer-service/releases) for your computer
+1. Download the correct [binary release](https://github.com/SignTools/SignTools/releases) for your computer
 2. Run it once - it will exit immediately, saying that it has generated a configuration file
 3. In the same folder as the binary, you will find a new file `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below. The lines that start with a hashtag `#` are comments, you do not need to touch them.
 
@@ -56,7 +56,7 @@ builder:
   github:
     enable: false
     # the name you gave your builder repository
-    repo_name: ios-signer-ci
+    repo_name: SignTools-CI
     # your GitHub profile/organization name
     org_name: YOUR_ORG_NAME
     workflow_file_name: sign.yml
@@ -194,12 +194,12 @@ You have two options:
 
 **Normal**
 
-1. Download the correct [binary release](https://github.com/SignTools/ios-signer-service/releases) (if this is a different computer than you used before)
+1. Download the correct [binary release](https://github.com/SignTools/SignTools/releases) (if this is a different computer than you used before)
 2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to the same folder as the binary you just downloaded
 
 **Docker**
 
-1. Use the official [Docker image](https://hub.docker.com/r/signtools/ios-signer-service)
+1. Use the official [Docker image](https://hub.docker.com/r/signtools/SignTools)
 2. Move and [mount](https://docs.docker.com/storage/volumes/) the configuration files from sections `2.1.` and `2.2.`:
    - `./signer-cfg.yml:/signer-cfg.yml`
    - `./data:/data` (or whatever you set in `save_dir`)
@@ -238,7 +238,7 @@ The web service cannot work by itself. You have two options:
    ```
 3. Then start your service with the following command:
    ```bash
-   ios-signer-service -cloudflared-port 51881
+   SignTools -cloudflared-port 51881
    ```
 4. When the service finishes loading, look for a line similar to this:
    ```log

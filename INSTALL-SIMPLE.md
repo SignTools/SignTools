@@ -16,7 +16,7 @@ For more information, check their [pricing page](https://www.heroku.com/pricing)
 
 ## 2. Builder
 
-You will have to create a builder. Currently, only GitHub Actions is supported. Head over to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) and follow the **GitHub Actions** instructions.
+You will have to create a builder. Currently, only GitHub Actions is supported. Head over to [SignTools-CI](https://github.com/SignTools/SignTools-CI) and follow the **GitHub Actions** instructions.
 
 Once you have made your builder, proceed below.
 
@@ -63,6 +63,6 @@ If you are using a manual provisioning profile, you likely received a certificat
 
 Click on the button below - register for a free account and follow the setup page.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/ios-signer-service/tree/master)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/SignTools/tree/master)
 
 Once you are done, you will be left with your very own web service. Congratulations!

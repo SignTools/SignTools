@@ -1,12 +1,12 @@
 package builders
 
 import (
+	"SignTools/src/util"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/ViRb3/sling/v2"
 	"github.com/pkg/errors"
-	"ios-signer-service/src/util"
 )
 
 type SemaphoreData struct {

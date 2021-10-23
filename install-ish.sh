@@ -13,7 +13,7 @@ download_release() {
 }
 
 download_release "cloudflared" false
-download_release "ios-signer-service" true
+download_release "SignTools" true
 
 echo "Installing runner script..."
 cat <<EOF >start-signer.sh
@@ -24,7 +24,7 @@ trap 'trap " " SIGTERM; kill 0; wait' SIGINT SIGTERM EXIT INT
 
 echo "Starting service..."
 ./cloudflared tunnel -url http://localhost:8080 -metrics localhost:51881 -loglevel error &
-./ios-signer-service -host localhost -cloudflared-port 51881 &
+./SignTools -host localhost -cloudflared-port 51881 &
 cat /dev/location > /dev/null &
 echo "Press Ctrl+C / ^+C to stop..."
 wait -n

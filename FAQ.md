@@ -29,7 +29,7 @@ Aka "Install button doesn't work", "Unable to install \*.ipa". This is a deliber
 
 For each device where you want to sideload apps, you need to have installed any app signed with your developer account at least once manually before using this service. Doing so will register your device's identifier (UDID) with the developer account, something the builder cannot do without physical connection with your device.
 
-**On macOS**: You can just build a blank new app or [SimpleApp](https://github.com/SignTools/ios-signer-ci/tree/master/SimpleApp) and run it on your phone. That will take care of UDID registration.
+**On macOS**: You can just build a blank new app or [SimpleApp](https://github.com/SignTools/SignTools-CI/tree/master/SimpleApp) and run it on your phone. That will take care of UDID registration.
 
 **On all other platforms**: You can install any app with a third-party signing tool like [AltStore](https://altstore.io/). That will take care of UDID registration.
 

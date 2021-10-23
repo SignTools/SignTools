@@ -4,13 +4,13 @@ WORKDIR /src
 COPY . .
 
 RUN go mod download && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o "ios-signer-service"
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o "SignTools"
 
 FROM alpine:3.14.2
 
 WORKDIR /
 
-COPY --from=builder "/src/ios-signer-service" "/"
+COPY --from=builder "/src/SignTools" "/"
 
-CMD ["/ios-signer-service"]
+CMD ["/SignTools"]
 EXPOSE 8080

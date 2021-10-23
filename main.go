@@ -1,6 +1,12 @@
 package main
 
 import (
+	"SignTools/src/assets"
+	"SignTools/src/builders"
+	"SignTools/src/config"
+	"SignTools/src/storage"
+	"SignTools/src/tunnel"
+	"SignTools/src/util"
 	"bytes"
 	"encoding/xml"
 	"flag"
@@ -14,12 +20,6 @@ import (
 	"github.com/ziflex/lecho/v2"
 	htmlTemplate "html/template"
 	"io"
-	"ios-signer-service/src/assets"
-	"ios-signer-service/src/builders"
-	"ios-signer-service/src/config"
-	"ios-signer-service/src/storage"
-	"ios-signer-service/src/tunnel"
-	"ios-signer-service/src/util"
 	"mime"
 	"mime/multipart"
 	"net/http"

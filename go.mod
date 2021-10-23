@@ -1,4 +1,4 @@
-module ios-signer-service
+module SignTools
 
 go 1.17
 

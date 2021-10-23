@@ -1,10 +1,10 @@
 package storage
 
 import (
+	"SignTools/src/config"
+	"SignTools/src/util"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"ios-signer-service/src/config"
-	"ios-signer-service/src/util"
 	"os"
 	"sort"
 )

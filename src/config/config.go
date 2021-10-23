@@ -1,6 +1,7 @@
 package config
 
 import (
+	"SignTools/src/builders"
 	"crypto/rand"
 	"encoding/hex"
 	"github.com/ViRb3/koanf-extra/env"
@@ -11,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
-	"ios-signer-service/src/builders"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,7 +58,7 @@ func createDefaultFile() *File {
 		Builder: Builder{
 			GitHub: builders.GitHubData{
 				Enable:           false,
-				RepoName:         "ios-signer-ci",
+				RepoName:         "SignTools-CI",
 				OrgName:          "YOUR_PROFILE_NAME",
 				WorkflowFileName: "sign.yml",
 				Token:            "YOUR_TOKEN",

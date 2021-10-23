@@ -2,4 +2,4 @@ build:
   docker:
     web: Dockerfile.heroku
 run:
-  web: /ios-signer-service -port "$PORT" -log-json
+  web: /SignTools -port "$PORT" -log-json

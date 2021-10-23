@@ -10,12 +10,12 @@ assignees: ""
 
 **I tried basic troubleshooting first**
 
-- [ ] Updated **both** [ios-signer-service](https://github.com/SignTools/ios-signer-service) **and** the builder ([ios-signer-ci](https://github.com/SignTools/ios-signer-ci) or [ios-signer-builder](https://github.com/SignTools/ios-signer-builder)) to the latest version
-- [ ] Read through the [FAQ page](https://github.com/SignTools/ios-signer-service/blob/master/FAQ.md)
+- [ ] Updated **both** [SignTools](https://github.com/SignTools/SignTools) **and** the builder ([SignTools-CI](https://github.com/SignTools/SignTools-CI) or [SignTools-Builder](https://github.com/SignTools/SignTools-Builder)) to the latest version
+- [ ] Read through the [FAQ page](https://github.com/SignTools/SignTools/blob/master/FAQ.md)
 
 **Describe the bug**
 
-A clear and concise description of what the bug is. If it is related to [ios-signer-ci](https://github.com/SignTools/ios-signer-ci) or [ios-signer-builder](https://github.com/SignTools/ios-signer-builder), please include their logs.
+A clear and concise description of what the bug is. If it is related to [SignTools-CI](https://github.com/SignTools/SignTools-CI) or [SignTools-Builder](https://github.com/SignTools/SignTools-Builder), please include their logs.
 
 **To reproduce**
 
@@ -36,10 +36,10 @@ If applicable, add screenshots to help explain your problem.
 
 **System configuration**
 
-- ios-signer-service version: [e.g. 2.1.1]
+- SignTools version: [e.g. 2.1.1]
 - Installation type: [heroku, computer, phone; nginx, ngrok, cloudflared]
-- Builder type: [ios-signer-ci, ios-signer-builder]
-- Builder version: [e.g. 1.0.0 for ios-signer-builder; the latest commit hash of your repo for ios-signer-ci, e.g. 03e0ed9]
+- Builder type: [SignTools-CI, SignTools-Builder]
+- Builder version: [e.g. 1.0.0 for SignTools-Builder; the latest commit hash of your repo for SignTools-CI, e.g. 03e0ed9]
 
 **Additional context**
 

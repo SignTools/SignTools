@@ -1,6 +1,7 @@
 package builders
 
 import (
+	"SignTools/src/util"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -9,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/oauth2"
-	"ios-signer-service/src/util"
 )
 
 type GitHubData struct {

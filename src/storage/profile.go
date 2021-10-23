@@ -1,14 +1,14 @@
 package storage
 
 import (
+	"SignTools/src/assets"
+	"SignTools/src/util"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/ViRb3/go-pkcs12"
 	"github.com/pkg/errors"
 	"io/ioutil"
-	"ios-signer-service/src/assets"
-	"ios-signer-service/src/util"
 	"os"
 	"path"
 )
