@@ -171,8 +171,12 @@ func getTweaks(c echo.Context, app storage.App) error {
 	if len(tweaks) < 1 {
 		return c.NoContent(404)
 	}
+	appName, err := app.GetString(storage.AppName)
+	if err != nil {
+		return err
+	}
 	c.Response().Header().Set("Content-Type", mime.TypeByExtension(".tar"))
-	c.Response().Header().Add("Content-Disposition", `attachment; filename="tweaks.tar"`)
+	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s-tweaks.tar"`, appName))
 	writer := tar.NewWriter(c.Response().Writer)
 	defer writer.Close()
 	for _, tweak := range tweaks {
