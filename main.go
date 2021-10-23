@@ -7,6 +7,7 @@ import (
 	"SignTools/src/storage"
 	"SignTools/src/tunnel"
 	"SignTools/src/util"
+	"archive/tar"
 	"bytes"
 	"encoding/xml"
 	"flag"
@@ -143,6 +144,7 @@ func serve(host string, port uint64) {
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
+	e.GET("/apps/:id/tweaks", appResolver(getTweaks))
 	e.GET("/apps/:id/unsigned", appResolver(getUnsignedApp))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/resign", appResolver(resignApp), basicAuth)
@@ -157,6 +159,43 @@ func serve(host string, port uint64) {
 	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+func getTweaks(c echo.Context, app storage.App) error {
+	tweaks, err := app.ReadDir(storage.TweaksDir)
+	if os.IsNotExist(err) {
+		return c.NoContent(404)
+	} else if err != nil {
+		return err
+	}
+	if len(tweaks) < 1 {
+		return c.NoContent(404)
+	}
+	c.Response().Header().Set("Content-Type", mime.TypeByExtension(".tar"))
+	c.Response().Header().Add("Content-Disposition", `attachment; filename="tweaks.tar"`)
+	writer := tar.NewWriter(c.Response().Writer)
+	defer writer.Close()
+	for _, tweak := range tweaks {
+		tweakName := storage.FSName(filepath.Join(string(storage.TweaksDir), tweak.Name()))
+		file, err := app.GetFile(tweakName)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		stat, err := app.Stat(tweakName)
+		if err != nil {
+			return err
+		}
+		writer.WriteHeader(&tar.Header{
+			Name: tweak.Name(),
+			Mode: 0600,
+			Size: stat.Size(),
+		})
+		if _, err := io.Copy(writer, file); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func renderRenameApp(c echo.Context, app storage.App) error {
@@ -642,6 +681,7 @@ func renderIndex(c echo.Context) error {
 			ManifestUrl:         manifestUrl,
 			DownloadSignedUrl:   path.Join("/apps", app.GetId(), "signed"),
 			DownloadUnsignedUrl: path.Join("/apps", app.GetId(), "unsigned"),
+			DownloadTweaksUrl:   path.Join("/apps", app.GetId(), "tweaks"),
 			TwoFactorUrl:        path.Join("/apps", app.GetId(), "2fa"),
 			ResignUrl:           path.Join("/apps", app.GetId(), "resign"),
 			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),

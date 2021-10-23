@@ -9,6 +9,7 @@ type App struct {
 	ManifestUrl         string
 	DownloadSignedUrl   string
 	DownloadUnsignedUrl string
+	DownloadTweaksUrl   string
 	TwoFactorUrl        string
 	ResignUrl           string
 	DeleteUrl           string
