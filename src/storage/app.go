@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"io"
-	"mime/multipart"
 	"os"
 	"path/filepath"
 	"sync"
@@ -40,7 +39,7 @@ func loadApp(id string) App {
 	return newApp(id)
 }
 
-func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweaks []*multipart.FileHeader) (App, error) {
+func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweakMap map[string]io.ReadSeeker) (App, error) {
 	app := newApp(uuid.NewString())
 	if err := os.MkdirAll(app.resolvePath(AppRoot), os.ModePerm); err != nil {
 		return nil, errors.New("make app dir")
@@ -60,19 +59,14 @@ func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArg
 	if err := app.SetFile(AppUnsignedFile, unsignedFile); err != nil {
 		return nil, errors.WithMessagef(err, "set %s", AppUnsignedFile)
 	}
-	if tweaks != nil {
+	if len(tweakMap) > 0 {
 		if err := app.MkDir(TweaksDir); err != nil {
 			return nil, err
 		}
 	}
-	for _, tweak := range tweaks {
-		tweakName := FSName(filepath.Join(string(TweaksDir), tweak.Filename))
-		tweakFile, err := tweak.Open()
-		if err != nil {
-			return nil, err
-		}
-		defer tweakFile.Close()
-		if err := app.SetFile(tweakName, tweakFile); err != nil {
+	for name, tweak := range tweakMap {
+		tweakName := FSName(filepath.Join(string(TweaksDir), name))
+		if err := app.SetFile(tweakName, tweak); err != nil {
 			return nil, errors.WithMessagef(err, "set %s", tweakName)
 		}
 	}

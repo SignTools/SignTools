@@ -457,12 +457,39 @@ func uploadUnsignedApp(c echo.Context) error {
 		fileName = fmt.Sprintf("%s (%s)%s",
 			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
 	}
-	form, err := c.MultipartForm()
-	if err != nil {
-		return err
+	tweakMap := map[string]io.ReadSeeker{}
+	if fileId != "" {
+		app, ok := storage.Apps.Get(fileId)
+		if !ok {
+			return errors.New("no app with id " + fileId)
+		}
+		tweakPaths, err := app.ReadDir(storage.TweaksDir)
+		if err != nil {
+			return err
+		}
+		for _, tweakPath := range tweakPaths {
+			tweakName := storage.FSName(path.Join(string(storage.TweaksDir), tweakPath.Name()))
+			tweak, err := app.GetFile(tweakName)
+			if err != nil {
+				return err
+			}
+			tweakMap[tweakPath.Name()] = tweak
+		}
+	} else {
+		form, err := c.MultipartForm()
+		if err != nil {
+			return err
+		}
+		for _, tweakHeader := range form.File[formNames.FormTweakFiles] {
+			tweak, err := tweakHeader.Open()
+			if err != nil {
+				return err
+			}
+			defer tweak.Close()
+			tweakMap[tweakHeader.Filename] = tweak
+		}
 	}
-	tweaks := form.File[formNames.FormTweakFiles]
-	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId, tweaks)
+	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId, tweakMap)
 	if err != nil {
 		return err
 	}

@@ -309,6 +309,14 @@
                       name="{{.FormTweakFiles}}"
                       multiple
                     />
+                    <input
+                      class="form-control"
+                      type="text"
+                      id="formTweaksText"
+                      value="Using previous tweaks"
+                      hidden
+                      disabled
+                    />
                   </div>
                 </div>
               </div>
@@ -411,6 +419,8 @@
     const formFileSelect = document.getElementById("formFileSelect");
     const formFileId = document.getElementById("formFileId");
     const formFileText = document.getElementById("formFileText");
+    const formTweaksSelect = document.getElementById("formTweaksSelect");
+    const formTweaksText = document.getElementById("formTweaksText");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
     const modalBody = document.getElementById("modalBody");
@@ -449,6 +459,8 @@
         formFileText.value = item.getAttribute("x-app-name");
         formFileSelect.hidden = true;
         formFileSelect.required = false;
+        formTweaksSelect.hidden = true;
+        formTweaksText.hidden = false;
         modal.show();
       });
     }
@@ -460,6 +472,8 @@
       formFileText.value = "";
       formFileSelect.hidden = false;
       formFileSelect.required = true;
+      formTweaksSelect.hidden = false;
+      formTweaksText.hidden = true;
       modal.show();
     });
     btnModalClose.addEventListener("click", function () {
