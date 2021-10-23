@@ -36,7 +36,7 @@ There are two types of signing profiles:
 
 Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. You can either use an `Apple Development` certificate, or both `Apple Development` and `Apple Distribution` if you want to use production entitlements. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-If you are using a manual provisioning profile, you likely received a certificate archive along with it - use that. Otherwise, follow the instructions below:
+If you are using a manual provisioning profile, you likely received a certificate archive along with it - use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
 
 - **macOS**
 
