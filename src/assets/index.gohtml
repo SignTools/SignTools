@@ -597,13 +597,12 @@
     }
 
     setTimeout(function () {
-      const actionInput = debounceAction(3000);
-      const actionScroll = debounceAction(300);
+      const action = debounceAction(3000);
       inputSearchFilter.addEventListener("input", function () {
-        actionInput();
+        action();
       });
       document.addEventListener("scroll", function () {
-        actionScroll();
+        action();
       });
 
       const refreshHandle = setInterval(function () {
