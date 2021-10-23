@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
+	"ios-signer-service/src/util"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,5 +101,9 @@ func (a *FileSystemBase) MkDir(name FSName) error {
 }
 
 func (a *FileSystemBase) ReadDir(name FSName) ([]os.DirEntry, error) {
-	return os.ReadDir(a.resolvePath(name))
+	dirs, err := os.ReadDir(a.resolvePath(name))
+	if err != nil {
+		return nil, err
+	}
+	return util.RemoveHiddenDirs(dirs), nil
 }

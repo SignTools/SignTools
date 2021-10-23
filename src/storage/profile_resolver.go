@@ -20,10 +20,11 @@ type profileResolver struct {
 }
 
 func (r *profileResolver) refresh() error {
-	idDirs, err := util.ReadDirNonHidden(profilesPath)
+	idDirs, err := os.ReadDir(profilesPath)
 	if err != nil {
 		return errors.WithMessage(err, "read profiles dir")
 	}
+	idDirs = util.RemoveHiddenDirs(idDirs)
 	envProfile, err := newEnvProfile(config.Current.EnvProfile)
 	if err == nil {
 		r.idToProfileMap[envProfile.GetId()] = envProfile

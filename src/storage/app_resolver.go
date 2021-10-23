@@ -5,6 +5,7 @@ import (
 	"io"
 	"ios-signer-service/src/util"
 	"mime/multipart"
+	"os"
 	"sort"
 	"sync"
 )
@@ -23,10 +24,11 @@ type appResolver struct {
 func (r *appResolver) refresh() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	idDirs, err := util.ReadDirNonHidden(appsPath)
+	idDirs, err := os.ReadDir(appsPath)
 	if err != nil {
 		return errors.WithMessage(err, "read apps dir")
 	}
+	idDirs = util.RemoveHiddenDirs(idDirs)
 	for _, idDir := range idDirs {
 		id := idDir.Name()
 		r.idToAppMap[id] = loadApp(id)
