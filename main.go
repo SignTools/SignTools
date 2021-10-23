@@ -186,11 +186,13 @@ func getTweaks(c echo.Context, app storage.App) error {
 		if err != nil {
 			return err
 		}
-		writer.WriteHeader(&tar.Header{
+		if err := writer.WriteHeader(&tar.Header{
 			Name: tweak.Name(),
 			Mode: 0600,
 			Size: stat.Size(),
-		})
+		}); err != nil {
+			return err
+		}
 		if _, err := io.Copy(writer, file); err != nil {
 			return err
 		}
