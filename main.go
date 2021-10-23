@@ -304,7 +304,6 @@ func getLastJob(c echo.Context) error {
 	} else if err != nil {
 		return err
 	}
-	c.Response().Header().Set("Content-Type", mime.TypeByExtension(".tar"))
 	return c.NoContent(200)
 }
 
