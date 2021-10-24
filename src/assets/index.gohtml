@@ -384,7 +384,9 @@
                   <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
                     <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
+                    {{if gt $app.TweakCount 0}}
                     <li><a class="dropdown-item" href="{{$app.DownloadTweaksUrl}}">Tweaks</a></li>
+                    {{end}}
                   </ul>
                 </div>
                 {{else}} {{if eq $app.Status 0 }}
