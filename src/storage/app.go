@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 )
@@ -65,7 +64,7 @@ func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArg
 		}
 	}
 	for name, tweak := range tweakMap {
-		tweakPath := FSName(filepath.Join(string(TweaksDir), name))
+		tweakPath := FSName(util.SafeJoinFilePaths(string(TweaksDir), name))
 		if err := app.SetFile(tweakPath, tweak); err != nil {
 			return nil, errors.WithMessagef(err, "set %s", tweakPath)
 		}
