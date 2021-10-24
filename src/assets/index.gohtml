@@ -379,16 +379,6 @@
                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}"
                   >Install</a
                 >
-                <div class="dropdown">
-                  <a class="btn btn-outline-light mt-2 ms-2 dropdown-toggle" data-bs-toggle="dropdown">Download</a>
-                  <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
-                    <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
-                    {{if gt $app.TweakCount 0}}
-                    <li><a class="dropdown-item" href="{{$app.DownloadTweaksUrl}}">Tweaks</a></li>
-                    {{end}}
-                  </ul>
-                </div>
                 {{else}} {{if eq $app.Status 0 }}
                 <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
                 {{end}}
@@ -398,6 +388,19 @@
                     href="{{$app.WorkflowUrl}}"
                     >Status</a
                   >
+                </div>
+                {{end}} {{if or (eq $app.Status 1) (eq $app.Status 2)}}
+                <div class="dropdown">
+                  <a class="btn btn-outline-light mt-2 ms-2 dropdown-toggle" data-bs-toggle="dropdown">Download</a>
+                  <ul class="dropdown-menu">
+                    {{if eq $app.Status 1 }}
+                    <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
+                    {{end}}
+                    <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
+                    {{if gt $app.TweakCount 0}}
+                    <li><a class="dropdown-item" href="{{$app.DownloadTweaksUrl}}">Tweaks</a></li>
+                    {{end}}
+                  </ul>
                 </div>
                 {{end}}
               </div>
