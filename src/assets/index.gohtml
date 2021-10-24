@@ -43,7 +43,11 @@
         <ol class="breadcrumb bg-transparent py-2 my-0 me-auto text-white">
           <li class="breadcrumb-item"><a href="/">SignTools</a></li>
         </ol>
-        <a id="btnUploadApp" class="btn btn-outline-light my-0 ms-auto"> Upload App </a>
+        <div class="form-check form-switch ms-auto me-4">
+          <input class="form-check-input" type="checkbox" id="chkAutoRefresh" />
+          <label class="form-check-label text-white" for="chkAutoRefresh">Refresh</label>
+        </div>
+        <a id="btnUploadApp" class="btn btn-outline-light my-0"> Upload App </a>
       </div>
     </nav>
     <div class="modal" id="uploadModal" tabindex="-1">
@@ -437,6 +441,7 @@
     const dropdownCreateFrom = document.getElementsByClassName("dropdownCreateFrom");
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
+    const chkAutoRefresh = document.getElementById("chkAutoRefresh");
     const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
     let masonry = null;
@@ -559,5 +564,35 @@
     let tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    let autoRefreshHandle = null;
+    function checkAutoRefresh() {
+      if (localStorage.getItem("autoRefresh") != null) {
+        autoRefreshHandle = setTimeout(function () {
+          window.location.reload();
+        }, 5_000);
+      } else if (autoRefreshHandle != null) {
+        clearTimeout(autoRefreshHandle);
+        autoRefreshHandle = null;
+      }
+    }
+    chkAutoRefresh.addEventListener("click", function () {
+      if (chkAutoRefresh.checked) {
+        localStorage.setItem("autoRefresh", "true");
+      } else {
+        localStorage.removeItem("autoRefresh");
+      }
+      checkAutoRefresh();
+    });
+    document.addEventListener("click", function (e) {
+      if (e.target === chkAutoRefresh) {
+        return;
+      }
+      chkAutoRefresh.checked = false;
+      localStorage.removeItem("autoRefresh");
+      checkAutoRefresh();
+    });
+    chkAutoRefresh.checked = localStorage.getItem("autoRefresh") != null;
+    checkAutoRefresh();
   </script>
 </html>
