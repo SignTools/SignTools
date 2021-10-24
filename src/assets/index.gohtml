@@ -45,7 +45,7 @@
         </ol>
         <div class="form-check form-switch ms-auto me-4">
           <input class="form-check-input" type="checkbox" id="chkAutoRefresh" />
-          <label class="form-check-label text-white" for="chkAutoRefresh">Refresh</label>
+          <label class="form-check-label text-white" for="chkAutoRefresh" id="lblAutoRefresh">Refresh</label>
         </div>
         <a id="btnUploadApp" class="btn btn-outline-light my-0"> Upload App </a>
       </div>
@@ -442,6 +442,7 @@
     const inputSearchFilter = document.getElementById("inputSearchFilter");
     const btnSearchClear = document.getElementById("btnSearchClear");
     const chkAutoRefresh = document.getElementById("chkAutoRefresh");
+    const lblAutoRefresh = document.getElementById("lblAutoRefresh");
     const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
     let masonry = null;
@@ -585,7 +586,7 @@
       checkAutoRefresh();
     });
     document.addEventListener("click", function (e) {
-      if (e.target === chkAutoRefresh) {
+      if (e.target === chkAutoRefresh || e.target === lblAutoRefresh) {
         return;
       }
       chkAutoRefresh.checked = false;
