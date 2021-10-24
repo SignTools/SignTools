@@ -365,11 +365,11 @@
                 </div>
               </div>
               <p class="card-text mb-2">
-                {{if eq $app.Status 1 }} {{$app.BundleId}} <br />
+                {{if gt $app.TweakCount 0}} {{$app.TweakCount}} tweaks <br />
+                {{end}} {{if eq $app.Status 1 }} {{$app.BundleId}} <br />
                 {{end}} {{$app.ProfileName}} <br />
                 {{if eq $app.Status 0 }} Processing {{else if eq $app.Status 1 }} Signed {{else if eq $app.Status 2 }}
-                Failed {{else if eq $app.Status 3 }} Waiting {{end}}
-                <br />
+                Failed {{else if eq $app.Status 3 }} Waiting {{end}} <br />
                 {{$app.ModTime}}
               </p>
               <div class="d-flex flex-wrap justify-content-end">

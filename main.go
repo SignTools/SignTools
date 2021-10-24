@@ -656,6 +656,13 @@ func renderIndex(c echo.Context) error {
 			manifestUrl = proxyUrl.String()
 		}
 
+		tweakCount := 0
+		if tweaks, err := app.ReadDir(storage.TweaksDir); err == nil {
+			tweakCount = len(tweaks)
+		} else if !os.IsNotExist(err) {
+			return err
+		}
+
 		data.Apps = append(data.Apps, assets.App{
 			Id:                  app.GetId(),
 			Status:              status,
@@ -672,6 +679,7 @@ func renderIndex(c echo.Context) error {
 			ResignUrl:           path.Join("/apps", app.GetId(), "resign"),
 			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),
 			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
+			TweakCount:          tweakCount,
 		})
 	}
 	if usingManifestProxy {
