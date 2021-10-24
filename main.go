@@ -507,17 +507,17 @@ func uploadUnsignedApp(c echo.Context) error {
 		if !ok {
 			return errors.New("no app with id " + fileId)
 		}
-		tweakNames, err := app.ReadDir(storage.TweaksDir)
-		if err != nil {
-			return err
-		}
-		for _, tweakName := range tweakNames {
-			tweakPath := storage.FSName(path.Join(string(storage.TweaksDir), tweakName.Name()))
-			tweak, err := app.GetFile(tweakPath)
-			if err != nil {
-				return err
+		if tweakNames, err := app.ReadDir(storage.TweaksDir); err == nil {
+			for _, tweakName := range tweakNames {
+				tweakPath := storage.FSName(path.Join(string(storage.TweaksDir), tweakName.Name()))
+				tweak, err := app.GetFile(tweakPath)
+				if err != nil {
+					return err
+				}
+				tweakMap[tweakName.Name()] = tweak
 			}
-			tweakMap[tweakName.Name()] = tweak
+		} else if !os.IsNotExist(err) {
+			return err
 		}
 	} else {
 		form, err := c.MultipartForm()
