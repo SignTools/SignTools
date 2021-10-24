@@ -37,6 +37,7 @@ This project is self-hosted; there is no public service. It does not provide any
 - No computer required after an initial setup \*
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
+- Inject tweaks as you are signing apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46) \*
 - Provisioning profiles, paid and free developer accounts supported
 - Every possible signing method supported, including entitlements \*
