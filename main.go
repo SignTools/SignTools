@@ -95,7 +95,7 @@ func getPublicUrlFatal(provider tunnel.Provider) string {
 }
 
 func serve(host string, port uint64) {
-	if err := os.MkdirAll(config.Current.SaveDir, 0777); err != nil {
+	if err := os.MkdirAll(config.Current.SaveDir, 0700); err != nil {
 		log.Fatal().Err(err).Send()
 	}
 

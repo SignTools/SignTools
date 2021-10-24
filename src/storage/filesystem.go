@@ -97,7 +97,7 @@ func (a *FileSystemBase) Stat(name FSName) (os.FileInfo, error) {
 func (a *FileSystemBase) MkDir(name FSName) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	return os.MkdirAll(a.resolvePath(name), 700)
+	return os.MkdirAll(a.resolvePath(name), 0700)
 }
 
 func (a *FileSystemBase) ReadDir(name FSName) ([]os.DirEntry, error) {
