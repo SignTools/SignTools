@@ -445,7 +445,12 @@
     const lblAutoRefresh = document.getElementById("lblAutoRefresh");
     const dropdowns = document.getElementsByClassName("dropdown");
     const masonryRow = document.getElementById("masonryRow");
-    let masonry = null;
+    let masonry = new Masonry(masonryRow, {
+      percentPosition: true,
+      horizontalOrder: true,
+      itemSelector: ".appItem",
+      columnWidth: "#appSizeItem",
+    });
     const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
 
     modalElem.addEventListener("shown.bs.modal", function () {
@@ -517,14 +522,12 @@
 
     inputSearchFilter.addEventListener("input", function () {
       if (inputSearchFilter.value === "") {
-        window.location.hash = "";
         for (let app of document.getElementsByClassName("appItem")) {
           app.hidden = false;
         }
-        if (masonry) masonry.layout();
+        masonry.layout();
         return;
       }
-      window.location.hash = inputSearchFilter.value;
       let searchText = inputSearchFilter.value.toLowerCase();
       for (let app of document.getElementsByClassName("appItem")) {
         if (app.querySelector(".card-title").textContent.toLowerCase().includes(searchText)) {
@@ -533,24 +536,11 @@
           app.hidden = true;
         }
       }
-      if (masonry) masonry.layout();
-    });
-
-    if (window.location.hash) {
-      inputSearchFilter.value = decodeURIComponent(window.location.hash.substring(1));
-      inputSearchFilter.dispatchEvent(new Event("input"));
-    }
-    // make sure this is initialized after any location hash filtering to prevent graphical glitches
-    masonry = new Masonry(masonryRow, {
-      percentPosition: true,
-      horizontalOrder: true,
-      itemSelector: ".appItem",
-      columnWidth: "#appSizeItem",
+      masonry.layout();
     });
 
     const searchClearHandler = function () {
       inputSearchFilter.value = "";
-      window.location.hash = "";
       inputSearchFilter.dispatchEvent(new Event("input"));
     };
     inputSearchFilter.addEventListener("keydown", function (e) {
