@@ -65,9 +65,9 @@ func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArg
 		}
 	}
 	for name, tweak := range tweakMap {
-		tweakName := FSName(filepath.Join(string(TweaksDir), name))
-		if err := app.SetFile(tweakName, tweak); err != nil {
-			return nil, errors.WithMessagef(err, "set %s", tweakName)
+		tweakPath := FSName(filepath.Join(string(TweaksDir), name))
+		if err := app.SetFile(tweakPath, tweak); err != nil {
+			return nil, errors.WithMessagef(err, "set %s", tweakPath)
 		}
 	}
 	return app, nil

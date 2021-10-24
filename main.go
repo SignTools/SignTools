@@ -180,13 +180,13 @@ func getTweaks(c echo.Context, app storage.App) error {
 	writer := tar.NewWriter(c.Response().Writer)
 	defer writer.Close()
 	for _, tweak := range tweaks {
-		tweakName := storage.FSName(filepath.Join(string(storage.TweaksDir), tweak.Name()))
-		file, err := app.GetFile(tweakName)
+		tweakPath := storage.FSName(filepath.Join(string(storage.TweaksDir), tweak.Name()))
+		file, err := app.GetFile(tweakPath)
 		if err != nil {
 			return err
 		}
 		defer file.Close()
-		stat, err := app.Stat(tweakName)
+		stat, err := app.Stat(tweakPath)
 		if err != nil {
 			return err
 		}
@@ -507,17 +507,17 @@ func uploadUnsignedApp(c echo.Context) error {
 		if !ok {
 			return errors.New("no app with id " + fileId)
 		}
-		tweakPaths, err := app.ReadDir(storage.TweaksDir)
+		tweakNames, err := app.ReadDir(storage.TweaksDir)
 		if err != nil {
 			return err
 		}
-		for _, tweakPath := range tweakPaths {
-			tweakName := storage.FSName(path.Join(string(storage.TweaksDir), tweakPath.Name()))
-			tweak, err := app.GetFile(tweakName)
+		for _, tweakName := range tweakNames {
+			tweakPath := storage.FSName(path.Join(string(storage.TweaksDir), tweakName.Name()))
+			tweak, err := app.GetFile(tweakPath)
 			if err != nil {
 				return err
 			}
-			tweakMap[tweakPath.Name()] = tweak
+			tweakMap[tweakName.Name()] = tweak
 		}
 	} else {
 		form, err := c.MultipartForm()

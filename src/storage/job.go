@@ -62,9 +62,9 @@ func (j *signJob) writeArchive(returnJobId string, writer io.Writer) error {
 			return err
 		}
 		for _, tweak := range tweaks {
-			tweakName := FSName(path.Join(string(TweaksDir), tweak.Name()))
+			tweakPath := FSName(path.Join(string(TweaksDir), tweak.Name()))
 			files = append(files, []fileGetter{
-				{name: string(tweakName), f1: func() (ReadonlyFile, error) { return app.GetFile(tweakName) }},
+				{name: string(tweakPath), f1: func() (ReadonlyFile, error) { return app.GetFile(tweakPath) }},
 			}...)
 		}
 	} else if !os.IsNotExist(err) {
