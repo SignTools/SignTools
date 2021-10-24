@@ -2,7 +2,7 @@
     <img width="256" heigth="256" src="img/logo.png">
     <h1 align="center">SignTools</h1>
     <p align="center">
-        A self-hosted, cross-platform service to sign and install iOS apps, all <b>without a computer</b>.
+        A free, self-hosted, cross-platform service to sign and install iOS apps, all <b>without a computer</b>.
     </p>
     <p align="center">
         <img alt="GitHub" src="https://img.shields.io/github/license/signtools/SignTools">
