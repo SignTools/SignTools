@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+    content="width=device-width">
+    <title>App</title>
+  </head>
+  <body>
+    <p> Scan code to install Fitatu </p>
+    <div class="qrCode"></div>
+    
+    <script src="qrcode.min.js"></script>
+    <script>
+      var qrCodeElement = document.querySelector(".qrCode");
+      var qrCodeProperties = {width : 200, height : 200};
+      var qrCodeUrl = 'http://192.168.0.87:3000/fitatu.ipa';
+      
+      new QRCode(qrCodeElement, qrCodeProperties).makeCode(qrCodeUrl);
+    </script>
+  </body>
+</html>
