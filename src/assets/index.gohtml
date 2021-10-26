@@ -383,16 +383,14 @@
                   href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}"
                   >Install</a
                 >
-                {{else}} {{if eq $app.Status 0 }}
+                {{end}} {{if ne $app.Status 1 }}
+                <a
+                  class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
+                  href="{{$app.WorkflowUrl}}"
+                  >Status</a
+                >
+                {{end}} {{if or (eq $app.Status 0) (eq $app.Status 3)}}
                 <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
-                {{end}}
-                <div class="d-flex">
-                  <a
-                    class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
-                    href="{{$app.WorkflowUrl}}"
-                    >Status</a
-                  >
-                </div>
                 {{end}} {{if or (eq $app.Status 1) (eq $app.Status 2)}}
                 <div class="dropdown">
                   <a class="btn btn-outline-light mt-2 ms-2 dropdown-toggle" data-bs-toggle="dropdown">Download</a>
