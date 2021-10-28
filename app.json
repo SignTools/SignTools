@@ -72,12 +72,12 @@
       "value": ""
     },
     "PROFILE_ACCOUNT_NAME": {
-      "description": "Your Apple developer account's name (e-mail). If you don't have one, but you have a manual provisioning profile, leave this empty and fill in the profile instead.",
+      "description": "Your Apple developer account's name (e-mail). If you don't have one, but you have a custom provisioning profile, leave this empty and fill in the profile instead.",
       "required": false,
       "value": ""
     },
     "PROFILE_ACCOUNT_PASS": {
-      "description": "Your Apple developer account's password. If you don't have one, but you have a manual provisioning profile, leave this empty and fill in the profile instead.",
+      "description": "Your Apple developer account's password. If you don't have one, but you have a custom provisioning profile, leave this empty and fill in the profile instead.",
       "required": false,
       "value": ""
     }

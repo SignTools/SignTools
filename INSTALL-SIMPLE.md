@@ -30,13 +30,13 @@ There are two types of signing profiles:
 
   This method works for both free and paid developer accounts. You only need your Apple account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization. There are no restrictions if you have a paid account. If you have a free account, make sure you read and understand the limitations in the [FAQ](FAQ.md#free-developer-account-limitations) page.
 
-- **Manual provisioning profile**
+- **Custom provisioning profile**
 
   If you have a provisioning profile with a `.mobileprovision` extension, you can use this method as well. There is no 6-digit code, so signing will be faster than a developer account. However, based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
 Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. You can either use an `Apple Development` certificate, or both `Apple Development` and `Apple Distribution` if you want to use production entitlements. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-If you are using a manual provisioning profile, you likely received a certificate archive along with it - use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
+If you are using a custom provisioning profile, you likely received a certificate archive along with it - use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
 
 - **macOS**
 
