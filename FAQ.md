@@ -53,21 +53,21 @@ Re-use an existing app's bundle id if you hit the limit. Note that the old app w
 
 - **Apple Development**
 
-  This is the default certificate type. If you have a free developer account, it grants you access to some standard entitlements, including app debugging (get-task-allow), which is necessary for some jailbreaks and emulators. If you have a paid developer account, it grants you access to all standard entitlements. This is the recommended type of certificate to use.
+  This is the default certificate type. If you have a free developer account, it grants you access to some standard entitlements, including app debugging (`get-task-allow`), which is necessary for some jailbreaks and emulators. If you have a paid developer account, it grants you access to all standard entitlements. This is the recommended type of certificate to use.
 
 - **Apple Distribution**
 
-  This certificate type is only available to paid developer accounts, as it is used when publishing an app. It grants you access to every standard entitlement, except for app debugging (get-task-allow). Additionally, it allows you to use production entitlements such as push notifications. Only use this type of certificate if you need those extra entitlements.
+  This certificate type is only available to paid developer accounts, as it is used when publishing an app. It grants you access to every standard entitlement, except for app debugging (`get-task-allow`). Additionally, it allows you to use production entitlements such as push notifications. Only use this type of certificate if you need those extra entitlements.
 
 ### Provisioning profiles
 
 - **Wildcard**
 
-  Its `application-identifier` looks like `TEAM_ID.*`. It can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...), but it can't use most standard entitlements such as app groups or iCloud containers.
+  Its `application-identifier` looks like `TEAM_ID.*`. It can properly sign any app (`TEAM_ID.app1`, `TEAM_ID.app2`, ...), but it can't contain most standard entitlements such as app groups or iCloud containers.
 
 - **Explicit**
 
-  Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can use any standard entitlement as long as it's in the provisioning profile. If you sign multiple apps with the same profile, only one of the apps can be installed on your device at a time. This is because their bundle ids will be identical and the apps will replace each other.
+  Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can contain any standard entitlement. You can also improperly any app with any id, but some functions such as file importing will not work.
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 
