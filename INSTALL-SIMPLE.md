@@ -61,7 +61,9 @@ If you are using a custom provisioning profile, you likely received a certificat
 
 ## 4. Web service
 
-Click on the button below - register for a free account and follow the setup page.
+Register for an account at [Heroku](http://www.heroku.com/) and log in.
+
+Then, click on the button below and follow the setup page:
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/SignTools/tree/master)
 
