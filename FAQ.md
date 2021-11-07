@@ -67,7 +67,7 @@ Re-use an existing app's bundle id if you hit the limit. Note that the old app w
 
 - **Explicit**
 
-  Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can contain any standard entitlement. You can also improperly any app with any id, but some functions such as file importing will not work.
+  Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can contain any standard entitlement. You can also improperly sign any app with any id, but some functions such as file importing will not work.
 
 ## App runs, but malfunctions due to invalid signing/entitlements
 
