@@ -18,9 +18,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/tus/tusd/pkg/filestore"
+	tusd "github.com/tus/tusd/pkg/handler"
 	"github.com/ziflex/lecho/v2"
 	htmlTemplate "html/template"
 	"io"
+	log3 "log"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -35,8 +38,8 @@ import (
 )
 
 var formNames = assets.FormNames{
-	FormFile:            "file",
 	FormFileId:          "file_id",
+	FormTweakIds:        "tweak_ids",
 	FormProfileId:       "profile_id",
 	FormBuilderId:       "builder_id",
 	FormAppDebug:        "app_debug",
@@ -52,7 +55,6 @@ var formNames = assets.FormNames{
 	FormIdPatch:         "id_patch",
 	FormIdForceOriginal: "id_force_original",
 	FormBundleName:      "bundle_name",
-	FormTweakFiles:      "tweaks[]",
 }
 
 func main() {
@@ -104,6 +106,7 @@ func serve(host string, port uint64) {
 	go func() {
 		for range time.Tick(interval) {
 			storage.Jobs.Cleanup(timeout)
+			storage.Uploads.Cleanup(timeout)
 		}
 	}()
 
@@ -158,7 +161,64 @@ func serve(host string, port uint64) {
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
 	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
+	if err := addTusHandlers(e, map[string]echo.MiddlewareFunc{
+		"/tus/":          basicAuth,
+		"/jobs/:id/tus/": workflowKeyAuth,
+	}); err != nil {
+		log.Fatal().Err(err).Send()
+	}
+
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+type LogToZeroLog struct {
+	Context string
+}
+
+func (l *LogToZeroLog) Write(p []byte) (n int, err error) {
+	log.Info().Str("data", strings.TrimSpace(string(p))).Msg(l.Context)
+	return len(p), nil
+}
+
+func addTusHandlers(e *echo.Echo, uploadEndpoints map[string]echo.MiddlewareFunc) error {
+	store := filestore.FileStore{
+		Path: storage.GetUploadsPath(),
+	}
+	composer := tusd.NewStoreComposer()
+	store.UseIn(composer)
+	logToZeroLog := LogToZeroLog{Context: "tusd"}
+	logger := log3.New(&logToZeroLog, "", 0)
+	handler, err := tusd.NewUnroutedHandler(tusd.Config{
+		BasePath:              "/files/",
+		StoreComposer:         composer,
+		NotifyCompleteUploads: true,
+		Logger:                logger,
+	})
+	//TODO: Apply tus middleware
+	go func() {
+		for {
+			event := <-handler.CompleteUploads
+			storage.Uploads.Add(event.Upload.ID)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+	for prefix, middlewareFunc := range uploadEndpoints {
+		e.POST(prefix, func(c echo.Context) error {
+			handler.PostFile(c.Response().Writer, c.Request())
+			return nil
+		}, middlewareFunc)
+	}
+	e.HEAD("/files/:file_id", func(c echo.Context) error {
+		handler.HeadFile(c.Response().Writer, c.Request())
+		return nil
+	})
+	e.PATCH("/files/:file_id", func(c echo.Context) error {
+		handler.PatchFile(c.Response().Writer, c.Request())
+		return nil
+	})
+	return nil
 }
 
 func getTweaks(c echo.Context, app storage.App) error {
@@ -252,11 +312,13 @@ func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
 	if !ok {
 		return errors.New(fmt.Sprintf("return job %s appid %s not resolved", job.Id, job.AppId))
 	}
-	header, err := c.FormFile(formNames.FormFile)
-	if err != nil {
-		return err
+	fileId := c.FormValue(formNames.FormFileId)
+	upload, ok := storage.Uploads.Get(fileId)
+	if !ok {
+		return errors.New("no app upload file with id " + fileId)
 	}
-	file, err := header.Open()
+	defer storage.Uploads.Delete(fileId)
+	file, err := upload.GetData()
 	if err != nil {
 		return err
 	}
@@ -440,14 +502,11 @@ func uploadUnsignedApp(c echo.Context) error {
 	if !ok {
 		return errors.New("no builder with id " + builderId)
 	}
+
 	var file multipart.File
 	var fileName string
 	fileId := c.FormValue(formNames.FormFileId)
-	if fileId != "" {
-		app, ok := storage.Apps.Get(fileId)
-		if !ok {
-			return errors.New("no app with id " + fileId)
-		}
+	if app, ok := storage.Apps.Get(fileId); ok {
 		readonlyFile, err := app.GetFile(storage.AppUnsignedFile)
 		if err != nil {
 			return err
@@ -458,18 +517,23 @@ func uploadUnsignedApp(c echo.Context) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		header, err := c.FormFile(formNames.FormFile)
+	} else if upload, ok := storage.Uploads.Get(fileId); ok {
+		defer storage.Uploads.Delete(fileId)
+		readonlyFile, err := upload.GetData()
 		if err != nil {
 			return err
 		}
-		file, err = header.Open()
-		if err != nil {
-			return err
-		}
+		file = readonlyFile
 		defer file.Close()
-		fileName = header.Filename
+		info, err := upload.GetInfo()
+		if err != nil {
+			return err
+		}
+		fileName = info.MetaData["filename"]
+	} else {
+		return errors.New("no app upload file with id " + fileId)
 	}
+
 	signArgs := ""
 	if c.FormValue(formNames.FormAllDevices) != "" {
 		signArgs += " -a"
@@ -501,18 +565,27 @@ func uploadUnsignedApp(c echo.Context) error {
 		fileName = fmt.Sprintf("%s (%s)%s",
 			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
 	}
-	form, err := c.MultipartForm()
-	if err != nil {
-		return err
-	}
 	tweakMap := map[string]io.ReadSeeker{}
-	for _, tweakHeader := range form.File[formNames.FormTweakFiles] {
-		tweak, err := tweakHeader.Open()
+	tweakIds := c.FormValue(formNames.FormTweakIds)
+	for _, tweakId := range strings.Split(tweakIds, ",") {
+		if tweakId == tweakIds {
+			break
+		}
+		tweak, ok := storage.Uploads.Get(tweakId)
+		if !ok {
+			return errors.New("no tweak upload file with id " + fileId)
+		}
+		defer storage.Uploads.Delete(tweakId)
+		readonlyFile, err := tweak.GetData()
 		if err != nil {
 			return err
 		}
-		defer tweak.Close()
-		tweakMap[tweakHeader.Filename] = tweak
+		defer readonlyFile.Close()
+		info, err := tweak.GetInfo()
+		if err != nil {
+			return err
+		}
+		tweakMap[info.MetaData["filename"]] = readonlyFile
 	}
 	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId, tweakMap)
 	if err != nil {

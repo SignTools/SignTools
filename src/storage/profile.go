@@ -6,11 +6,11 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/ViRb3/go-pkcs12"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path"
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 var ProfilePaths = []FSName{ProfileCert, ProfileCertPass, ProfileProv, ProfileName, ProfileAccountName, ProfileAccountPass}

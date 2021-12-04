@@ -6,9 +6,9 @@ import (
 	"SignTools/src/storage"
 	"SignTools/src/util"
 	"archive/tar"
-	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/eventials/go-tus"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -18,9 +18,10 @@ import (
 	"github.com/ziflex/lecho/v2"
 	"io"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -191,17 +192,31 @@ func validateFile(t *testing.T, actualData string, f func(storage.App) (storage.
 	assert.EqualValues(t, actualData, b)
 }
 
-func uploadSignedFile(t *testing.T, returnId string) {
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	field, err := w.CreateFormFile("file", "file.ipa")
+func tusUpload(t *testing.T, data []byte) string {
+	tusClient, err := tus.NewClient(config.Current.ServerUrl+"/tus/", nil)
 	assert.NoError(t, err)
-	field.Write([]byte(signedData))
-	w.Close()
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/jobs/%s/signed", config.Current.ServerUrl, returnId), &b)
+	tusUpload, err := tusClient.CreateUpload(tus.NewUploadFromBytes(data))
+	assert.NoError(t, err)
+	tusProgressChan := make(chan tus.Upload)
+	tusUpload.NotifyUploadProgress(tusProgressChan)
+	assert.NoError(t, tusUpload.Upload())
+	for progress := range tusProgressChan {
+		if progress.Finished() {
+			break
+		}
+	}
+	return path.Base(tusUpload.Url())
+}
+
+func uploadSignedFile(t *testing.T, returnId string) {
+	fileId := tusUpload(t, []byte(signedData))
+	form := url.Values{
+		"file_id": {fileId}}
+	req, err := http.NewRequest("POST",
+		fmt.Sprintf("%s/jobs/%s/signed", config.Current.ServerUrl, returnId), strings.NewReader(form.Encode()))
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+builderKey)
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.NoError(t, util.Check2xxCode(resp.StatusCode))
@@ -249,34 +264,18 @@ func TestAuthenticationWrong(t *testing.T) {
 }
 
 func uploadUnsigned(t *testing.T) {
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-
-	formData := map[string][]string{
-		formNames.FormFile:       {"This & That.ipa", unsignedData},
+	fileId := tusUpload(t, []byte(unsignedData))
+	form := url.Values{
+		formNames.FormFileId:     {fileId},
 		formNames.FormProfileId:  {profileId},
 		formNames.FormAllDevices: {"true"},
 		formNames.FormAppDebug:   {"true"},
 		formNames.FormFileShare:  {"true"},
 		formNames.FormBuilderId:  {"selfhosted"},
 	}
-	for key, val := range formData {
-		var field io.Writer
-		var err error
-		if len(val) > 1 {
-			field, err = w.CreateFormFile(key, val[0])
-			val = val[1:]
-		} else {
-			field, err = w.CreateFormField(key)
-		}
-		assert.NoError(t, err)
-		_, err = field.Write([]byte(val[0]))
-		assert.NoError(t, err)
-	}
-	assert.NoError(t, w.Close())
-	req, err := http.NewRequest("POST", config.Current.ServerUrl+"/apps", &b)
+	req, err := http.NewRequest("POST", config.Current.ServerUrl+"/apps", strings.NewReader(form.Encode()))
 	assert.NoError(t, err)
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.NoError(t, util.Check2xxCode(resp.StatusCode))

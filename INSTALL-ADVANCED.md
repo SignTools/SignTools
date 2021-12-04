@@ -224,6 +224,8 @@ The web service cannot work by itself. You have two options:
   /apps/:id/
   /jobs
   /jobs/:id
+  /jobs/:id/tus/
+  /files/:id
   ```
   where `:id` is a wildcard parameter.
 

@@ -27,6 +27,17 @@
       integrity="sha256-PDJQdTN7dolQWDASIoBVrjkuOEaI137FI15sqI3Oxu8="
       crossorigin="anonymous"
     />
+    <script
+      src="https://cdn.jsdelivr.net/npm/uppy@2.2.3/dist/uppy.min.js"
+      integrity="sha256-I3+pb8CYXtWPkSAzCIvFXcAC7QqudjN5QX/V3Vk+W5k="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/uppy@2.2.3/dist/uppy.min.css"
+      integrity="sha256-qktWqXWHPbgvZKtOIdBjJy1TMTjRZ9V3LWiUOCt2jSQ="
+      crossorigin="anonymous"
+    />
     <style>
       a,
       a:hover {
@@ -87,7 +98,7 @@
                 <div class="tab-pane active pt-2" id="nav-main" role="tabpanel">
                   <div class="mb-2">
                     <label class="form-label">App file</label>
-                    <input class="form-control" type="file" id="formFileSelect" name="{{.FormFile}}" required />
+                    <input class="form-control" type="file" id="formFileSelect" required />
                     <input class="form-control" type="text" id="formFileText" hidden disabled />
                     <input
                       class="form-control"
@@ -306,12 +317,15 @@
                       title="Injects tweaks into the app. Does not always work."
                       >?</a
                     >
+                    <input class="form-control" type="file" id="formTweaksSelect" multiple />
                     <input
                       class="form-control"
-                      type="file"
-                      id="formTweaksSelect"
-                      name="{{.FormTweakFiles}}"
-                      multiple
+                      type="text"
+                      id="formTweakIds"
+                      name="{{.FormTweakIds}}"
+                      hidden
+                      required
+                      readonly
                     />
                   </div>
                 </div>
@@ -325,6 +339,7 @@
                 style="display: none"
               ></div>
               <button id="formSubmit" type="button" class="btn btn-primary">Submit</button>
+              <div class="UppyProgressBar"></div>
             </div>
           </form>
         </div>
@@ -419,6 +434,8 @@
     const formFileSelect = document.getElementById("formFileSelect");
     const formFileId = document.getElementById("formFileId");
     const formFileText = document.getElementById("formFileText");
+    const formTweakIds = document.getElementById("formTweakIds");
+    const formTweaksSelect = document.getElementById("formTweaksSelect");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
     const modalBody = document.getElementById("modalBody");
@@ -450,6 +467,45 @@
       columnWidth: "#appSizeItem",
     });
     const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
+
+    const uppy = new Uppy.Core();
+    uppy.use(Uppy.ProgressBar, {
+      target: ".UppyProgressBar",
+      fixed: true,
+      hideAfterFinish: false,
+    });
+    uppy.use(Uppy.Tus, {
+      endpoint: "/tus/",
+      parallelUploads: 4,
+    });
+
+    function addTusFileHook(formItem, uploadType) {
+      formItem.addEventListener("change", (event) => {
+        uppy
+          .getFiles()
+          .filter((f) => f.meta["uploadType"] === uploadType)
+          .forEach((f) => uppy.removeFile(f.id));
+        for (let file of event.target.files) {
+          try {
+            uppy.addFile({
+              name: file.name,
+              type: file.type,
+              data: file,
+              meta: {
+                uploadType: uploadType,
+              },
+            });
+          } catch (err) {
+            console.error(err);
+            alert(err);
+            formItem.value = "";
+          }
+        }
+      });
+    }
+
+    addTusFileHook(formFileSelect, "ipa");
+    addTusFileHook(formTweaksSelect, "tweak");
 
     modalElem.addEventListener("shown.bs.modal", function () {
       modalBody.style.minHeight = `${modalBody.offsetHeight}px`;
@@ -488,11 +544,34 @@
       btnModalClose.disabled = true;
       formFileSpinner.style.display = "inline-block";
 
-      // https://github.com/hakimel/Ladda/issues/71
-      setTimeout(function () {
+      uppy.upload().then((result) => {
+        if (result.failed.length > 0) {
+          for (let file of result.failed) {
+            console.error(file.error);
+            alert(file.error);
+          }
+          return;
+        }
+        function getIdFromUrl(url) {
+          return url.split("/").pop();
+        }
+        if (!formFileId.value) {
+          formFileId.value = result.successful
+            .filter((f) => f.meta["uploadType"] === "ipa")
+            .map((f) => f.uploadURL)
+            .map(getIdFromUrl)[0];
+        }
+        if (!formTweakIds.value) {
+          formTweakIds.value = result.successful
+            .filter((f) => f.meta["uploadType"] === "tweak")
+            .map((f) => f.uploadURL)
+            .map(getIdFromUrl)
+            .join(",");
+        }
         uploadForm.submit();
-      }, 200);
+      });
     });
+
     formProfile.addEventListener("change", function () {
       const selectedOption = formProfile.options[formProfile.selectedIndex];
       if (selectedOption.getAttribute("account") === "true") {
