@@ -82,8 +82,8 @@ func (r *appResolver) Delete(id string) error {
 	appId := app.GetId()
 	delete(r.idToAppMap, appId)
 	r.mutex.Unlock()
-	if err := app.Delete(); err != nil {
-		return errors.WithMessagef(err, "delete app id=%s", app.GetId())
+	if err := app.delete(); err != nil {
+		return errors.WithMessagef(err, "delete app id=%s", appId)
 	}
 	return nil
 }

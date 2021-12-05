@@ -30,7 +30,7 @@ type App interface {
 	IsSigned() (bool, error)
 	GetModTime() (time.Time, error)
 	ResetModTime() error
-	Delete() error
+	delete() error
 	FileSystem
 }
 
@@ -84,7 +84,7 @@ type app struct {
 	FileSystemBase
 }
 
-func (a *app) Delete() error {
+func (a *app) delete() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return os.RemoveAll(a.resolvePath(AppRoot))
