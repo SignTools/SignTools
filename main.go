@@ -567,25 +567,24 @@ func uploadUnsignedApp(c echo.Context) error {
 	}
 	tweakMap := map[string]io.ReadSeeker{}
 	tweakIds := c.FormValue(formNames.FormTweakIds)
-	for _, tweakId := range strings.Split(tweakIds, ",") {
-		if tweakId == tweakIds {
-			break
+	if tweakIds != "" {
+		for _, tweakId := range strings.Split(tweakIds, ",") {
+			tweak, ok := storage.Uploads.Get(tweakId)
+			if !ok {
+				return errors.New("no tweak upload file with id " + fileId)
+			}
+			defer storage.Uploads.Delete(tweakId)
+			readonlyFile, err := tweak.GetData()
+			if err != nil {
+				return err
+			}
+			defer readonlyFile.Close()
+			info, err := tweak.GetInfo()
+			if err != nil {
+				return err
+			}
+			tweakMap[info.MetaData["filename"]] = readonlyFile
 		}
-		tweak, ok := storage.Uploads.Get(tweakId)
-		if !ok {
-			return errors.New("no tweak upload file with id " + fileId)
-		}
-		defer storage.Uploads.Delete(tweakId)
-		readonlyFile, err := tweak.GetData()
-		if err != nil {
-			return err
-		}
-		defer readonlyFile.Close()
-		info, err := tweak.GetInfo()
-		if err != nil {
-			return err
-		}
-		tweakMap[info.MetaData["filename"]] = readonlyFile
 	}
 	app, err := storage.Apps.New(file, fileName, profile, signArgs, userBundleId, builderId, tweakMap)
 	if err != nil {
