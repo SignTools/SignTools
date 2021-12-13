@@ -81,7 +81,7 @@ func createDefaultFile() *File {
 		ServerUrl:           "http://localhost:8080",
 		RedirectHttps:       false,
 		SaveDir:             "data",
-		SignTimeoutMins:     15,
+		SignTimeoutMins:     30,
 		CleanupIntervalMins: 1,
 		BasicAuth: BasicAuth{
 			Enable:   false,
