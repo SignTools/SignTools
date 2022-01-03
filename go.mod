@@ -9,7 +9,7 @@ require (
 	github.com/eventials/go-tus v0.0.0-20211022131811-252c8454f2dc
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.3.0
-	github.com/knadh/koanf v1.3.3
+	github.com/knadh/koanf v1.4.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.1
 	github.com/natefinch/atomic v1.0.1
