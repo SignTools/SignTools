@@ -15,7 +15,7 @@ assignees: ""
 
 **Describe the bug**
 
-A clear and concise description of what the bug is. If it is related to [SignTools-CI](https://github.com/SignTools/SignTools-CI) or [SignTools-Builder](https://github.com/SignTools/SignTools-Builder), please include their logs.
+A clear and concise description of what the bug is.
 
 **To reproduce**
 
@@ -29,6 +29,14 @@ Steps to reproduce the behavior:
 **Expected behavior**
 
 A clear and concise description of what you expected to happen.
+
+**Logs**
+
+If possible, please include logs.
+
+- For SignTools Heroku, check [how to retrieve logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui).
+- For SignTools self-hosted, the logs will be printed in your terminal.
+- For SignTools-CI, check [how to use workflow run logs](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/using-workflow-run-logs). You can also click the "Status" button on any app in the web interface.
 
 **Screenshots**
 

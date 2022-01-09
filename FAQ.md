@@ -16,7 +16,6 @@
   - [App runs, but malfunctions due to invalid signing/entitlements](#app-runs-but-malfunctions-due-to-invalid-signingentitlements)
   - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
   - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
-  - [How can I debug a failing builder?](#how-can-i-debug-a-failing-builder)
   - [Install button does not work](#install-button-does-not-work)
 
 ## Free developer account limitations
@@ -90,10 +89,6 @@ You can also use `-u YOUR_UDID -n` to run this command over the network. When th
 This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the [free account limitations](#free-developer-account-limitations) section.
 
 Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the [integrity verification error](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified) section.
-
-## How can I debug a failing builder?
-
-Check the builder's logs for any errors. You can get to the logs by clicking the "Status" button on any app in the web interface while it's signing or failed.
 
 ## Install button does not work
 

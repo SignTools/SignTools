@@ -68,3 +68,8 @@ Then, click on the button below and follow the setup page:
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/SignTools/tree/master)
 
 Once you are done, you will be left with your very own web service. Congratulations!
+
+## 5. Quick links
+
+- [Changing existing configuration variables](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard)
+- [Retrieving logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui)
