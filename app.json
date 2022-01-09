@@ -63,11 +63,11 @@
       "value": ""
     },
     "PROFILE_CERT_BASE64": {
-      "description": "Your signing profile's certificate (p12). This is always required, no matter what signing method you use. You have to encode the file as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "description": "Your signing profile's certificate (p12). This is always required, no matter what signing method you use. You have to encode the file as base64. Use the following link: https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
       "value": ""
     },
     "PROFILE_PROV_BASE64": {
-      "description": "Your signing profile's provisioning profile (mobileprovision). If you have a developer account, leave this empty and fill in your account details instead. Otherwise, you have to encode the provisioning profile as base64. Use the following link: (Safari unsupported!) - https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
+      "description": "Your signing profile's provisioning profile (mobileprovision). If you have a developer account, leave this empty and fill in your account details instead. Otherwise, you have to encode the provisioning profile as base64. Use the following link: https://git.io/base64z - click on 'Open file as input' in the top-right corner, and when you get a bunch of letters as 'Output', paste them here.",
       "required": false,
       "value": ""
     },
