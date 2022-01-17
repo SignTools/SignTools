@@ -44,6 +44,7 @@ var formNames = assets.FormNames{
 	FormBuilderId:       "builder_id",
 	FormAppDebug:        "app_debug",
 	FormAllDevices:      "all_devices",
+	FormMac:             "mac",
 	FormFileShare:       "file_share",
 	FormToken:           "token",
 	FormId:              "id",
@@ -537,6 +538,9 @@ func uploadUnsignedApp(c echo.Context) error {
 	signArgs := ""
 	if c.FormValue(formNames.FormAllDevices) != "" {
 		signArgs += " -a"
+	}
+	if c.FormValue(formNames.FormMac) != "" {
+		signArgs += " -m"
 	}
 	if c.FormValue(formNames.FormAppDebug) != "" {
 		signArgs += " -d"

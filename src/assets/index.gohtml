@@ -295,6 +295,19 @@
                       >
                     </div>
                     <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="formMac" name="{{.FormMac}}" />
+                      <label style="display: inline" class="form-check-label" for="formMac">
+                        Apply patches for Mac
+                      </label>
+                      <a
+                        style="color: blue"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="right"
+                        title="Applies patches that make the app work better on Mac, such as freeform window resizing."
+                        >?</a
+                      >
+                    </div>
+                    <div class="form-check">
                       <input class="form-check-input" type="checkbox" id="formFileShare" name="{{.FormFileShare}}" />
                       <label style="display: inline" class="form-check-label" for="formFileShare">
                         Force enable file sharing
@@ -508,7 +521,7 @@
     addTusFileHook(formTweaksSelect, "tweak");
 
     modalElem.addEventListener("shown.bs.modal", function () {
-      modalBody.style.minHeight = `${modalBody.offsetHeight}px`;
+      modalBody.style.minHeight = `30.5rem`;
     });
     for (let item of dropdownCreateFrom) {
       item.addEventListener("click", function () {

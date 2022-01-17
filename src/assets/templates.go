@@ -44,6 +44,7 @@ type FormNames struct {
 	FormBuilderId       string
 	FormAppDebug        string
 	FormAllDevices      string
+	FormMac             string
 	FormFileShare       string
 	FormToken           string
 	FormId              string
