@@ -23,7 +23,7 @@ set -e
 trap 'trap " " SIGTERM; kill 0; wait' SIGINT SIGTERM EXIT INT
 
 echo "Starting service..."
-./cloudflared tunnel -url http://localhost:8080 -metrics localhost:51881 -loglevel error &
+./cloudflared tunnel --url http://localhost:8080 --metrics localhost:51881 --loglevel error &
 ./SignTools -host localhost -cloudflared-port 51881 &
 cat /dev/location > /dev/null &
 echo "Press Ctrl+C / ^+C to stop..."
