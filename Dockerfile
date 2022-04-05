@@ -6,7 +6,7 @@ COPY . .
 RUN go mod download && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o "SignTools"
 
-FROM alpine:3.15.0
+FROM alpine:3.15.4
 
 WORKDIR /
 
