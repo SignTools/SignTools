@@ -1,8 +1,8 @@
 {
   "devDependencies": {
-    "git-format-staged": "^2.1.2",
-    "husky": "^7.0.1",
-    "prettier": "^2.3.2"
+    "git-format-staged": "^3.0.0",
+    "husky": "^7.0.4",
+    "prettier": "^2.6.2"
   },
   "scripts": {
     "prepare": "husky install"
