@@ -28,7 +28,7 @@ require (
 replace (
 	github.com/eventials/go-tus v0.0.0-20211022131811-252c8454f2dc => github.com/SignTools/go-tus v0.0.0-20211211225219-4d64b8c43f3b
 	github.com/tus/tusd v1.8.0 => github.com/SignTools/tusd v1.8.1-0.20211205181817-97252a9e2fa6
-	software.sslmate.com/src/go-pkcs12 v0.0.0-20210415151418-c5206de65a78 => github.com/SignTools/go-pkcs12 v0.0.0-20211205185039-6ccc4e597cc9
+	software.sslmate.com/src/go-pkcs12 v0.2.0 => github.com/SignTools/go-pkcs12 v0.0.0-20220420151050-a6465d7589ec
 )
 
 require (

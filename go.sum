@@ -64,6 +64,8 @@ github.com/Azure/go-autorest/tracing v0.6.0/go.mod h1:+vhtPC754Xsa23ID7GlGsrdKBp
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/SignTools/go-pkcs12 v0.0.0-20220420151050-a6465d7589ec h1:lsX3HD2sa4YRCJkXaaWFspH6jx7I0wyTC4oB6pqzVtk=
+github.com/SignTools/go-pkcs12 v0.0.0-20220420151050-a6465d7589ec/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
 github.com/SignTools/go-tus v0.0.0-20211211225219-4d64b8c43f3b h1:Id2V2CG/ovfAFYXTtpD37BjZAuMJ+eUrBgSvlfzlH0s=
 github.com/SignTools/go-tus v0.0.0-20211211225219-4d64b8c43f3b/go.mod h1:XYuK1S5+kS6FGhlIUFuZFPvWiSrOIoLk6+ro33Xce3Y=
 github.com/ViRb3/koanf-extra v0.0.0-20210725213601-654e724986c4 h1:PjmKIRq4MM2YJkAdcQkB2B7eWuAVTbmVF+jwCrSEk5Y=
@@ -925,5 +927,3 @@ honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
-software.sslmate.com/src/go-pkcs12 v0.2.0 h1:nlFkj7bTysH6VkC4fGphtjXRbezREPgrHuJG20hBGPE=
-software.sslmate.com/src/go-pkcs12 v0.2.0/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
