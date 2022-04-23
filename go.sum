@@ -66,8 +66,6 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/SignTools/go-pkcs12 v0.0.0-20220420151050-a6465d7589ec h1:lsX3HD2sa4YRCJkXaaWFspH6jx7I0wyTC4oB6pqzVtk=
 github.com/SignTools/go-pkcs12 v0.0.0-20220420151050-a6465d7589ec/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
-github.com/SignTools/go-tus v0.0.0-20211211225219-4d64b8c43f3b h1:Id2V2CG/ovfAFYXTtpD37BjZAuMJ+eUrBgSvlfzlH0s=
-github.com/SignTools/go-tus v0.0.0-20211211225219-4d64b8c43f3b/go.mod h1:XYuK1S5+kS6FGhlIUFuZFPvWiSrOIoLk6+ro33Xce3Y=
 github.com/ViRb3/koanf-extra v0.0.0-20210725213601-654e724986c4 h1:PjmKIRq4MM2YJkAdcQkB2B7eWuAVTbmVF+jwCrSEk5Y=
 github.com/ViRb3/koanf-extra v0.0.0-20210725213601-654e724986c4/go.mod h1:ZPRu5gf31DvsT2lKAu70+ZdxA5BnwEtWjpZL/Au/Kak=
 github.com/ViRb3/sling/v2 v2.0.2 h1:XPadHD6pQHIuGSI0UYrkgmP7HH/ZLvt9/FM7saboVWs=
@@ -130,6 +128,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.m
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.mod h1:hliV/p42l8fGbc6Y9bQ70uLwIvmJyVE5k4iMKlh8wCQ=
 github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.mod h1:AFq3mo9L8Lqqiid3OhADV3RfLJnjiw63cSpi+fDTRC0=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
+github.com/eventials/go-tus v0.0.0-20211022131811-252c8454f2dc h1:hTnYsrpmAwdWP94knQerKlv9cnvBZ3lsGNxCSuMh1qg=
+github.com/eventials/go-tus v0.0.0-20211022131811-252c8454f2dc/go.mod h1:XYuK1S5+kS6FGhlIUFuZFPvWiSrOIoLk6+ro33Xce3Y=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
