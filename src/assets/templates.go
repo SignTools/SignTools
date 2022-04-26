@@ -6,7 +6,7 @@ type App struct {
 	Name                string
 	ModTime             string
 	WorkflowUrl         string
-	ManifestUrl         string
+	InstallUrl          string
 	DownloadSignedUrl   string
 	DownloadUnsignedUrl string
 	DownloadTweaksUrl   string
@@ -73,4 +73,8 @@ type ManifestData struct {
 
 type RenameData struct {
 	AppName string
+}
+
+type InstallData struct {
+	ManifestUrl string
 }

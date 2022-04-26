@@ -9,6 +9,9 @@ import (
 //go:embed index.gohtml
 var IndexHtml string
 
+//go:embed install.gohtml
+var InstallHtml string
+
 //go:embed 2fa.html
 var TwoFactorHtml string
 

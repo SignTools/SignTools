@@ -406,11 +406,7 @@
               </p>
               <div class="d-flex flex-wrap justify-content-end">
                 {{if eq $app.Status 1 }}
-                <a
-                  class="btn btn-outline-light mt-2 ms-2"
-                  href="itms-services://?action=download-manifest&url={{$app.ManifestUrl}}"
-                  >Install</a
-                >
+                <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.InstallUrl}}">Install</a>
                 {{end}} {{if ne $app.Status 1 }}
                 <a
                   class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"

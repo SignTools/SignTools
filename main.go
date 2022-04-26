@@ -150,6 +150,7 @@ func serve(host string, port uint64) {
 	e.GET("/apps/:id/signed", appResolver(getSignedApp))
 	e.GET("/apps/:id/tweaks", appResolver(getTweaks))
 	e.GET("/apps/:id/unsigned", appResolver(getUnsignedApp))
+	e.GET("/apps/:id/install", appResolver(renderInstall))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/resign", appResolver(resignApp), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
@@ -170,6 +171,57 @@ func serve(host string, port uint64) {
 	}
 
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+func renderInstall(c echo.Context, app storage.App) error {
+	usingManifestProxy := false
+	baseUrl := getBaseUrl(c)
+	manifestUrl := ""
+	var err error
+	if strings.HasPrefix(baseUrl, "https") {
+		// must be a full URL
+		manifestUrl, err = util.JoinUrls(baseUrl, "/apps", app.GetId(), "manifest")
+		if err != nil {
+			return errors.WithMessage(err, "build manifest url")
+		}
+	} else {
+		usingManifestProxy = true
+		downloadFullUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
+		if err != nil {
+			return errors.WithMessage(err, "build download url")
+		}
+		proxyUrl := url.URL{
+			Scheme: "https",
+			Host:   "ota.signtools.workers.dev",
+			Path:   "/v1",
+		}
+		name, err := app.GetString(storage.AppName)
+		if err != nil {
+			logErrApp(err, app).Msg("get name")
+		}
+		bundleId, _ := app.GetString(storage.AppBundleId)
+
+		query := url.Values{
+			"ipa":   []string{downloadFullUrl},
+			"title": []string{name},
+			"id":    []string{bundleId},
+		}
+		proxyUrl.RawQuery = query.Encode()
+		manifestUrl = proxyUrl.String()
+	}
+	if usingManifestProxy {
+		log.Warn().Str("base_url", getBaseUrl(c)).Msg("using OTA manifest proxy, installation may not work")
+	}
+	data := assets.InstallData{ManifestUrl: manifestUrl}
+	t, err := htmlTemplate.New("").Parse(assets.InstallHtml)
+	if err != nil {
+		return err
+	}
+	var result bytes.Buffer
+	if err := t.Execute(&result, data); err != nil {
+		return err
+	}
+	return c.HTMLBlob(200, result.Bytes())
 }
 
 type LogToZeroLog struct {
@@ -661,7 +713,6 @@ func renderIndex(c echo.Context) error {
 	data := assets.IndexData{
 		FormNames: formNames,
 	}
-	usingManifestProxy := false
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
@@ -705,33 +756,6 @@ func renderIndex(c echo.Context) error {
 		} else {
 			status = assets.AppStatusFailed
 		}
-		baseUrl := getBaseUrl(c)
-		manifestUrl := ""
-		if strings.HasPrefix(baseUrl, "https") {
-			// must be a full URL
-			manifestUrl, err = util.JoinUrls(baseUrl, "/apps", app.GetId(), "manifest")
-			if err != nil {
-				return errors.WithMessage(err, "build manifest url")
-			}
-		} else {
-			usingManifestProxy = true
-			downloadFullUrl, err := util.JoinUrls(baseUrl, "/apps", app.GetId(), "signed")
-			if err != nil {
-				return errors.WithMessage(err, "build download url")
-			}
-			proxyUrl := url.URL{
-				Scheme: "https",
-				Host:   "ota.signtools.workers.dev",
-				Path:   "/v1",
-			}
-			query := url.Values{
-				"ipa":   []string{downloadFullUrl},
-				"title": []string{name},
-				"id":    []string{bundleId},
-			}
-			proxyUrl.RawQuery = query.Encode()
-			manifestUrl = proxyUrl.String()
-		}
 
 		tweakCount := 0
 		if tweaks, err := app.ReadDir(storage.TweaksDir); err == nil {
@@ -748,7 +772,7 @@ func renderIndex(c echo.Context) error {
 			WorkflowUrl:         workflowUrl,
 			ProfileName:         profileName,
 			BundleId:            bundleId,
-			ManifestUrl:         manifestUrl,
+			InstallUrl:          path.Join("/apps", app.GetId(), "install"),
 			DownloadSignedUrl:   path.Join("/apps", app.GetId(), "signed"),
 			DownloadUnsignedUrl: path.Join("/apps", app.GetId(), "unsigned"),
 			DownloadTweaksUrl:   path.Join("/apps", app.GetId(), "tweaks"),
@@ -758,9 +782,6 @@ func renderIndex(c echo.Context) error {
 			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
 			TweakCount:          tweakCount,
 		})
-	}
-	if usingManifestProxy {
-		log.Warn().Str("base_url", getBaseUrl(c)).Msg("using OTA manifest proxy, installation may not work")
 	}
 	profiles, err := storage.Profiles.GetAll()
 	if err != nil {
