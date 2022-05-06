@@ -5,8 +5,11 @@
     <title>SignTools | Install</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script>
-      window.location.href = "itms-services://?action=download-manifest&url={{.ManifestUrl}}";
-    </script>
   </head>
+  <body>
+    <div id="manifest" href="itms-services://?action=download-manifest&url={{.ManifestUrl}}"></div>
+    <script>
+      window.location.href = document.getElementById("manifest").getAttribute("href");
+    </script>
+  </body>
 </html>
