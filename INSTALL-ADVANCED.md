@@ -16,9 +16,11 @@ For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still ne
     - [2.1. Configuration file](#21-configuration-file)
     - [2.2. Signing profile](#22-signing-profile)
   - [3. Web service installation](#3-web-service-installation)
-    - [3.1. Self-hosting on computer or server](#31-self-hosting-on-computer-or-server)
-      - [3.1.1. Installing](#311-installing)
-      - [3.1.2. Running](#312-running)
+    - [3a. Normal](#3a-normal)
+    - [3b. Docker](#3b-docker)
+  - [4. Web service execution](#4-web-service-execution)
+    - [4a. Reverse proxy](#4a-reverse-proxy)
+    - [4b. Tunnel provider](#4b-tunnel-provider)
 
 ## 1. Builder
 
@@ -181,25 +183,21 @@ That's all the initial configuration! To recap, you now have the following confi
 
 ## 3. Web service installation
 
-### 3.1. Self-hosting on computer or server
-
-#### 3.1.1. Installing
-
 You have two options:
 
-**Normal**
+### 3a. Normal
 
 1. Download the correct [binary release](https://github.com/SignTools/SignTools/releases) (if this is a different computer than you used before)
 2. Move the configuration files you made in sections `2.1.` and `2.2.` of this guide to the same folder as the binary you just downloaded
 
-**Docker**
+### 3b. Docker
 
 1. Use the official [Docker image](https://hub.docker.com/r/signtools/SignTools)
 2. Move and [mount](https://docs.docker.com/storage/volumes/) the configuration files from sections `2.1.` and `2.2.`:
    - `./signer-cfg.yml:/signer-cfg.yml`
    - `./data:/data` (or whatever you set in `save_dir`)
 
-#### 3.1.2. Running
+## 4. Web service execution
 
 For reference, these are the default arguments that will be used:
 
@@ -209,7 +207,9 @@ For reference, these are the default arguments that will be used:
 
 The web service cannot work by itself. You have two options:
 
-**Reverse proxy** - secure, fast, reliable, but harder to set up
+### 4a. Reverse proxy
+
+Secure, fast, reliable, but harder to set up
 
 - Requires publicly accessible port 443 (HTTPS)
 - Requires domain with valid HTTPS certificate
@@ -224,7 +224,9 @@ The web service cannot work by itself. You have two options:
   ```
   where `:id` is a wildcard parameter.
 
-**Tunnel provider** - less secure, slower, but quick and easy to set up
+### 4b. Tunnel provider
+
+Less secure, slower, but quick and easy to set up
 
 [ngrok](https://ngrok.com/) and [Cloudflare Argo](https://blog.cloudflare.com/a-free-argo-tunnel-for-your-next-project/#how-can-i-use-the-free-version) are supported as tunnel providers. The latter will be demonstrated in this guide. Run the signer service with `-help` to see alternative details.
 
