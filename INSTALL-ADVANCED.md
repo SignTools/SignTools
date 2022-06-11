@@ -4,7 +4,7 @@ Before you begin, it is recommended to understand exactly how this project works
 
 ## Video tutorial
 
-For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still need this written guide** - the video is somewhat outdated, and it does not cover everything.
+For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still need this written guide** — the video is not up to date, and it does not cover everything written here.
 
 ## Table of Contents
 
@@ -41,8 +41,8 @@ It's easier if you use your personal computer for the initial configuration. Thi
 You need to create a configuration file which links the web service to your builder.
 
 1. Download the correct [binary release](https://github.com/SignTools/SignTools/releases) for your computer
-2. Run it once - it will exit immediately, saying that it has generated a configuration file
-3. In the same folder as the binary, you will find a new file `signer-cfg.yml` - open it with your favorite text editor and configure the settings using the explanations below. The lines that start with a hashtag `#` are comments, you do not need to touch them.
+2. Run it once — it will exit immediately, saying that it has generated a configuration file
+3. In the same folder as the binary, you will find a new file `signer-cfg.yml` — open it with your favorite text editor and configure the settings using the explanations below. The lines that start with a hashtag `#` are comments, you do not need to touch them.
 
 > :warning: **Don't forget to set "`enable: true`" on the builder that you are configuring!**
 
@@ -114,7 +114,7 @@ There are two types of signing profiles:
 
 Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. You can either use an `Apple Development` certificate, or both `Apple Development` and `Apple Distribution` if you want to use production entitlements. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-If you are using a custom provisioning profile, you likely received a certificate archive along with it - use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
+If you are using a custom provisioning profile, you likely received a certificate archive along with it — use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
 
 - **macOS**
 

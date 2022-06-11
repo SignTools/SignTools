@@ -2,7 +2,7 @@
     <img width="256" heigth="256" src="img/logo.png">
     <h1 align="center">SignTools</h1>
     <p align="center">
-        A free, self-hosted, cross-platform service to sign and install iOS apps, all <b>without a computer</b>.
+        A free, self-hosted platform to sign and install iOS apps without a computer *
     </p>
     <p align="center">
         <img alt="GitHub" src="https://img.shields.io/github/license/signtools/SignTools">
@@ -14,13 +14,12 @@
     </p>
 </p>
 
+
 ## Introduction
 
-There are countless reasons to install apps outside Apple's App Store. Unfortunately, this process is severely hindered and out of reach for most people. Here SignTools comes to the rescue. No more terminal, half-working scripts, or even computer. Sideload any app directly from your phone through a simple web interface.
+SignTools is a sideloading platform that takes a different approach from any similar tools. It consists of two components — a **service** and a **builder**. The builder is a macOS machine which performs signing using official Apple software. Doing so means high reliability and compatibility. The service (this repo) can be hosted anywhere, and it provides a web interface for you to upload, sign, and download apps, using the builder where necessary. Having the web service means that you don't need anything installed on your phone, and you can still sideload without a computer *.
 
-What's the catch? The workflow uses a separate macOS machine, called a "builder", to perform the signing. This project is only a web service which controls the builder, along with a web interface for you to upload unsigned apps and download signed apps. However, **you don't need to own a Mac** - the builder can be any **free** CI (Continuous Integration) provider or even your own machine. The web service can also be hosted on any **free** server or one of your own.
-
-More information and examples can be found in the installation section.
+Don't be discouraged if this sounds complicated — **you don't need to own a Mac or a server**, and the **simple setup takes less than 5 minutes**! Read ahead for more information and examples.
 
 ## :raised_hands: Community
 
@@ -60,9 +59,9 @@ This project is self-hosted; there is no public service. It does not provide any
 
 There are multiple ways to install this web service:
 
-- ### [Simple](INSTALL-SIMPLE.md) - on a free Heroku server
+- ### [Simple](INSTALL-SIMPLE.md) — on a free Heroku server
 
-- ### [Advanced](INSTALL-ADVANCED.md) - on your own machine
+- ### [Advanced](INSTALL-ADVANCED.md) — on your own machine
 
 ## [Frequently Asked Questions (FAQ)](FAQ.md)
 
