@@ -77,4 +77,5 @@ type RenameData struct {
 
 type InstallData struct {
 	ManifestUrl string
+	AppName     string
 }

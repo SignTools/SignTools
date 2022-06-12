@@ -212,7 +212,14 @@ func renderInstall(c echo.Context, app storage.App) error {
 	if usingManifestProxy {
 		log.Warn().Str("base_url", getBaseUrl(c)).Msg("using OTA manifest proxy, installation may not work")
 	}
-	data := assets.InstallData{ManifestUrl: manifestUrl}
+	appName, err := app.GetString(storage.AppName)
+	if err != nil {
+		return err
+	}
+	data := assets.InstallData{
+		ManifestUrl: manifestUrl,
+		AppName:     appName,
+	}
 	t, err := htmlTemplate.New("").Parse(assets.InstallHtml)
 	if err != nil {
 		return err
