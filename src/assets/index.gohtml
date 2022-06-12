@@ -669,6 +669,11 @@
       localStorage.removeItem("autoRefresh");
       checkAutoRefresh();
     });
+    document.addEventListener("keydown", function (e) {
+      chkAutoRefresh.checked = false;
+      localStorage.removeItem("autoRefresh");
+      checkAutoRefresh();
+    });
     chkAutoRefresh.checked = localStorage.getItem("autoRefresh") != null;
     checkAutoRefresh();
   </script>
