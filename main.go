@@ -249,11 +249,11 @@ func addTusHandlers(e *echo.Echo, uploadEndpoints map[string]echo.MiddlewareFunc
 	logToZeroLog := LogToZeroLog{Context: "tusd"}
 	logger := log3.New(&logToZeroLog, "", 0)
 	handler, err := tusd.NewUnroutedHandler(tusd.Config{
-		BasePath:                "/files/",
-		StoreComposer:           composer,
-		NotifyCompleteUploads:   true,
-		RespectForwardedHeaders: true,
-		Logger:                  logger,
+		BasePath:              "/files/",
+		StoreComposer:         composer,
+		NotifyCompleteUploads: true,
+		UseRelativeUrls:       true,
+		Logger:                logger,
 	})
 	//TODO: Apply tus middleware
 	go func() {
