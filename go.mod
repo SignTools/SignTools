@@ -1,6 +1,6 @@
 module SignTools
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20210725213601-654e724986c4

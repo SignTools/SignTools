@@ -3,7 +3,11 @@ package storage
 import (
 	"SignTools/src/assets"
 	"SignTools/src/util"
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
 	"github.com/pkg/errors"
@@ -77,6 +81,10 @@ func loadProfile(id string) (*profile, error) {
 	return p, nil
 }
 
+type PublicKeyComparator interface {
+	Equal(x crypto.PublicKey) bool
+}
+
 // Validates the input P12 file, adds any missing standard CAs, and returns the new P12 along with the team ID.
 func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 	blocks, err := pkcs12.ToPEM(originalP12, pass)
@@ -95,7 +103,7 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 		block, _ := pem.Decode(certBytes)
 		blocks = append(blocks, block)
 	}
-	var keys []interface{}
+	keyMap := map[any]PublicKeyComparator{}
 	var authorities []*x509.Certificate
 	var certificates []*x509.Certificate
 	serialNumbers := map[string]bool{}
@@ -119,15 +127,26 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 		case "PRIVATE KEY":
 			var key interface{}
 			if key, err = x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
+				keyMap[key] = key.(*rsa.PrivateKey).Public().(*rsa.PublicKey)
 			} else if key, err = x509.ParsePKCS8PrivateKey(block.Bytes); err == nil {
+				switch v := key.(type) {
+				case *rsa.PrivateKey:
+					keyMap[key] = v.Public().(*rsa.PublicKey)
+				case *ecdsa.PrivateKey:
+					keyMap[key] = v.Public().(*ecdsa.PublicKey)
+				case *ed25519.PrivateKey:
+					keyMap[key] = v.Public().(*ed25519.PublicKey)
+				default:
+					return nil, "", errors.New("unknown private key type")
+				}
 			} else if key, err = x509.ParseECPrivateKey(block.Bytes); err == nil {
+				keyMap[key] = key.(*ecdsa.PrivateKey).Public().(*ecdsa.PublicKey)
 			} else {
 				return nil, "", errors.New("unknown private key type")
 			}
-			keys = append(keys, key)
 		}
 	}
-	if len(keys) < 1 {
+	if len(keyMap) < 1 {
 		return nil, "", errors.Errorf("no private keys found")
 	}
 	if len(certificates) < 1 {
@@ -140,12 +159,26 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 		if len(cert.Subject.OrganizationalUnit) != 1 {
 			return nil, "", errors.Errorf("certificate %s has invalid organization unit, bad item count", cert.SerialNumber.String())
 		}
+		valid := false
+		for _, publicKey := range keyMap {
+			if publicKey.Equal(cert.PublicKey) {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return nil, "", errors.Errorf("certificate %s has no matching private key", cert.SerialNumber.String())
+		}
 	}
 	orgUnit := certificates[0].Subject.OrganizationalUnit[0]
 	for _, cert := range certificates {
 		if cert.Subject.OrganizationalUnit[0] != orgUnit {
 			return nil, "", errors.Errorf("certificate %s has invalid organization unit, not the same as the others", cert.SerialNumber.String())
 		}
+	}
+	var keys []any
+	for key := range keyMap {
+		keys = append(keys, key)
 	}
 	fixedP12, err := pkcs12.Encode(rand.Reader, keys, certificates, authorities, pass)
 	if err != nil {
