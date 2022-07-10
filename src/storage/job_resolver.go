@@ -67,7 +67,7 @@ func (r *JobResolver) Cleanup(timeout time.Duration) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := time.Now()
-	var deleteList []interface{}
+	var deleteList []any
 	for el := r.appIdToSignJobMap.Front(); el != nil; el = el.Next() {
 		job := el.Value.(*signJob)
 		if now.After(job.ts.Add(timeout)) {

@@ -125,7 +125,7 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 				certificates = append(certificates, cert)
 			}
 		case "PRIVATE KEY":
-			var key interface{}
+			var key any
 			if key, err = x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
 				keyMap[key] = key.(*rsa.PrivateKey).Public().(*rsa.PublicKey)
 			} else if key, err = x509.ParsePKCS8PrivateKey(block.Bytes); err == nil {
