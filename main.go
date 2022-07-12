@@ -147,9 +147,9 @@ func serve(host string, port uint64) {
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
-	e.GET("/apps/:id/signed", appResolver(getSignedApp))
-	e.GET("/apps/:id/tweaks", appResolver(getTweaks))
-	e.GET("/apps/:id/unsigned", appResolver(getUnsignedApp))
+	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
+	getAndHead(e, "/apps/:id/tweaks", appResolver(getTweaks), appResolver(getEmpty200App))
+	getAndHead(e, "/apps/:id/unsigned", appResolver(getUnsignedApp), appResolver(getUnsignedApp))
 	e.GET("/apps/:id/install", appResolver(renderInstall))
 	e.GET("/apps/:id/manifest", appResolver(getManifest))
 	e.GET("/apps/:id/resign", appResolver(resignApp), basicAuth)
@@ -158,9 +158,10 @@ func serve(host string, port uint64) {
 	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
-	e.GET("/jobs", getLastJob, workflowKeyAuth)
+	getAndHead(e, "/jobs", getLastJob, getEmpty200, workflowKeyAuth)
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
+	getAndHead(e, "/jobs/:id/unsigned", jobResolver(getUnsignedAppJob), jobResolver(getUnsignedAppJob), workflowKeyAuth)
 	e.GET("/jobs/:id/fail", jobResolver(failJob), workflowKeyAuth)
 
 	if err := addTusHandlers(e, map[string]echo.MiddlewareFunc{
@@ -171,6 +172,11 @@ func serve(host string, port uint64) {
 	}
 
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+func getAndHead(e *echo.Echo, path string, getHandler func(c echo.Context) error, headHandler func(c echo.Context) error, m ...echo.MiddlewareFunc) {
+	e.GET(path, getHandler, m...)
+	e.HEAD(path, headHandler, m...)
 }
 
 func renderInstall(c echo.Context, app storage.App) error {
@@ -515,6 +521,30 @@ func escapeXML(str string) (string, error) {
 
 func getSignedApp(c echo.Context, app storage.App) error {
 	file, err := app.GetFile(storage.AppSignedFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := writeFileResponse(c, file, app); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getEmpty200(c echo.Context) error {
+	return c.NoContent(200)
+}
+
+func getEmpty200App(c echo.Context, app storage.App) error {
+	return c.NoContent(200)
+}
+
+func getUnsignedAppJob(c echo.Context, job *storage.ReturnJob) error {
+	app, ok := storage.Apps.Get(job.AppId)
+	if !ok {
+		return c.NoContent(404)
+	}
+	file, err := app.GetFile(storage.AppUnsignedFile)
 	if err != nil {
 		return err
 	}
