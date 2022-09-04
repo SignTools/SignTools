@@ -21,6 +21,7 @@ For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still ne
   - [4. Web service execution](#4-web-service-execution)
     - [4a. Reverse proxy](#4a-reverse-proxy)
     - [4b. Tunnel provider](#4b-tunnel-provider)
+  - [5. Troubleshooting](#5-troubleshooting)
 
 ## 1. Builder
 
@@ -244,3 +245,7 @@ Less secure, slower, but quick and easy to set up
    11:51PM INF using server url url=https://aids-woman-zum-summer.trycloudflare.com
    ```
    `https://xxxxxxxxxxxx.trycloudflare.com` is the public address of your service. That's what you want to open in your browser. If you want faster transfer speeds, you can also use the LAN or localhost IP address. Congratulations!
+
+## 5. Troubleshooting
+
+Check out the [FAQ](FAQ.md) page.

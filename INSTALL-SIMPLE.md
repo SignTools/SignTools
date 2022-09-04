@@ -69,7 +69,6 @@ Then, click on the button below and follow the setup page:
 
 Once you are done, you will be left with your very own web service. Congratulations!
 
-## 5. Quick links
+## 5. Troubleshooting
 
-- [Changing existing configuration variables](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard)
-- [Retrieving logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui)
+Check out the [FAQ](FAQ.md) page.

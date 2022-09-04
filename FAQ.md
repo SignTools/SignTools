@@ -10,13 +10,17 @@
     - [3. Two-factor authentication (2FA)](#3-two-factor-authentication-2fa)
     - [4. Each signed app will expire in 7 days](#4-each-signed-app-will-expire-in-7-days)
     - [5. A maximum of 10 app ids can be registered per 7 days](#5-a-maximum-of-10-app-ids-can-be-registered-per-7-days)
-  - [What kind of certificates/provisioning profiles are supported?](#what-kind-of-certificatesprovisioning-profiles-are-supported)
-    - [Certificates](#certificates)
-    - [Provisioning profiles](#provisioning-profiles)
-  - [App runs, but malfunctions due to invalid signing/entitlements](#app-runs-but-malfunctions-due-to-invalid-signingentitlements)
-  - ["This app cannot be installed because its integrity could not be verified."](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
-  - ["Unable To Install \*.ipa"](#unable-to-install-ipa)
-  - [Install button does not work](#install-button-does-not-work)
+  - [Different types of certificates/provisioning profiles](#different-types-of-certificatesprovisioning-profiles)
+    - [1. Certificates](#1-certificates)
+    - [2. Provisioning profiles](#2-provisioning-profiles)
+  - [Service troubleshooting](#service-troubleshooting)
+    - [1. App runs, but malfunctions due to invalid signing/entitlements](#1-app-runs-but-malfunctions-due-to-invalid-signingentitlements)
+    - [2. "This app cannot be installed because its integrity could not be verified."](#2-this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
+    - [3. "Unable To Install \*.ipa"](#3-unable-to-install-ipa)
+    - [4. Install button does not work](#4-install-button-does-not-work)
+  - [Heroku troubleshooting](#heroku-troubleshooting)
+    - [1. Changing existing configuration variables](#1-changing-existing-configuration-variables)
+    - [2. Retrieving logs via the UI](#2-retrieving-logs-via-the-ui)
 
 ## Free developer account limitations
 
@@ -46,9 +50,9 @@ Resign it and you will get another 7 days.
 
 Re-use an existing app's bundle id if you hit the limit. Note that the old app will be replaced with the new one when you install it. Otherwise, wait for an app id to expire.
 
-## What kind of certificates/provisioning profiles are supported?
+## Different types of certificates/provisioning profiles
 
-### Certificates
+### 1. Certificates
 
 - **Apple Development**
 
@@ -58,7 +62,7 @@ Re-use an existing app's bundle id if you hit the limit. Note that the old app w
 
   This certificate type is only available to paid developer accounts, as it is used when publishing an app. It grants you access to every standard entitlement, except for app debugging (`get-task-allow`). Additionally, it allows you to use production entitlements such as push notifications. Only use this type of certificate if you need those extra entitlements.
 
-### Provisioning profiles
+### 2. Provisioning profiles
 
 - **Wildcard**
 
@@ -68,13 +72,15 @@ Re-use an existing app's bundle id if you hit the limit. Note that the old app w
 
   Its `application-identifier` looks like `TEAM_ID.app1`. It can properly sign only one app (`TEAM_ID.app1`), but it can contain any standard entitlement. You can also improperly sign any app with any id, but some functions such as file importing will not work.
 
-## App runs, but malfunctions due to invalid signing/entitlements
+## Service troubleshooting
 
-First, make sure you are signing the app correctly and not breaking the entitlements. Read the [kinds of certificates and profiles](#what-kind-of-certificatesprovisioning-profiles-are-supported) section.
+### 1. App runs, but malfunctions due to invalid signing/entitlements
+
+First, make sure you are signing the app correctly and not breaking the entitlements. Read the [types of certificates and profiles](#different-types-of-certificatesprovisioning-profiles) section.
 
 If that doesn't help, you need to figure out what entitlements the app requires. unc0ver 6.0.2 and DolphiniOS emulator need the app debugging (`get-task-allow`) entitlement. Make sure you are using a signing profile with `get-task-allow=true` in its provisioning profile. Also, when you upload such an app to this service, make sure to tick the `Enable app debugging` option. Since this is a potential security issue, it will be disabled by default unless you tick the box.
 
-## "This app cannot be installed because its integrity could not be verified."
+### 2. "This app cannot be installed because its integrity could not be verified."
 
 This error means that the signature is invalid. Is your signing profile valid? Is your device's UDID registered with the signing profile? To debug this problem, install [libimobiledevice](https://libimobiledevice.org/) (for Windows: [imobiledevice-net](https://github.com/libimobiledevice-win32/imobiledevice-net)). Download the problematic signed app from your service to your computer, then attempt to install it on your iOS device:
 
@@ -84,16 +90,22 @@ ideviceinstaller -i app.ipa
 
 You can also use `-u YOUR_UDID -n` to run this command over the network. When the installation finishes, you should see a more detailed error. Please create an issue here on GitHub and upload the unsigned app along with the detailed error from above so this can be fixed.
 
-## "Unable To Install \*.ipa"
+### 3. "Unable To Install \*.ipa"
 
 This error means that there was a problem while installing the app. Are you trying to web install (OTA) an app signed with a free developer account? That's sadly not possible. Read the [free account limitations](#free-developer-account-limitations) section.
 
-Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the [integrity verification error](#this-app-cannot-be-installed-because-its-integrity-could-not-be-verified) section.
+Otherwise, try installing again, sometimes it's a network problem. If that doesn't help, refer to the [integrity verification error](#2-this-app-cannot-be-installed-because-its-integrity-could-not-be-verified) section.
 
-## Install button does not work
+### 4. Install button does not work
 
 Check your logs for something among these lines:
 
 > WRN using OTA manifest proxy, installation may not work
 
 If you see the warning, then you are trying to access the service over HTTP instead of HTTPS. Apple only allows OTA installation over HTTPS, so to make it work for you, a special manifest proxy is used. The server that delivers the proxy is limited to 100,000 requests per day globally, so unfortunately the limit has likely been reached. Wait one day, or access your service over HTTPS instead.
+
+## Heroku troubleshooting
+
+### 1. [Changing existing configuration variables](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard)
+
+### 2. [Retrieving logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui)
