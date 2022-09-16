@@ -25,7 +25,6 @@ import (
 	"io"
 	log3 "log"
 	"mime"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -39,6 +38,7 @@ import (
 
 var formNames = assets.FormNames{
 	FormFileId:          "file_id",
+	FormFileUrl:         "file_url",
 	FormTweakIds:        "tweak_ids",
 	FormProfileId:       "profile_id",
 	FormBuilderId:       "builder_id",
@@ -594,10 +594,19 @@ func uploadUnsignedApp(c echo.Context) error {
 		return errors.New("no builder with id " + builderId)
 	}
 
-	var file multipart.File
+	var file io.ReadCloser
 	var fileName string
 	fileId := c.FormValue(formNames.FormFileId)
-	if app, ok := storage.Apps.Get(fileId); ok {
+	fileUrl := c.FormValue(formNames.FormFileUrl)
+	if fileUrl != "" {
+		resp, err := http.Get(fileUrl)
+		if err != nil {
+			return c.String(400, "Failed to download app from url: "+err.Error())
+		}
+		file = resp.Body
+		defer file.Close()
+		fileName = filepath.Base(fileUrl)
+	} else if app, ok := storage.Apps.Get(fileId); ok {
 		readonlyFile, err := app.GetFile(storage.AppUnsignedFile)
 		if err != nil {
 			return err
@@ -659,7 +668,7 @@ func uploadUnsignedApp(c echo.Context) error {
 		fileName = fmt.Sprintf("%s (%s)%s",
 			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
 	}
-	tweakMap := map[string]io.ReadSeeker{}
+	tweakMap := map[string]io.Reader{}
 	tweakIds := c.FormValue(formNames.FormTweakIds)
 	if tweakIds != "" {
 		for _, tweakId := range strings.Split(tweakIds, ",") {

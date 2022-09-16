@@ -134,7 +134,7 @@ func (p *envProfile) SetString(name FSName, s string) error {
 	return errors.New("unsupported operation")
 }
 
-func (p *envProfile) SetFile(name FSName, seeker io.ReadSeeker) error {
+func (p *envProfile) SetFile(name FSName, seeker io.Reader) error {
 	return errors.New("unsupported operation")
 }
 

@@ -38,7 +38,7 @@ func loadApp(id string) App {
 	return newApp(id)
 }
 
-func createApp(unsignedFile io.ReadSeeker, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweakMap map[string]io.ReadSeeker) (App, error) {
+func createApp(unsignedFile io.Reader, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweakMap map[string]io.Reader) (App, error) {
 	app := newApp(uuid.NewString())
 	if err := os.MkdirAll(app.resolvePath(AppRoot), os.ModePerm); err != nil {
 		return nil, errors.New("make app dir")

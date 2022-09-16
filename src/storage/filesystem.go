@@ -19,7 +19,7 @@ type FileSystem interface {
 	GetString(FSName) (string, error)
 	GetFile(FSName) (ReadonlyFile, error)
 	SetString(FSName, string) error
-	SetFile(FSName, io.ReadSeeker) error
+	SetFile(FSName, io.Reader) error
 	RemoveFile(FSName) error
 	Stat(name FSName) (os.FileInfo, error)
 	MkDir(name FSName) error
@@ -54,7 +54,7 @@ func (a *FileSystemBase) GetFile(name FSName) (ReadonlyFile, error) {
 	return os.Open(a.resolvePath(name))
 }
 
-func (a *FileSystemBase) SetFile(name FSName, value io.ReadSeeker) error {
+func (a *FileSystemBase) SetFile(name FSName, value io.Reader) error {
 	dir, file := filepath.Split(a.resolvePath(name))
 	if dir == "" {
 		dir = "."

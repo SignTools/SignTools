@@ -97,9 +97,24 @@
               <div class="tab-content" id="nav-tabContent">
                 <div class="tab-pane active pt-2" id="nav-main" role="tabpanel">
                   <div class="mb-2">
-                    <label class="form-label">App file</label>
+                    <div class="d-flex justify-content-between">
+                      <label class="form-label">App file</label>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="formFileUseUrl" />
+                        <label class="form-check-label" for="formFileUseUrl">URL</label>
+                      </div>
+                    </div>
                     <input class="form-control" type="file" id="formFileSelect" required />
                     <input class="form-control" type="text" id="formFileText" hidden disabled />
+                    <input
+                      class="form-control"
+                      type="text"
+                      id="formFileUrl"
+                      placeholder="https://git.io/myapp.ipa"
+                      name="{{.FormFileUrl}}"
+                      hidden
+                      required
+                    />
                     <input
                       class="form-control"
                       type="text"
@@ -443,6 +458,8 @@
     const formFileSelect = document.getElementById("formFileSelect");
     const formFileId = document.getElementById("formFileId");
     const formFileText = document.getElementById("formFileText");
+    const formFileUseUrl = document.getElementById("formFileUseUrl");
+    const formFileUrl = document.getElementById("formFileUrl");
     const formTweakIds = document.getElementById("formTweakIds");
     const formTweaksSelect = document.getElementById("formTweaksSelect");
     const formSubmit = document.getElementById("formSubmit");
@@ -523,20 +540,26 @@
       item.addEventListener("click", function () {
         formFileId.value = item.getAttribute("x-app-id");
         formFileText.hidden = false;
-        formFileText.required = true;
         formFileText.value = item.getAttribute("x-app-name");
         formFileSelect.hidden = true;
-        formFileSelect.required = false;
+        formFileSelect.disabled = true;
+        formFileUrl.hidden = true;
+        formFileUrl.disabled = true;
+        formFileUseUrl.disabled = true;
+        formFileUseUrl.checked = false;
         modal.show();
       });
     }
     btnUploadApp.addEventListener("click", function () {
       formFileId.value = "";
       formFileText.hidden = true;
-      formFileText.required = false;
       formFileText.value = "";
       formFileSelect.hidden = false;
-      formFileSelect.required = true;
+      formFileSelect.disabled = false;
+      formFileUrl.hidden = true;
+      formFileUrl.disabled = true;
+      formFileUseUrl.disabled = false;
+      formFileUseUrl.checked = false;
       modal.show();
     });
     btnModalClose.addEventListener("click", function () {
@@ -581,6 +604,12 @@
       });
     });
 
+    formFileUseUrl.addEventListener("change", function () {
+      formFileSelect.hidden = !formFileSelect.hidden;
+      formFileSelect.disabled = !formFileSelect.disabled;
+      formFileUrl.hidden = !formFileUrl.hidden;
+      formFileUrl.disabled = !formFileUrl.disabled;
+    });
     formProfile.addEventListener("change", function () {
       const selectedOption = formProfile.options[formProfile.selectedIndex];
       if (selectedOption.getAttribute("account") === "true") {
