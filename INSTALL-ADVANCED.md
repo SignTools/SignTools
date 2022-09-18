@@ -217,13 +217,18 @@ Secure, fast, reliable, but harder to set up
 - Requires manual configuration of reverse proxy with your own authentication
 - Don't protect the following endpoints:
   ```
-  /apps/:id/
+  /apps/*/
   /jobs
-  /jobs/:id
-  /jobs/:id/tus/
-  /files/:id
+  /jobs/*
+  /jobs/*/tus/
+  /files/*
   ```
-  where `:id` is a wildcard parameter.
+  where `*` is a wildcard parameter.
+
+- Make sure the `Host` header is preserved by your reverse proxy. For nginx, you need the following line:
+  ```nginx
+  proxy_set_header Host $http_host;
+  ```
 
 ### 4b. Tunnel provider
 
