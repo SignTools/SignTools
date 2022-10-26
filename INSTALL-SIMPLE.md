@@ -6,6 +6,8 @@ For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). **You still ne
 
 ## 1. Limitations
 
+### Please be aware that [Heroku is ending the free tier of their service](https://blog.heroku.com/next-chapter) starting on *November 28th, 2022*.
+
 This installation guide uses [Heroku](https://www.heroku.com/) to host your signing service for free. The free plan has several small limitations that you should be aware of:
 
 - You can only run your service for 550 hours per month (23 days).
