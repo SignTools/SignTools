@@ -14,7 +14,7 @@ require (
 	github.com/labstack/gommon v0.3.1
 	github.com/natefinch/atomic v1.0.1
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.29.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tus/tusd v1.9.0
 	github.com/ziflex/lecho/v2 v2.5.2
