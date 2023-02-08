@@ -225,9 +225,10 @@ Secure, fast, reliable, but harder to set up
   ```
   where `*` is a wildcard parameter.
 
-- Make sure the `Host` header is preserved by your reverse proxy. For nginx, you need the following line:
+- Make sure the request hostname and scheme are preserved by your reverse proxy. For nginx, you need the following lines:
   ```nginx
   proxy_set_header Host $http_host;
+  proxy_set_header X-Forwarded-Proto $scheme;
   ```
 
 ### 4b. Tunnel provider
