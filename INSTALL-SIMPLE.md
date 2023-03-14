@@ -6,15 +6,14 @@ For a video tutorial, [click here](https://youtu.be/mOmEcaFtBgk). **You still ne
 
 ## 1. Limitations
 
-### Please be aware that [Heroku is ending the free tier of their service](https://blog.heroku.com/next-chapter) starting on *November 28th, 2022*.
+This installation guide uses [fly.io](https://fly.io/) to host your signing service for free. The free plan has a couple of minor limitations to be aware of:
 
-This installation guide uses [Heroku](https://www.heroku.com/) to host your signing service for free. The free plan has several small limitations that you should be aware of:
-
-- You can only run your service for 550 hours per month (23 days).
-- HOWEVER, your service will automatically turn off after 30 minutes of inactivity. When off, usage is not counted. If you access the service when it is off, it will automatically turn on again.
-- Storage is deleted every time the service is turned off. This effectively means that signed apps are kept for 30 minutes.
-
-For more information, check their [pricing page](https://www.heroku.com/pricing).
+ - Up to 3 shared-cpu-1x 256mb VMs
+ - 3GB persistent volume storage (total)
+ - 160GB outbound data transfer
+ - You may need to provide them with a credit card number in order to sign up
+ 
+More information is available on their [pricing page](https://fly.io/docs/about/pricing/#free-allowances)
 
 ## 2. Builder
 
@@ -63,14 +62,17 @@ If you are using a custom provisioning profile, you likely received a certificat
 
 ## 4. Web service
 
-Register for an account at [Heroku](http://www.heroku.com/) and log in.
+In order to get your web service online, follow these steps to get set up:
 
-Then, click on the button below and follow the setup page:
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/SignTools/SignTools/tree/master)
-
-Once you are done, you will be left with your very own web service. Congratulations!
-
+ - [Install the Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/)
+ - [Sign up for Fly.io](https://fly.io/docs/hands-on/sign-up/)
+ - [Login to your account with the CLI](https://fly.io/docs/hands-on/sign-in/)
+ - Run `git clone https://github.com/SignTools/SignTools.git` on your computer that has the Fly CLI 
+ - `cd SignTools`
+ - Run the helper script to assist with generating your `fly.toml` file: `python3 fly-config-builder.py`
+ - After the script has completed successfully, run `fly launch`, and once it's done building, you should be good to go!
+ - (optional) Head to [fly.io/dashboard](https://fly.io/dashboard) now if you'd like to setup a custom domain with an SSL certificate
+ 
 ## 5. Troubleshooting
 
 Check out the [FAQ](FAQ.md) page.
