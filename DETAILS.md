@@ -4,4 +4,29 @@ This project is not one simple program. It is a combination of a web service and
 
 Below is a rough [sequence diagram](https://en.wikipedia.org/wiki/Sequence_diagram) of how the entire process works. If you haven't read a diagram like this before, it essentialy describes interactions between different parties. In this case, we have four parties: the User, Web Service, Builder, and Apple. Start reading the diagram from the top and make your way to the bottom. Each vertical line is a party, while each horizontal line is an interaction. The big rectangle labeled `alt - if using a developer account` will only be executed if you are signing with a developer account. Otherwise, it is skipped.
 
-[![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgVXNlciAtPj5XZWIgU2VydmljZTogVXBsb2FkIHVuc2lnbmVkIGFwcFxuICAgIFdlYiBTZXJ2aWNlLT4-V2ViIFNlcnZpY2U6IFNhdmUgYXBwIGFuZCBnZW5lcmF0ZSBzaWduIGpvYlxuICAgIFdlYiBTZXJ2aWNlLT4-QnVpbGRlcjogVHJpZ2dlciAoYWN0aXZhdGUpXG4gICAgICAgIEJ1aWxkZXItPj5XZWIgU2VydmljZTogUmV0cmlldmUgbGFzdCBzaWduIGpvYlxuICAgICAgICBXZWIgU2VydmljZS0-PkJ1aWxkZXI6IFxuICAgICAgICBub3RlIG92ZXIgV2ViIFNlcnZpY2UsIEJ1aWxkZXI6IFRoZSBzaWduIGpvYiBpcyBhbiBhcmNoaXZlIG9mIDxicj4gZmlsZXMgc3VjaCBhcyB0aGUgc2lnbmluZyBjZXJ0aWZpY2F0ZSwgPGJyPiBkZXZlbG9wZXIgYWNjb3VudCAoaWYgdXNlZCksIDxicj4gYW5kIHVuc2lnbmVkIGFwcFxuICAgIGFsdCBpZiB1c2luZyBhIGRldmVsb3BlciBhY2NvdW50XG4gICAgcmVjdCByZ2IoMCwgMCwgMjU1LCAuMSlcbiAgICAgICAgQnVpbGRlciAtPj5BcHBsZTogU3RhcnQgbG9nIGluIHRvIGFjY291bnRcbiAgICAgICAgQXBwbGUtPj5Vc2VyOiBTZW5kIDJGQSBjb2RlXG4gICAgICAgIG5vdGUgb3ZlciBXZWIgU2VydmljZSwgQnVpbGRlcjogMkZBID0gVHdvLWZhY3RvciBhdXRoZW50aWNhdGlvblxuICAgICAgICBVc2VyLT4-V2ViIFNlcnZpY2U6IFN1Ym1pdCAyRkEgY29kZVxuICAgICAgICBCdWlsZGVyLT4-V2ViIFNlcnZpY2U6IFJldHJpZXZlIDJGQSBjb2RlXG4gICAgICAgIFdlYiBTZXJ2aWNlLT4-QnVpbGRlcjogXG4gICAgICAgIEJ1aWxkZXItPj5BcHBsZTogRmluaXNoIGxvZyBpbiB0byBhY2NvdW50XG4gICAgZW5kXG4gICAgZW5kXG4gICAgQnVpbGRlciAtPj5CdWlsZGVyOiBTaWduIHRoZSBhcHBcbiAgICBCdWlsZGVyIC0-PldlYiBTZXJ2aWNlOiBVcGxvYWQgc2lnbmVkIGFwcFxuICAgIFVzZXItPj5XZWIgU2VydmljZTogSW5zdGFsbCBzaWduZWQgYXBwXG4gICAgV2ViIFNlcnZpY2UtPj5Vc2VyOiBcbiAgICBVc2VyLT4-VXNlcjogRG9uZSIsIm1lcm1haWQiOnt9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgVXNlciAtPj5XZWIgU2VydmljZTogVXBsb2FkIHVuc2lnbmVkIGFwcFxuICAgIFdlYiBTZXJ2aWNlLT4-V2ViIFNlcnZpY2U6IFNhdmUgYXBwIGFuZCBnZW5lcmF0ZSBzaWduIGpvYlxuICAgIFdlYiBTZXJ2aWNlLT4-QnVpbGRlcjogVHJpZ2dlciAoYWN0aXZhdGUpXG4gICAgICAgIEJ1aWxkZXItPj5XZWIgU2VydmljZTogUmV0cmlldmUgbGFzdCBzaWduIGpvYlxuICAgICAgICBXZWIgU2VydmljZS0-PkJ1aWxkZXI6IFxuICAgICAgICBub3RlIG92ZXIgV2ViIFNlcnZpY2UsIEJ1aWxkZXI6IFRoZSBzaWduIGpvYiBpcyBhbiBhcmNoaXZlIG9mIDxicj4gZmlsZXMgc3VjaCBhcyB0aGUgc2lnbmluZyBjZXJ0aWZpY2F0ZSwgPGJyPiBkZXZlbG9wZXIgYWNjb3VudCAoaWYgdXNlZCksIDxicj4gYW5kIHVuc2lnbmVkIGFwcFxuICAgIGFsdCBpZiB1c2luZyBhIGRldmVsb3BlciBhY2NvdW50XG4gICAgcmVjdCByZ2IoMCwgMCwgMjU1LCAuMSlcbiAgICAgICAgQnVpbGRlciAtPj5BcHBsZTogU3RhcnQgbG9nIGluIHRvIGFjY291bnRcbiAgICAgICAgQXBwbGUtPj5Vc2VyOiBTZW5kIDJGQSBjb2RlXG4gICAgICAgIG5vdGUgb3ZlciBXZWIgU2VydmljZSwgQnVpbGRlcjogMkZBID0gVHdvLWZhY3RvciBhdXRoZW50aWNhdGlvblxuICAgICAgICBVc2VyLT4-V2ViIFNlcnZpY2U6IFN1Ym1pdCAyRkEgY29kZVxuICAgICAgICBCdWlsZGVyLT4-V2ViIFNlcnZpY2U6IFJldHJpZXZlIDJGQSBjb2RlXG4gICAgICAgIFdlYiBTZXJ2aWNlLT4-QnVpbGRlcjogXG4gICAgICAgIEJ1aWxkZXItPj5BcHBsZTogRmluaXNoIGxvZyBpbiB0byBhY2NvdW50XG4gICAgZW5kXG4gICAgZW5kXG4gICAgQnVpbGRlciAtPj5CdWlsZGVyOiBTaWduIHRoZSBhcHBcbiAgICBCdWlsZGVyIC0-PldlYiBTZXJ2aWNlOiBVcGxvYWQgc2lnbmVkIGFwcFxuICAgIFVzZXItPj5XZWIgU2VydmljZTogSW5zdGFsbCBzaWduZWQgYXBwXG4gICAgV2ViIFNlcnZpY2UtPj5Vc2VyOiBcbiAgICBVc2VyLT4-VXNlcjogRG9uZSIsIm1lcm1haWQiOnt9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlfQ)
+```mermaid
+sequenceDiagram
+    User ->>Web Service: Upload unsigned app
+    Web Service->>Web Service: Save app and generate sign job
+    Web Service->>Builder: Trigger (activate)
+        Builder->>Web Service: Retrieve last sign job
+        Web Service->>Builder: 
+        note over Web Service, Builder: The sign job is an archive of <br> files such as the signing certificate, <br> developer account (if used), <br> and unsigned app
+    alt if using a developer account
+    rect rgb(0, 0, 255, .1)
+        Builder ->>Apple: Start log in to account
+        Apple->>User: Send 2FA code
+        note over Web Service, Builder: 2FA = Two-factor authentication
+        User->>Web Service: Submit 2FA code
+        Builder->>Web Service: Retrieve 2FA code
+        Web Service->>Builder: 
+        Builder->>Apple: Finish log in to account
+    end
+    end
+    Builder ->>Builder: Sign the app
+    Builder ->>Web Service: Upload signed app
+    User->>Web Service: Install signed app
+    Web Service->>User: 
+    User->>User: Done
+```
+
