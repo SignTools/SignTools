@@ -2,10 +2,6 @@
 
 Before you begin, it is recommended to understand exactly how this project works. Knowing what is happening at each point will help you troubleshoot any issues far better. Check out the [How does this all work?](DETAILS.md) page.
 
-## Video tutorial
-
-For a video tutorial, [click here](https://youtu.be/Tcco-bES1-M). **You still need this written guide** — the video is not up to date, and it does not cover everything written here.
-
 ## Table of Contents
 
 - [Advanced Installation](#advanced-installation)
@@ -235,7 +231,7 @@ Secure, fast, reliable, but harder to set up
 
 Less secure, slower, but quick and easy to set up
 
-[ngrok](https://ngrok.com/) and [Cloudflare Argo](https://blog.cloudflare.com/a-free-argo-tunnel-for-your-next-project/#how-can-i-use-the-free-version) are supported as tunnel providers. The latter will be demonstrated in this guide. Run the signer service with `-help` to see alternative details.
+[ngrok](https://ngrok.com/) and [Cloudflare Argo](https://blog.cloudflare.com/a-free-argo-tunnel-for-your-next-project/#how-can-i-use-the-free-version) are supported as tunnel providers. The latter will be demonstrated in this guide since it has no restrictions. Run the signer service with `-help` to see alternative details.
 
 1. Download the correct [cloudflared](https://github.com/cloudflare/cloudflared/releases/latest) binary for your computer.
 2. **Every time before** starting your service, execute the following command and keep it running:

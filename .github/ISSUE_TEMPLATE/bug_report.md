@@ -34,7 +34,7 @@ A clear and concise description of what you expected to happen.
 
 If possible, please include logs.
 
-- For SignTools Heroku, check [how to retrieve logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui).
+- For SignTools Railway, check [how to retrieve logs via the UI](https://docs.railway.app/deploy/deployments#logs).
 - For SignTools self-hosted, the logs will be printed in your terminal.
 - For SignTools-CI, check [how to use workflow run logs](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/using-workflow-run-logs). You can also click the "Status" button on any app in the web interface.
 
@@ -45,7 +45,7 @@ If applicable, add screenshots to help explain your problem.
 **System configuration**
 
 - SignTools version: [e.g. 2.1.1]
-- Installation type: [heroku, computer, phone; nginx, ngrok, cloudflared]
+- Installation type: [railway, computer, phone; nginx, ngrok, cloudflared]
 - Builder type: [SignTools-CI, SignTools-Builder]
 - Builder version: [e.g. 1.0.0 for SignTools-Builder; the latest commit hash of your repo for SignTools-CI, e.g. 03e0ed9]
 

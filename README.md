@@ -59,7 +59,7 @@ This project is self-hosted; there is no public service. It does not provide any
 
 There are multiple ways to install this web service:
 
-- ### [Simple](INSTALL-SIMPLE.md) — on a free Heroku server
+- ### [Simple](INSTALL-SIMPLE.md) — on a free Railway server
 
 - ### [Advanced](INSTALL-ADVANCED.md) — on your own machine
 

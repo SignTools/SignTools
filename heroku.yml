@@ -1,5 +1,0 @@
-build:
-  docker:
-    web: Dockerfile.heroku
-run:
-  web: /SignTools -port "$PORT" -log-json

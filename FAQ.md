@@ -18,7 +18,7 @@
     - [2. "This app cannot be installed because its integrity could not be verified."](#2-this-app-cannot-be-installed-because-its-integrity-could-not-be-verified)
     - [3. "Unable To Install \*.ipa"](#3-unable-to-install-ipa)
     - [4. Install button does not work](#4-install-button-does-not-work)
-  - [Heroku troubleshooting](#heroku-troubleshooting)
+  - [Railway troubleshooting](#railway-troubleshooting)
     - [1. Changing existing configuration variables](#1-changing-existing-configuration-variables)
     - [2. Retrieving logs via the UI](#2-retrieving-logs-via-the-ui)
 
@@ -104,8 +104,8 @@ Check your logs for something among these lines:
 
 If you see the warning, then you are trying to access the service over HTTP instead of HTTPS. Apple only allows OTA installation over HTTPS, so to make it work for you, a special manifest proxy is used. The server that delivers the proxy is limited to 100,000 requests per day globally, so unfortunately the limit has likely been reached. Wait one day, or access your service over HTTPS instead.
 
-## Heroku troubleshooting
+## Railway troubleshooting
 
-### 1. [Changing existing configuration variables](https://devcenter.heroku.com/articles/config-vars#using-the-heroku-dashboard)
+### 1. [Changing existing configuration variables](https://docs.railway.app/develop/variables)
 
-### 2. [Retrieving logs via the UI](https://devcenter.heroku.com/articles/logging#log-retrieval-via-the-ui)
+### 2. [Retrieving logs via the UI](https://docs.railway.app/deploy/deployments#logs)
