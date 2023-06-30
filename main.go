@@ -600,7 +600,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	fileUrl := c.FormValue(formNames.FormFileUrl)
 	if fileUrl != "" {
 		resp, err := http.Get(fileUrl)
-		if err != nil {
+		if err != nil || resp.StatusCode < 200 || resp.StatusCode > 299 {
 			return c.String(400, "Failed to download app from url: "+err.Error())
 		}
 		file = resp.Body
