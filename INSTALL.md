@@ -5,7 +5,6 @@ Before you begin, it is recommended to understand exactly how this project works
 ## Table of Contents
 
 - [Advanced Installation](#advanced-installation)
-  - [Video tutorial](#video-tutorial)
   - [Table of Contents](#table-of-contents)
   - [1. Builder](#1-builder)
   - [2. Web service configuration](#2-web-service-configuration)
@@ -103,7 +102,7 @@ There are two types of signing profiles:
 
 - **Developer account**
 
-  This method works for both free and paid developer accounts. You only need your Apple account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization. There are no restrictions if you have a paid account. If you have a free account, make sure you read and understand the limitations in the [FAQ](FAQ.md#free-developer-account-limitations) page.
+  You only need your Apple Developer Account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization.
 
 - **Custom provisioning profile**
 
@@ -111,28 +110,7 @@ There are two types of signing profiles:
 
 Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. If you need development entitlements, add an `Apple Development` certificate and its key. If you need distribution entitlements, add both an `Apple Development` and `Apple Distribution` certificate, along with their keys. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
-If you are using a custom provisioning profile, you likely received a certificate archive along with it — use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list). Otherwise, follow the instructions below:
-
-- **macOS**
-
-  Install [Xcode](https://developer.apple.com/xcode/) and open the `Account Preferences` (A). Sign into your account using the plus button. Select your account and click on `Manage Certificates...`. In the new window (B), click the plus button and then `Apple Development`. Click `Done`. Now open the `Keychain` app (C). There you will find your certificate and private key. Select them by holding `Command`, then right-click and select `Export 2 items...`. This will export you the `.p12` file you need.
-
-  <table>
-  <tr>
-      <th>A</th>
-      <th>B</th>
-      <th>C</th>
-  </tr>
-  <tr>
-      <td><img src="img/6.png"/></td>
-      <td><img src="img/7.png"/></td>
-      <td><img src="img/5.png"/></td>
-  </tr>
-  </table>
-
-- **Windows**
-
-  There is no official way to do this. However, you can use [altserver-cert-dumper](https://github.com/SignTools/altserver-cert-dumper) with [AltStore](https://altstore.io/) as a workaround. Note that you are doing so at your own risk.
+If you are using a custom provisioning profile, you likely received a certificate archive along with it — use that. If you have a developer account, you can create one from the [developer portal](https://developer.apple.com/account/resources/certificates/list).
 
 Once you have your signing profile, you need to create the correct folders for the service to read it:
 
