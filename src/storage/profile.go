@@ -6,7 +6,6 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -180,7 +179,7 @@ func processP12(originalP12 []byte, pass string) ([]byte, string, error) {
 	for key := range keyMap {
 		keys = append(keys, key)
 	}
-	fixedP12, err := pkcs12.Encode(rand.Reader, keys, certificates, authorities, pass)
+	fixedP12, err := pkcs12.LegacyDES.Encode(keys, certificates, authorities, pass)
 	if err != nil {
 		return nil, "", errors.WithMessage(err, "encode final p12")
 	}
