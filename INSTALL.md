@@ -70,13 +70,15 @@ builder:
   # your own self-hosted Mac builder
   selfhosted:
     enable: false
-    # the url of your builder
+    # the url of your builder, must be reachable by this server
     url: http://192.168.1.133:8090
     # the auth key you used when you started the builder
     key: SOME_SECRET_KEY
-# the base url used by the builder to reach this server
+# the url of this server, must be reachable by your builder
+# if your builder is hosted on the internet (e.g. GitHub or Semaphore),
+# this must to be a public url reachable over internet, not LAN IP or localhost
 # leave empty if using a tunnel provider, it will set this automatically
-server_url: https://mywebsite.com
+server_url: https://signtools.mywebsite.com
 # whether to redirect all http requests to https
 redirect_https: false
 # where to save data like apps and signing profiles
@@ -102,11 +104,11 @@ There are two types of signing profiles:
 
 - **Developer account**
 
-  You only need your Apple Developer Account's name and password. You will likely be prompted for a 6-digit code every time you sign an app, which you can submit on the service's web page. This method will be able to use most entitlements, resulting in working app extensions and iCloud synchronization.
+  You only need your Apple Developer Account's name and password. You will sometimes be prompted for a 6-digit code (2FA) when you sign an app, which you can submit on the service's web page. This method will register app identifiers with Apple's servers, which will take a bit longer, but will also allow you to use most entitlements, resulting in working app extensions and iCloud synchronization.
 
 - **Custom provisioning profile**
 
-  If you have a provisioning profile with a `.mobileprovision` extension, you can use this method as well. There is no 6-digit code, so signing will be faster than a developer account. However, based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
+  If you have a provisioning profile with a `.mobileprovision` extension, you can use this method as well. There is no 6-digit code (2FA), and signing is completely local, so the process will be faster than a developer account. However, based on the type of your provisioning profile, different entitlements and features may not work on your signed apps. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
 Additionally, you will also need a certificate archive with a `.p12` extension. It must contain at least one certificate and at least one private key. If you need development entitlements, add an `Apple Development` certificate and its key. If you need distribution entitlements, add both an `Apple Development` and `Apple Distribution` certificate, along with their keys. For the differences, check the [FAQ](FAQ.md#what-kind-of-certificatesprovisioning-profiles-are-supported) page.
 
