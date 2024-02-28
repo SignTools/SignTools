@@ -18,17 +18,11 @@
 
 SignTools is a sideloading platform that takes a different approach from any similar tools. It consists of two components — a **service** and a **builder**. The builder is a macOS machine which performs signing using official Apple software. Doing so means high reliability and compatibility. The service (this repo) can be hosted anywhere, and it provides a web interface for you to upload, sign, and download apps, using the builder where necessary. Having the web service means that you don't need anything installed on your phone, and you can still sideload without a computer.
 
-## Note on free developer accounts
-
-Starting from SignTools 3.0.0, free developer accounts are no longer supported. Most of SignTools' unique features have always required a paid account, and using the project with a free account has always been unnecessarily more difficult than other freely available tools. Additionally, certain suboptimal design choices were made to accommodate for free accounts, which reduced stability and performance. Therefore, with this new release, the signing flow has been significantly reworked and should be much faster and more robust.
-
-## :raised_hands: Community
-
-Come join the official Discord to get more interactive support and have general conversations about this project: https://discord.gg/A4T6npnRCk
-
 ## Disclaimer
 
-This project is self-hosted; there is no public service. It does not provide any alternative catalog of apps. This project does not provide, promote, or support any form of piracy. This project is aimed solely at people who want to install homebrew apps on their device, much like the popular [AltStore](https://github.com/rileytestut/AltStore). We (all collaborators) cannot be held liable for anything that happens by you using this project.
+This project is self-hosted and does not constitute a public service. It does not offer any alternative catalog of applications, nor does it endorse or support any form of piracy. The sole purpose of this project is to enable users to use homebrew apps or tweaks on their devices.
+
+By using this project, you acknowledge and agree that the developers and collaborators cannot be held responsible for any damages, losses, or consequences incurred as a result of your use of this project. Please exercise caution and ensure that you comply with all applicable laws and regulations when using this project.
 
 ## Features
 
