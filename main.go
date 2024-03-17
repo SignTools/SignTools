@@ -471,9 +471,15 @@ func getManifest(c echo.Context, app storage.App) error {
 }
 
 func getBaseUrl(c echo.Context) string {
+	var host = ""
+	if value := c.Request().Header.Get("X-Forwarded-Host"); value != "" {
+		host = value
+	} else {
+		host = c.Request().Host
+	}
 	serverUrl := url.URL{
 		Scheme: c.Scheme(),
-		Host:   c.Request().Host,
+		Host:   host,
 	}
 	return serverUrl.String()
 }
