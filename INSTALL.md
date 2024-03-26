@@ -220,7 +220,7 @@ Less secure, slower, but quick and easy to set up
    ```
 3. Then start your service with the following command:
    ```bash
-   SignTools -cloudflared-port 51881
+   SignTools -cloudflared-host localhost:51881
    ```
 4. When the service finishes loading, look for a line similar to this:
    ```log
