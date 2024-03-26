@@ -62,9 +62,9 @@ func main() {
 	host := flag.String("host", "", "Listen host, empty for all")
 	port := flag.Uint64("port", 8080, "Listen port")
 	configFile := flag.String("config", "signer-cfg.yml", "Configuration file")
-	ngrokPort := flag.Uint64("ngrok-port", 0, "Ngrok web interface port. "+
+	ngrokHost := flag.String("ngrok-host", "", "Ngrok web interface host. "+
 		"Used to automatically parse the server_url")
-	cloudflaredPort := flag.Uint64("cloudflared-port", 0, "cloudflared metrics port. "+
+	cloudflaredHost := flag.String("cloudflared-host", "", "cloudflared metrics host. "+
 		"Used to automatically parse the server_url")
 	logJson := flag.Bool("log-json", false, "If enabled, outputs logs in JSON instead of pretty printing them.")
 	logLevel := flag.Uint("log-level", uint(zerolog.InfoLevel), "Logging level, 0 (debug) - 5 (panic).")
@@ -78,10 +78,10 @@ func main() {
 	config.Load(*configFile)
 	storage.Load()
 	switch {
-	case *ngrokPort != 0:
-		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Ngrok{Port: *ngrokPort, Proto: "https"})
-	case *cloudflaredPort != 0:
-		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Cloudflare{Port: *cloudflaredPort})
+	case *ngrokHost != "":
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Ngrok{Host: *ngrokHost, Proto: "https"})
+	case *cloudflaredHost != "":
+		config.Current.ServerUrl = getPublicUrlFatal(&tunnel.Cloudflare{Host: *cloudflaredHost})
 	}
 
 	log.Info().Str("url", config.Current.ServerUrl).Msg("using server url")
