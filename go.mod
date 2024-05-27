@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20210725213601-654e724986c4
 	github.com/ViRb3/sling/v2 v2.0.2
-	github.com/elliotchance/orderedmap v1.5.1
+	github.com/elliotchance/orderedmap v1.6.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.6.0
@@ -36,7 +36,6 @@ require (
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -50,6 +49,4 @@ require (
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
 )
