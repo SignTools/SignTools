@@ -25,8 +25,8 @@ func MakeSemaphore(data *SemaphoreData) *Semaphore {
 		baseUrl: baseUrl,
 		client: sling.New().Client(MakeClient()).
 			Base(baseUrl+"api/").
-			// default Go http2 user agent is (accidentally) blocked by the API server
-			Set("User-Agent", "curl/7.75.0").
+			// as per API spec
+			Set("User-Agent", "SemaphoreCI v2.0 Client").
 			SetMany(map[string]string{
 				"Authorization": "Token " + data.Token,
 			}),
@@ -129,6 +129,13 @@ type semaphoreSecretData struct {
 }
 
 func (s *Semaphore) SetSecrets(secrets map[string]string) error {
+	response, err := s.client.New().
+		Set("Content-Type", "application/json").
+		Delete("v1beta/secrets/" + s.data.SecretName).
+		ReceiveSuccess(nil)
+	if err != nil {
+		return errors.WithMessage(err, "deleting existing secret")
+	}
 	body := semaphoreSecret{
 		APIVersion: "v1beta",
 		Kind:       "Secret",
@@ -144,24 +151,13 @@ func (s *Semaphore) SetSecrets(secrets map[string]string) error {
 	if err != nil {
 		return errors.WithMessage(err, "json marshal secret")
 	}
-	response, err := s.client.New().
+	response, err = s.client.New().
 		Body(bytes.NewReader(bodyBytes)).
 		Set("Content-Type", "application/json").
-		Patch("v1beta/secrets/" + s.data.SecretName).
+		Post("v1beta/secrets").
 		ReceiveSuccess(nil)
 	if err != nil {
-		return errors.WithMessage(err, "update existing secret")
-	}
-	// secret doesn't exist, create it
-	if response.StatusCode == 404 {
-		response, err = s.client.New().
-			Body(bytes.NewReader(bodyBytes)).
-			Set("Content-Type", "application/json").
-			Post("v1beta/secrets").
-			ReceiveSuccess(nil)
-		if err != nil {
-			return errors.WithMessage(err, "create new secret")
-		}
+		return errors.WithMessage(err, "create new secret")
 	}
 	return util.Check2xxCode(response.StatusCode)
 }
