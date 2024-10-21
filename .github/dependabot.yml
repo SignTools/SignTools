@@ -26,3 +26,12 @@ updates:
       prefix: "fix"
       include: "scope"
     open-pull-requests-limit: 20
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "fix"
+      include: "scope"
+    open-pull-requests-limit: 20
