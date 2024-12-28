@@ -4,7 +4,7 @@ import (
 	"SignTools/src/util"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/tus/tusd/pkg/handler"
+	"github.com/tus/tusd/v2/pkg/handler"
 	"io"
 	"os"
 	"sync"

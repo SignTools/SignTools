@@ -12,18 +12,20 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"github.com/galecore/xslog/xzerolog"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	log2 "github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/tus/tusd/pkg/filestore"
-	tusd "github.com/tus/tusd/pkg/handler"
+	"github.com/tus/tusd/v2/pkg/filelocker"
+	"github.com/tus/tusd/v2/pkg/filestore"
+	tusd "github.com/tus/tusd/v2/pkg/handler"
 	"github.com/ziflex/lecho/v2"
+	log3 "golang.org/x/exp/slog"
 	htmlTemplate "html/template"
 	"io"
-	log3 "log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -237,31 +239,22 @@ func renderInstall(c echo.Context, app storage.App) error {
 	return c.HTMLBlob(200, result.Bytes())
 }
 
-type LogToZeroLog struct {
-	Context string
-}
-
-func (l *LogToZeroLog) Write(p []byte) (n int, err error) {
-	log.Info().Str("data", strings.TrimSpace(string(p))).Msg(l.Context)
-	return len(p), nil
-}
-
+// https://tus.github.io/tusd/advanced-topics/usage-package/
 func addTusHandlers(e *echo.Echo, uploadEndpoints map[string]echo.MiddlewareFunc) error {
-	store := filestore.FileStore{
-		Path: storage.GetUploadsPath(),
-	}
+	uploadsPath := storage.GetUploadsPath()
+	store := filestore.New(uploadsPath)
+	locker := filelocker.New(uploadsPath)
 	composer := tusd.NewStoreComposer()
 	store.UseIn(composer)
-	logToZeroLog := LogToZeroLog{Context: "tusd"}
-	logger := log3.New(&logToZeroLog, "", 0)
+	locker.UseIn(composer)
+	logger := xzerolog.NewHandler(&log.Logger)
 	handler, err := tusd.NewUnroutedHandler(tusd.Config{
 		BasePath:              "/files/",
 		StoreComposer:         composer,
 		NotifyCompleteUploads: true,
 		UseRelativeUrls:       true,
-		Logger:                logger,
+		Logger:                log3.New(logger),
 	})
-	//TODO: Apply tus middleware
 	go func() {
 		for {
 			event := <-handler.CompleteUploads
@@ -271,20 +264,25 @@ func addTusHandlers(e *echo.Echo, uploadEndpoints map[string]echo.MiddlewareFunc
 	if err != nil {
 		return err
 	}
-	for prefix, middlewareFunc := range uploadEndpoints {
+	tusMiddleware := echo.WrapMiddleware(handler.Middleware)
+	stripMiddleware := echo.WrapMiddleware(func(h http.Handler) http.Handler {
+		return http.StripPrefix("/files/", h)
+	})
+	for prefix, authMiddleware := range uploadEndpoints {
+		// middlewares run in order, make sure auth goes first!
 		e.POST(prefix, func(c echo.Context) error {
 			handler.PostFile(c.Response().Writer, c.Request())
 			return nil
-		}, middlewareFunc)
+		}, authMiddleware, tusMiddleware)
 	}
 	e.HEAD("/files/:file_id", func(c echo.Context) error {
 		handler.HeadFile(c.Response().Writer, c.Request())
 		return nil
-	})
+	}, stripMiddleware, tusMiddleware)
 	e.PATCH("/files/:file_id", func(c echo.Context) error {
 		handler.PatchFile(c.Response().Writer, c.Request())
 		return nil
-	})
+	}, stripMiddleware, tusMiddleware)
 	return nil
 }
 
