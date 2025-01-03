@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f
 	github.com/ViRb3/sling/v2 v2.0.2
-	github.com/elliotchance/orderedmap v1.7.0
+	github.com/elliotchance/orderedmap v1.8.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.6.0
