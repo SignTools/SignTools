@@ -7,7 +7,7 @@ toolchain go1.23.1
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f
 	github.com/ViRb3/sling/v2 v2.0.2
-	github.com/elliotchance/orderedmap v1.7.0
+	github.com/elliotchance/orderedmap v1.8.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/galecore/xslog v0.0.0-20230717081035-da7669fe4648
 	github.com/google/go-github/v33 v33.0.0
@@ -22,9 +22,9 @@ require (
 	github.com/tus/tusd/v2 v2.6.0
 	github.com/ziflex/lecho/v2 v2.5.2
 	go.uber.org/atomic v1.11.0
-	golang.org/x/crypto v0.32.0
-	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
-	golang.org/x/oauth2 v0.25.0
+	golang.org/x/crypto v0.33.0
+	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
+	golang.org/x/oauth2 v0.26.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.5.0
 )
@@ -51,7 +51,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
 )
