@@ -1,7 +1,6 @@
 module SignTools
 
 go 1.22.0
-
 toolchain go1.23.1
 
 require (
@@ -22,7 +21,7 @@ require (
 	github.com/tus/tusd/v2 v2.6.0
 	github.com/ziflex/lecho/v2 v2.5.2
 	go.uber.org/atomic v1.11.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.34.0
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
 	golang.org/x/oauth2 v0.26.0
 	gopkg.in/yaml.v3 v3.0.1
