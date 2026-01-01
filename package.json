@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "git-format-staged": "^3.1.1",
+    "git-format-staged": "^4.0.0",
     "husky": "^9.1.7",
     "prettier": "^3.6.2"
   },
