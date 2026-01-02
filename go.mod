@@ -1,6 +1,6 @@
 module SignTools
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.1
 
@@ -13,16 +13,16 @@ require (
 	github.com/google/go-github/v33 v33.0.0
 	github.com/google/uuid v1.6.0
 	github.com/knadh/koanf v1.5.0
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/natefinch/atomic v1.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tus/tusd/v2 v2.8.0
 	github.com/ziflex/lecho/v2 v2.5.2
 	go.uber.org/atomic v1.11.0
-	golang.org/x/crypto v0.39.0
+	golang.org/x/crypto v0.46.0
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	golang.org/x/oauth2 v0.30.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -50,8 +50,8 @@ require (
 	github.com/tus/tusd v1.13.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/net v0.40.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 )
