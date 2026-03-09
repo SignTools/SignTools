@@ -1,8 +1,6 @@
 module SignTools
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.25.0
 
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f
@@ -24,7 +22,7 @@ require (
 	go.uber.org/atomic v1.11.0
 	golang.org/x/crypto v0.46.0
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.7.0
 )
