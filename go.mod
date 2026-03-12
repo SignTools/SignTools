@@ -1,8 +1,6 @@
 module SignTools
 
-go 1.24.0
-
-toolchain go1.24.1
+go 1.25.0
 
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f
@@ -22,7 +20,7 @@ require (
 	github.com/tus/tusd/v2 v2.8.0
 	github.com/ziflex/lecho/v2 v2.5.2
 	go.uber.org/atomic v1.11.0
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.49.0
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/oauth2 v0.34.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -50,8 +48,8 @@ require (
 	github.com/tus/tusd v1.13.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 )
