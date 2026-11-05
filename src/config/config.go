@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -164,12 +165,7 @@ func getProfileFromEnv(mapDelim rune) (*EnvProfile, error) {
 
 func isAllowedExt(allowedExts []string, fileName string) bool {
 	fileExt := filepath.Ext(fileName)
-	for _, ext := range allowedExts {
-		if fileExt == ext {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(allowedExts, fileExt)
 }
 
 func getFile(mapDelim rune, fileName string) (*File, error) {

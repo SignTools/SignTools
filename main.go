@@ -675,7 +675,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	tweakMap := map[string]io.Reader{}
 	tweakIds := c.FormValue(formNames.FormTweakIds)
 	if tweakIds != "" {
-		for _, tweakId := range strings.Split(tweakIds, ",") {
+		for tweakId := range strings.SplitSeq(tweakIds, ",") {
 			tweak, ok := storage.Uploads.Get(tweakId)
 			if !ok {
 				return errors.New("no tweak upload file with id " + fileId)

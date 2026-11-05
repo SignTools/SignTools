@@ -290,7 +290,7 @@ func TestEscapeXML(t *testing.T) {
 func validateXML(input string) error {
 	decoder := xml.NewDecoder(strings.NewReader(input))
 	for {
-		err := decoder.Decode(new(interface{}))
+		err := decoder.Decode(new(any))
 		if errors.Is(err, io.EOF) {
 			return nil
 		} else if err != nil {

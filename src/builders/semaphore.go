@@ -76,12 +76,12 @@ func (s *Semaphore) getProjectId() (string, error) {
 
 type semaphoreProject struct {
 	Spec struct {
-		Visibility string        `json:"visibility"`
-		Schedulers []interface{} `json:"schedulers"`
+		Visibility string `json:"visibility"`
+		Schedulers []any  `json:"schedulers"`
 		Repository struct {
 			Whitelist struct {
-				Tags     []interface{} `json:"tags"`
-				Branches []interface{} `json:"branches"`
+				Tags     []any `json:"tags"`
+				Branches []any `json:"branches"`
 			} `json:"whitelist"`
 			URL    string `json:"url"`
 			Status struct {
@@ -90,12 +90,12 @@ type semaphoreProject struct {
 					Level string `json:"level"`
 				} `json:"pipeline_files"`
 			} `json:"status"`
-			RunOn              []interface{} `json:"run_on"`
-			PipelineFile       string        `json:"pipeline_file"`
-			Owner              string        `json:"owner"`
-			Name               string        `json:"name"`
+			RunOn              []any  `json:"run_on"`
+			PipelineFile       string `json:"pipeline_file"`
+			Owner              string `json:"owner"`
+			Name               string `json:"name"`
 			ForkedPullRequests struct {
-				AllowedSecrets []interface{} `json:"allowed_secrets"`
+				AllowedSecrets []any `json:"allowed_secrets"`
 			} `json:"forked_pull_requests"`
 		} `json:"repository"`
 	} `json:"spec"`
