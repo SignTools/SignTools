@@ -68,9 +68,11 @@ func (r *tweakResolver) New(file io.Reader, name string) (Tweak, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.watch()
 	r.mutex.Lock()
 	r.idToTweakMap[t.GetId()] = t
 	r.mutex.Unlock()
+	Changes.notify()
 	return t, nil
 }
 
@@ -83,6 +85,7 @@ func (r *tweakResolver) Delete(id string) error {
 	}
 	delete(r.idToTweakMap, id)
 	r.mutex.Unlock()
+	Changes.notify()
 	if err := t.delete(); err != nil {
 		return errors.WithMessagef(err, "delete tweak id=%s", id)
 	}

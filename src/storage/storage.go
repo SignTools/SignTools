@@ -27,6 +27,8 @@ var Jobs = newJobResolver()
 var Uploads = newUploadResolver()
 var Tweaks = newTweakResolver()
 
+var Changes = newBroker()
+
 func Load() {
 	appsPath = filepath.Join(config.Current.SaveDir, "apps")
 	profilesPath = filepath.Join(config.Current.SaveDir, "profiles")

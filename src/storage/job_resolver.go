@@ -27,12 +27,13 @@ type JobResolver struct {
 // User bundle ID is unused if the profile is not an account.
 func (r *JobResolver) MakeSignJob(appId string, profileId string) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	r.appIdToSignJobMap.Set(appId, &signJob{
 		ts:        time.Now(),
 		appId:     appId,
 		profileId: profileId,
 	})
+	r.mu.Unlock()
+	Changes.notify()
 }
 
 var ErrNotFound = errors.New("not found")
@@ -52,12 +53,14 @@ func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 	r.idToReturnJobMap[returnJobId] = &returnJob
 	r.appIdToReturnJobMap[job.appId] = &returnJob
 	r.mu.Unlock()
+	Changes.notify()
 
 	if err := job.writeArchive(returnJobId, writer); err != nil {
 		r.mu.Lock()
 		delete(r.idToReturnJobMap, returnJobId)
 		delete(r.appIdToReturnJobMap, job.appId)
 		r.mu.Unlock()
+		Changes.notify()
 		return errors.WithMessage(err, "write archive")
 	}
 	return nil
@@ -65,7 +68,13 @@ func (r *JobResolver) TakeLastJob(writer io.Writer) error {
 
 func (r *JobResolver) Cleanup(timeout time.Duration) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
+	removed := false
+	defer func() {
+		r.mu.Unlock()
+		if removed {
+			Changes.notify()
+		}
+	}()
 	now := time.Now()
 	var deleteList []any
 	for el := r.appIdToSignJobMap.Front(); el != nil; el = el.Next() {
@@ -76,6 +85,7 @@ func (r *JobResolver) Cleanup(timeout time.Duration) {
 	}
 	for _, key := range deleteList {
 		r.appIdToSignJobMap.Delete(key)
+		removed = true
 	}
 	var deleteList2 []string
 	for id, job := range r.idToReturnJobMap {
@@ -84,7 +94,9 @@ func (r *JobResolver) Cleanup(timeout time.Duration) {
 		}
 	}
 	for _, id := range deleteList2 {
-		r.deleteById(id)
+		if r.deleteById(id) {
+			removed = true
+		}
 	}
 }
 
@@ -112,8 +124,12 @@ func (r *JobResolver) GetByAppId(id string) (*ReturnJob, bool) {
 
 func (r *JobResolver) DeleteById(id string) bool {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.deleteById(id)
+	ok := r.deleteById(id)
+	r.mu.Unlock()
+	if ok {
+		Changes.notify()
+	}
+	return ok
 }
 
 func (r *JobResolver) deleteById(id string) bool {

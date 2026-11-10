@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -35,10 +34,12 @@ type App interface {
 }
 
 func loadApp(id string) App {
-	return newApp(id)
+	a := newApp(id)
+	a.watch()
+	return a
 }
 
-func createApp(unsignedFile io.Reader, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweakMap map[string]io.Reader) (App, error) {
+func createApp(unsignedFile io.Reader, name string, profile Profile, signArgs string, userBundleId string, builderId string, tweakMap map[string]io.Reader) (*app, error) {
 	app := newApp(uuid.NewString())
 	if err := os.MkdirAll(app.resolvePath(AppRoot), os.ModePerm); err != nil {
 		return nil, errors.New("make app dir")
@@ -79,25 +80,8 @@ func newApp(id string) *app {
 }
 
 type app struct {
-	mu sync.RWMutex
 	id string
 	FileSystemBase
-}
-
-func (a *app) delete() error {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	return os.RemoveAll(a.resolvePath(AppRoot))
-}
-
-func (a *app) GetModTime() (time.Time, error) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	appDir, err := os.Stat(a.resolvePath(AppRoot))
-	if err != nil {
-		return time.Time{}, err
-	}
-	return appDir.ModTime(), nil
 }
 
 func (a *app) IsSigned() (bool, error) {
@@ -117,10 +101,8 @@ func (a *app) GetId() string {
 
 func (a *app) ResetModTime() error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	now := time.Now()
-	if err := os.Chtimes(a.resolvePath(AppRoot), now, now); err != nil {
-		return err
-	}
-	return nil
+	err := os.Chtimes(a.resolvePath(AppRoot), now, now)
+	a.mu.Unlock()
+	return a.changed(err)
 }

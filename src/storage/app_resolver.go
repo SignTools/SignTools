@@ -66,9 +66,11 @@ func (r *appResolver) New(unsignedFile io.Reader, name string, profile Profile, 
 	if err != nil {
 		return nil, err
 	}
+	app.watch()
 	r.mutex.Lock()
 	r.idToAppMap[app.GetId()] = app
 	r.mutex.Unlock()
+	Changes.notify()
 	return app, nil
 }
 
@@ -82,6 +84,7 @@ func (r *appResolver) Delete(id string) error {
 	appId := app.GetId()
 	delete(r.idToAppMap, appId)
 	r.mutex.Unlock()
+	Changes.notify()
 	if err := app.delete(); err != nil {
 		return errors.WithMessagef(err, "delete app id=%s", appId)
 	}

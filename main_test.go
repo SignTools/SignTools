@@ -6,6 +6,9 @@ import (
 	"SignTools/src/storage"
 	"SignTools/src/util"
 	"archive/tar"
+	"bufio"
+	"context"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/eventials/go-tus"
@@ -260,7 +263,9 @@ func tusUploadNamed(t *testing.T, data []byte, name string) string {
 	tusClient, err := tus.NewClient(config.Current.ServerUrl+"/tus/", nil)
 	assert.NoError(t, err)
 	upload := tus.NewUploadFromBytes(data)
-	upload.Metadata["filename"] = name
+	if name != "" {
+		upload.Metadata["filename"] = name
+	}
 	tusUpload, err := tusClient.CreateUpload(upload)
 	assert.NoError(t, err)
 	assert.NoError(t, tusUpload.Upload())
@@ -297,19 +302,7 @@ func validateFile(t *testing.T, actualData string, f func(storage.App) (storage.
 }
 
 func tusUpload(t *testing.T, data []byte) string {
-	tusClient, err := tus.NewClient(config.Current.ServerUrl+"/tus/", nil)
-	assert.NoError(t, err)
-	tusUpload, err := tusClient.CreateUpload(tus.NewUploadFromBytes(data))
-	assert.NoError(t, err)
-	tusProgressChan := make(chan tus.Upload)
-	tusUpload.NotifyUploadProgress(tusProgressChan)
-	assert.NoError(t, tusUpload.Upload())
-	for progress := range tusProgressChan {
-		if progress.Finished() {
-			break
-		}
-	}
-	return path.Base(tusUpload.Url())
+	return tusUploadNamed(t, data, "")
 }
 
 func uploadSignedFile(t *testing.T, returnId string) {
@@ -401,4 +394,94 @@ func validateXML(input string) error {
 			return err
 		}
 	}
+}
+
+func readSSEEvent(r *bufio.Reader, eventType string) string {
+	event, data := "", ""
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil {
+			return ""
+		}
+		line = strings.TrimRight(line, "\n")
+		switch {
+		case line == "":
+			if event == eventType {
+				return data
+			}
+			event, data = "", ""
+		case strings.HasPrefix(line, "event: "):
+			event = strings.TrimPrefix(line, "event: ")
+		case strings.HasPrefix(line, "data: "):
+			data += strings.TrimPrefix(line, "data: ")
+		}
+	}
+}
+
+func TestLiveEvents(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", config.Current.ServerUrl+"/events", nil)
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer resp.Body.Close()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "text/event-stream", resp.Header.Get("Content-Type"))
+
+	// changes coalesce, so wait for the expected state rather than counting frames
+	reader := bufio.NewReader(resp.Body)
+	states := make(chan liveState)
+	go func() {
+		defer close(states)
+		for {
+			var s liveState
+			data := readSSEEvent(reader, "state")
+			if data == "" || json.Unmarshal([]byte(data), &s) != nil {
+				return
+			}
+			select {
+			case states <- s:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	waitFor := func(desc string, pred func(liveState) bool) liveState {
+		t.Helper()
+		timeout := time.After(5 * time.Second)
+		for {
+			select {
+			case s, ok := <-states:
+				if !ok {
+					t.Fatalf("event stream ended while waiting for %s", desc)
+				}
+				if pred(s) {
+					return s
+				}
+			case <-timeout:
+				t.Fatalf("timed out waiting for %s", desc)
+			}
+		}
+	}
+
+	waitFor("initial state", func(liveState) bool { return true })
+
+	tweakName := uuid.NewString() + ".dylib"
+	tweak, err := storage.Tweaks.New(strings.NewReader("data"), tweakName)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer storage.Tweaks.Delete(tweak.GetId())
+	state := waitFor("tweak added", func(s liveState) bool {
+		return strings.Contains(s.Tweaks, tweakName) && strings.Contains(s.SavedTweaks, tweakName)
+	})
+	assert.Contains(t, state.Tweaks, `data-id="`+tweak.GetId()+`"`)
+
+	assert.NoError(t, storage.Tweaks.Delete(tweak.GetId()))
+	waitFor("tweak deleted", func(s liveState) bool {
+		return !strings.Contains(s.Tweaks, tweakName) && !strings.Contains(s.SavedTweaks, tweakName)
+	})
 }

@@ -9,6 +9,7 @@ import (
 	"SignTools/src/util"
 	"archive/tar"
 	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -34,6 +35,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	textTemplate "text/template"
 	"time"
 )
@@ -148,6 +150,7 @@ func serve(host string, port uint64) {
 	}
 
 	e.GET("/", renderIndex, basicAuth)
+	e.GET("/events", streamEvents, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
@@ -181,6 +184,14 @@ func serve(host string, port uint64) {
 	}
 
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
+}
+
+// actionDone answers the page's fetch requests with 204, since live updates show the result.
+func actionDone(c echo.Context, back string) error {
+	if c.Request().Header.Get("X-Requested-With") != "" {
+		return c.NoContent(http.StatusNoContent)
+	}
+	return c.Redirect(http.StatusFound, back)
 }
 
 func getAndHead(e *echo.Echo, path string, getHandler func(c echo.Context) error, headHandler func(c echo.Context) error, m ...echo.MiddlewareFunc) {
@@ -361,7 +372,7 @@ func renameApp(c echo.Context, app storage.App) error {
 	if err := app.SetString(storage.AppName, c.FormValue("name")); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	return actionDone(c, "/")
 }
 
 func failJob(c echo.Context, job *storage.ReturnJob) error {
@@ -472,14 +483,14 @@ func set2FA(c echo.Context, app storage.App) error {
 		return errors.New("no job found for app " + app.GetId())
 	}
 	job.TwoFactorCode.Store(c.FormValue("formToken"))
-	return c.Redirect(302, "/")
+	return actionDone(c, "/")
 }
 
 func deleteApp(c echo.Context, app storage.App) error {
 	if err := storage.Apps.Delete(app.GetId()); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	return actionDone(c, "/")
 }
 
 func getManifest(c echo.Context, app storage.App) error {
@@ -551,7 +562,7 @@ func getSignedApp(c echo.Context, app storage.App) error {
 		return err
 	}
 	defer file.Close()
-	if err := writeFileResponse(c, file, app); err != nil {
+	if err := writeFileResponse(c, file, app, storage.AppName); err != nil {
 		return err
 	}
 	return nil
@@ -575,7 +586,7 @@ func getUnsignedAppJob(c echo.Context, job *storage.ReturnJob) error {
 		return err
 	}
 	defer file.Close()
-	if err := writeFileResponse(c, file, app); err != nil {
+	if err := writeFileResponse(c, file, app, storage.AppName); err != nil {
 		return err
 	}
 	return nil
@@ -587,19 +598,24 @@ func getUnsignedApp(c echo.Context, app storage.App) error {
 		return err
 	}
 	defer file.Close()
-	if err := writeFileResponse(c, file, app); err != nil {
+	if err := writeFileResponse(c, file, app, storage.AppName); err != nil {
 		return err
 	}
 	return nil
 }
 
-func writeFileResponse(c echo.Context, file io.ReadSeeker, app storage.App) error {
-	name, err := app.GetString(storage.AppName)
+type fileOwner interface {
+	GetString(storage.FSName) (string, error)
+	GetModTime() (time.Time, error)
+}
+
+func writeFileResponse(c echo.Context, file io.ReadSeeker, owner fileOwner, nameField storage.FSName) error {
+	name, err := owner.GetString(nameField)
 	if err != nil {
 		return err
 	}
 	//TODO: Should use the file's mod time, otherwise may tell client to use cached file even though it has changed
-	modTime, err := app.GetModTime()
+	modTime, err := owner.GetModTime()
 	if err != nil {
 		return err
 	}
@@ -751,7 +767,7 @@ func uploadUnsignedApp(c echo.Context) error {
 	if err := startSign(app, builder); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	return actionDone(c, "/")
 }
 
 func resignApp(c echo.Context, app storage.App) error {
@@ -772,7 +788,7 @@ func resignApp(c echo.Context, app storage.App) error {
 	if err := startSign(app, builder); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/")
+	return actionDone(c, "/")
 }
 
 func startSign(app storage.App, builder builders.Builder) error {
@@ -801,22 +817,23 @@ func logErrApp(err error, app storage.App) *zerolog.Event {
 	return log.Err(err).Str("app_id", app.GetId())
 }
 
-func renderIndex(c echo.Context) error {
+// indexTemplate's "apps", "tweaks" and "savedTweaks" blocks are also rendered alone by streamEvents.
+var indexTemplate = htmlTemplate.Must(htmlTemplate.New("index").Parse(assets.IndexHtml))
+
+func buildAppViews() ([]assets.App, error) {
 	apps, err := storage.Apps.GetAll()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	data := assets.IndexData{
-		FormNames: formNames,
-	}
+	var views []assets.App
 	for _, app := range apps {
 		isSigned, err := app.IsSigned()
 		if err != nil {
-			return errors.WithMessage(err, "get is signed")
+			return nil, errors.WithMessage(err, "get is signed")
 		}
 		modTime, err := app.GetModTime()
 		if err != nil {
-			return errors.WithMessage(err, "get mod time")
+			return nil, errors.WithMessage(err, "get mod time")
 		}
 		name, err := app.GetString(storage.AppName)
 		if err != nil {
@@ -857,10 +874,10 @@ func renderIndex(c echo.Context) error {
 		if tweaks, err := app.ReadDir(storage.TweaksDir); err == nil {
 			tweakCount = len(tweaks)
 		} else if !os.IsNotExist(err) {
-			return err
+			return nil, err
 		}
 
-		data.Apps = append(data.Apps, assets.App{
+		views = append(views, assets.App{
 			Id:                  app.GetId(),
 			Status:              status,
 			Name:                name,
@@ -879,7 +896,23 @@ func renderIndex(c echo.Context) error {
 			TweakCount:          tweakCount,
 		})
 	}
-	data.Tweaks, err = getTweakViews()
+	return views, nil
+}
+
+func buildLiveData() (assets.IndexData, error) {
+	data := assets.IndexData{FormNames: formNames}
+	var err error
+	if data.Apps, err = buildAppViews(); err != nil {
+		return data, err
+	}
+	if data.Tweaks, err = getTweakViews(); err != nil {
+		return data, err
+	}
+	return data, nil
+}
+
+func renderIndex(c echo.Context) error {
+	data, err := buildLiveData()
 	if err != nil {
 		return err
 	}
@@ -913,15 +946,120 @@ func renderIndex(c echo.Context) error {
 		name2 := data.Builders[j].Name
 		return name1 < name2
 	})
-	t, err := htmlTemplate.New("").Parse(assets.IndexHtml)
-	if err != nil {
-		return err
-	}
 	var result bytes.Buffer
-	if err := t.Execute(&result, data); err != nil {
+	if err := indexTemplate.Execute(&result, data); err != nil {
 		return err
 	}
 	return c.HTMLBlob(200, result.Bytes())
+}
+
+type liveState struct {
+	Apps        string `json:"apps"`
+	Tweaks      string `json:"tweaks"`
+	SavedTweaks string `json:"savedTweaks"`
+}
+
+// liveCache shares one render per change across all connected clients.
+var liveCache struct {
+	sync.Mutex
+	version uint64
+	payload []byte
+}
+
+func renderLiveState() ([]byte, error) {
+	version := storage.Changes.Version()
+	liveCache.Lock()
+	defer liveCache.Unlock()
+	if liveCache.payload != nil && liveCache.version == version {
+		return liveCache.payload, nil
+	}
+	data, err := buildLiveData()
+	if err != nil {
+		return nil, err
+	}
+	render := func(name string) (string, error) {
+		var buf bytes.Buffer
+		err := indexTemplate.ExecuteTemplate(&buf, name, data)
+		return buf.String(), errors.WithMessagef(err, "render %s", name)
+	}
+	var state liveState
+	if state.Apps, err = render("apps"); err != nil {
+		return nil, err
+	}
+	if state.Tweaks, err = render("tweaks"); err != nil {
+		return nil, err
+	}
+	if state.SavedTweaks, err = render("savedTweaks"); err != nil {
+		return nil, err
+	}
+	// the payload is mostly HTML, don't inflate it with \u003c escapes
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(state); err != nil {
+		return nil, err
+	}
+	liveCache.version = version
+	liveCache.payload = bytes.TrimSuffix(buf.Bytes(), []byte("\n"))
+	return liveCache.payload, nil
+}
+
+const sseHeartbeat = 25 * time.Second
+
+func streamEvents(c echo.Context) error {
+	// subscribe before the first render so no change can slip in between
+	changes, cancel := storage.Changes.Subscribe()
+	defer cancel()
+
+	res := c.Response()
+	res.Header().Set("Content-Type", "text/event-stream")
+	res.Header().Set("Cache-Control", "no-cache")
+	res.Header().Set("Connection", "keep-alive")
+	res.Header().Set("X-Accel-Buffering", "no")
+	res.WriteHeader(http.StatusOK)
+
+	var lastSent []byte
+	send := func() error {
+		payload, err := renderLiveState()
+		if err != nil {
+			log.Err(err).Msg("render live state")
+			return nil
+		}
+		if bytes.Equal(payload, lastSent) {
+			return nil
+		}
+		lastSent = payload
+		if _, err := fmt.Fprintf(res, "event: state\ndata: %s\n\n", payload); err != nil {
+			return err
+		}
+		res.Flush()
+		return nil
+	}
+
+	if _, err := fmt.Fprint(res, "retry: 3000\n\n"); err != nil {
+		return nil
+	}
+	if err := send(); err != nil {
+		return nil
+	}
+	heartbeat := time.NewTicker(sseHeartbeat)
+	defer heartbeat.Stop()
+	ctx := c.Request().Context()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-changes:
+			if err := send(); err != nil {
+				return nil
+			}
+		case <-heartbeat.C:
+			if _, err := fmt.Fprint(res, ": ping\n\n"); err != nil {
+				return nil
+			}
+			res.Flush()
+		}
+	}
 }
 
 // saveUploadAsTweak moves a completed tus upload into the tweak library.
@@ -952,26 +1090,16 @@ func uploadTweaks(c echo.Context) error {
 			}
 		}
 	}
-	return c.Redirect(302, "/#tweaks")
+	return actionDone(c, "/#tweaks")
 }
 
 func downloadTweak(c echo.Context, tweak storage.Tweak) error {
-	name, err := tweak.GetString(storage.TweakName)
-	if err != nil {
-		return err
-	}
 	file, err := tweak.GetFile(storage.TweakFile)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	modTime, err := tweak.GetModTime()
-	if err != nil {
-		return err
-	}
-	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, name))
-	http.ServeContent(c.Response(), c.Request(), name, modTime, file)
-	return nil
+	return writeFileResponse(c, file, tweak, storage.TweakName)
 }
 
 func renderRenameTweak(c echo.Context, tweak storage.Tweak) error {
@@ -1003,14 +1131,14 @@ func renameTweak(c echo.Context, tweak storage.Tweak) error {
 	if err := tweak.SetString(storage.TweakName, newName); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/#tweaks")
+	return actionDone(c, "/#tweaks")
 }
 
 func deleteTweak(c echo.Context, tweak storage.Tweak) error {
 	if err := storage.Tweaks.Delete(tweak.GetId()); err != nil {
 		return err
 	}
-	return c.Redirect(302, "/#tweaks")
+	return actionDone(c, "/#tweaks")
 }
 
 func getTweakViews() ([]assets.Tweak, error) {

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 type FSName string
@@ -29,6 +30,36 @@ type FileSystem interface {
 type FileSystemBase struct {
 	mu          sync.RWMutex
 	resolvePath func(FSName) string
+	onChange    func()
+}
+
+// watch is called once a resolver tracks the entity, so creating one doesn't announce a
+// half-written state.
+func (a *FileSystemBase) watch() {
+	a.onChange = Changes.notify
+}
+
+func (a *FileSystemBase) GetModTime() (time.Time, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	stat, err := os.Stat(a.resolvePath(""))
+	if err != nil {
+		return time.Time{}, err
+	}
+	return stat.ModTime(), nil
+}
+
+func (a *FileSystemBase) delete() error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return os.RemoveAll(a.resolvePath(""))
+}
+
+func (a *FileSystemBase) changed(err error) error {
+	if err == nil && a.onChange != nil {
+		a.onChange()
+	}
+	return err
 }
 
 func (a *FileSystemBase) GetString(name FSName) (string, error) {
@@ -43,9 +74,10 @@ func (a *FileSystemBase) GetString(name FSName) (string, error) {
 
 func (a *FileSystemBase) SetString(name FSName, value string) error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
 	reader := bytes.NewReader([]byte(strings.TrimSpace(value)))
-	return atomic.WriteFile(a.resolvePath(name), reader)
+	err := atomic.WriteFile(a.resolvePath(name), reader)
+	a.mu.Unlock()
+	return a.changed(err)
 }
 
 func (a *FileSystemBase) GetFile(name FSName) (ReadonlyFile, error) {
@@ -75,17 +107,19 @@ func (a *FileSystemBase) SetFile(name FSName, value io.Reader) error {
 		return errors.WithMessage(err, "close file")
 	}
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := atomic.ReplaceFile(f.Name(), a.resolvePath(name)); err != nil {
+	err = atomic.ReplaceFile(f.Name(), a.resolvePath(name))
+	a.mu.Unlock()
+	if err != nil {
 		return errors.WithMessage(err, "replace file")
 	}
-	return nil
+	return a.changed(nil)
 }
 
 func (a *FileSystemBase) RemoveFile(name FSName) error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	return os.Remove(a.resolvePath(name))
+	err := os.Remove(a.resolvePath(name))
+	a.mu.Unlock()
+	return a.changed(err)
 }
 
 func (a *FileSystemBase) Stat(name FSName) (os.FileInfo, error) {
@@ -96,8 +130,9 @@ func (a *FileSystemBase) Stat(name FSName) (os.FileInfo, error) {
 
 func (a *FileSystemBase) MkDir(name FSName) error {
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	return os.MkdirAll(a.resolvePath(name), 0700)
+	err := os.MkdirAll(a.resolvePath(name), 0700)
+	a.mu.Unlock()
+	return a.changed(err)
 }
 
 func (a *FileSystemBase) ReadDir(name FSName) ([]os.DirEntry, error) {

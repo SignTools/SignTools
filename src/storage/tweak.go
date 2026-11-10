@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -27,10 +26,12 @@ type Tweak interface {
 }
 
 func loadTweak(id string) Tweak {
-	return newTweak(id)
+	t := newTweak(id)
+	t.watch()
+	return t
 }
 
-func createTweak(file io.Reader, name string) (Tweak, error) {
+func createTweak(file io.Reader, name string) (*tweak, error) {
 	name, err := SanitizeTweakName(name)
 	if err != nil {
 		return nil, err
@@ -66,27 +67,10 @@ func newTweak(id string) *tweak {
 }
 
 type tweak struct {
-	mu sync.RWMutex
 	id string
 	FileSystemBase
 }
 
 func (t *tweak) GetId() string {
 	return t.id
-}
-
-func (t *tweak) GetModTime() (time.Time, error) {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	stat, err := os.Stat(t.resolvePath(TweakRoot))
-	if err != nil {
-		return time.Time{}, err
-	}
-	return stat.ModTime(), nil
-}
-
-func (t *tweak) delete() error {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return os.RemoveAll(t.resolvePath(TweakRoot))
 }
