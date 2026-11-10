@@ -841,6 +841,21 @@
       itemSelector: ".tweakItem",
       columnWidth: "#tweakSizeItem",
     });
+    // Masonry only measures cards at layout time, so a card that grows later would overlap the next
+    let relayoutFrame = 0;
+    const cardResizeObserver = new ResizeObserver(() => {
+      cancelAnimationFrame(relayoutFrame);
+      relayoutFrame = requestAnimationFrame(() => {
+        for (let m of [masonry, masonryTweaks]) {
+          m.options.layoutInstant = true;
+          m.layout();
+          delete m.options.layoutInstant;
+        }
+      });
+    });
+    for (let el of document.querySelectorAll(".appItem, .tweakItem")) {
+      cardResizeObserver.observe(el);
+    }
     const btnUploadTweaks = document.getElementById("btnUploadTweaks");
     const tweakSelect = document.getElementById("tweakSelect");
     const tweakForm = document.getElementById("tweakForm");
@@ -1245,10 +1260,11 @@
     document.addEventListener("mouseover", showTweakNames);
     document.addEventListener("focusin", showTweakNames);
 
-    function disposeTooltips(card) {
+    function releaseCard(card) {
       for (const el of card.querySelectorAll(".tweak-count")) {
         bootstrap.Tooltip.getInstance(el)?.dispose();
       }
+      cardResizeObserver.unobserve(card);
     }
 
     // unchanged cards are left alone, so e.g. an open menu stays open
@@ -1264,13 +1280,14 @@
         let el = current.get(next.dataset.id);
         current.delete(next.dataset.id);
         if (el && cardHtml.get(el) !== nextHtml) {
-          disposeTooltips(el);
+          releaseCard(el);
           el.replaceWith(next);
           el = null;
         }
         if (!el) {
           el = next;
           cardHtml.set(el, nextHtml);
+          cardResizeObserver.observe(el);
           changed = true;
         }
         if (prev.nextElementSibling !== el) {
@@ -1280,7 +1297,7 @@
         prev = el;
       }
       for (let el of current.values()) {
-        disposeTooltips(el);
+        releaseCard(el);
         el.remove();
         changed = true;
       }
