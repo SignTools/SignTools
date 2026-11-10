@@ -6,39 +6,11 @@
     <title>SignTools</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
-      integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D"
-      crossorigin="anonymous"
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"
-      integrity="sha256-rzXMaro05QBd53CZ36ctTBp3FdKN3Ow0P0gDHcjLCLw="
-      crossorigin="anonymous"
-    />
-    <script
-      src="https://cdn.jsdelivr.net/npm/uppy@2.9.3/dist/uppy.min.js"
-      integrity="sha256-AwzInV10JlTyQ3D+cm8UeCggCK6dujyU4Gmy4MCDTFo="
-      crossorigin="anonymous"
-    ></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/uppy@2.9.3/dist/uppy.min.css"
-      integrity="sha256-1GDsETbuTbdWsQXcmt8zRLSsQhnVCZAAfPpCdKuiDi8="
-      crossorigin="anonymous"
-    />
+    <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" />
+    <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/masonry-layout/masonry.pkgd.min.js"></script>
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css" />
+    <script src="/vendor/uppy/uppy.min.js"></script>
     <style>
       a,
       a:hover {
@@ -617,13 +589,21 @@
             </div>
             <div class="modal-footer">
               <div
+                class="progress flex-grow-1 me-3"
+                id="uploadProgress"
+                role="progressbar"
+                aria-label="Upload progress"
+                hidden
+              >
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+              </div>
+              <div
                 id="formFileSpinner"
                 class="spinner-border text-primary me-3"
                 role="status"
                 style="display: none"
               ></div>
               <button id="formSubmit" type="button" class="btn btn-primary">Submit</button>
-              <div class="UppyProgressBar"></div>
             </div>
           </form>
         </div>
@@ -643,13 +623,21 @@
             </div>
             <div class="modal-footer">
               <div
+                class="progress flex-grow-1 me-3"
+                id="tweakProgress"
+                role="progressbar"
+                aria-label="Upload progress"
+                hidden
+              >
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+              </div>
+              <div
                 id="tweakSpinner"
                 class="spinner-border text-primary me-3"
                 role="status"
                 style="display: none"
               ></div>
               <button id="tweakSubmit" type="button" class="btn btn-primary">Submit</button>
-              <div class="TweakProgressBar"></div>
             </div>
           </form>
         </div>
@@ -925,12 +913,23 @@
     }
 
     function uploadIds(result, uploadType) {
+      // Uppy resolves with nothing when the upload was cancelled midway
+      if (!result) throw new Error("Upload was cancelled");
       if (result.failed.length > 0) {
         throw new Error(result.failed.map((f) => f.error).join("\n"));
       }
       return result.successful
         .filter((f) => !uploadType || f.meta.uploadType === uploadType)
         .map((f) => f.uploadURL.split("/").pop());
+    }
+
+    function trackProgress(uploader, progress) {
+      const bar = progress.querySelector(".progress-bar");
+      uploader.on("progress", (percent) => (bar.style.width = `${percent}%`));
+      return (visible) => {
+        progress.hidden = !visible;
+        bar.style.width = "0%";
+      };
     }
 
     const navbar = document.querySelector(".navbar");
@@ -1023,12 +1022,8 @@
     }
     initSavedTweaks();
 
-    const tweakUppy = new Uppy.Core({ id: "tweaks", autoProceed: false });
-    tweakUppy.use(Uppy.ProgressBar, {
-      target: ".TweakProgressBar",
-      fixed: true,
-      hideAfterFinish: false,
-    });
+    const tweakUppy = new Uppy.Uppy({ id: "tweaks" });
+    const showTweakProgress = trackProgress(tweakUppy, document.getElementById("tweakProgress"));
     tweakUppy.use(Uppy.Tus, {
       endpoint: "/tus/",
       parallelUploads: 6,
@@ -1037,6 +1032,7 @@
       tweakSubmit.disabled = submitting;
       btnTweakModalClose.disabled = submitting;
       tweakSpinner.style.display = submitting ? "inline-block" : "none";
+      showTweakProgress(submitting);
     }
     function resetTweakForm() {
       tweakUppy.cancelAll();
@@ -1076,12 +1072,8 @@
         .finally(() => setTweakSubmitting(false));
     });
 
-    const uppy = new Uppy.Core();
-    uppy.use(Uppy.ProgressBar, {
-      target: ".UppyProgressBar",
-      fixed: true,
-      hideAfterFinish: false,
-    });
+    const uppy = new Uppy.Uppy();
+    const showUploadProgress = trackProgress(uppy, document.getElementById("uploadProgress"));
     uppy.use(Uppy.Tus, {
       endpoint: "/tus/",
       parallelUploads: 6,
@@ -1141,6 +1133,7 @@
       formSubmit.disabled = submitting;
       btnModalClose.disabled = submitting;
       formFileSpinner.style.display = submitting ? "inline-block" : "none";
+      showUploadProgress(submitting);
     }
 
     btnUploadApp.addEventListener("click", function () {

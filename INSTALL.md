@@ -13,6 +13,7 @@ Before you begin, it is recommended to understand exactly how this project works
   - [3. Web service installation](#3-web-service-installation)
     - [3a. Normal](#3a-normal)
     - [3b. Docker](#3b-docker)
+    - [3c. From source](#3c-from-source)
   - [4. Web service execution](#4-web-service-execution)
     - [4a. Reverse proxy](#4a-reverse-proxy)
     - [4b. Tunnel provider](#4b-tunnel-provider)
@@ -160,7 +161,7 @@ That's all the initial configuration! To recap, you now have the following confi
 
 ## 3. Web service installation
 
-You have two options:
+You have three options:
 
 ### 3a. Normal
 
@@ -173,6 +174,13 @@ You have two options:
 2. Move and [mount](https://docs.docker.com/storage/volumes/) the configuration files from sections `2.1.` and `2.2.`:
    - `./signer-cfg.yml:/signer-cfg.yml`
    - `./data:/data` (or whatever you set in `save_dir`)
+
+### 3c. From source
+
+1. Install [Go](https://go.dev/dl/) and [Bun](https://bun.sh/)
+2. Build the web UI files, which are embedded into the binary: `bun install --frozen-lockfile && bun run vendor`
+3. Build the binary: `go build`
+4. Continue as in `3a.`, with the binary you just built
 
 ## 4. Web service execution
 

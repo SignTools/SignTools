@@ -5,7 +5,8 @@
     "prettier": "^3.7.4"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "vendor": "bun scripts/vendor.mjs"
   },
   "prettier": {
     "overrides": [
@@ -17,5 +18,11 @@
       }
     ],
     "printWidth": 119
+  },
+  "dependencies": {
+    "bootstrap": "5.3.8",
+    "bootstrap-icons": "1.13.2",
+    "masonry-layout": "4.2.2",
+    "uppy": "6.0.5"
   }
 }

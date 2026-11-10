@@ -9,6 +9,8 @@ import (
 	"SignTools/src/util"
 	"archive/tar"
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
 	"flag"
@@ -27,6 +29,7 @@ import (
 	log3 "golang.org/x/exp/slog"
 	htmlTemplate "html/template"
 	"io"
+	"io/fs"
 	"mime"
 	"net/http"
 	"net/url"
@@ -154,6 +157,7 @@ func serve(host string, port uint64) {
 	e.GET("/favicon.png", getFavIcon, basicAuth)
 	// no auth: the install page loads it too
 	e.GET("/theme.js", getThemeScript)
+	e.GET("/vendor/*", vendorHandler())
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
 	getAndHead(e, "/apps/:id/tweaks", appResolver(getTweaks), appResolver(getEmpty200App))
@@ -389,6 +393,45 @@ func setBuilderSecrets(builder builders.Builder) error {
 		"SECRET_KEY": config.Current.BuilderKey,
 		"SECRET_URL": config.Current.ServerUrl,
 	})
+}
+
+// vendorHandler uses content-hash ETags, since embedded files have no modification time.
+func vendorHandler() echo.HandlerFunc {
+	files, err := fs.Sub(assets.VendorFS, "vendor")
+	if err != nil {
+		log.Fatal().Err(err).Msg("vendor fs")
+	}
+	etags := map[string]string{}
+	if err := fs.WalkDir(files, ".", func(name string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		data, err := fs.ReadFile(files, name)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(data)
+		etags[name] = `"` + hex.EncodeToString(sum[:8]) + `"`
+		return nil
+	}); err != nil {
+		log.Fatal().Err(err).Msg("hash vendor files")
+	}
+	return func(c echo.Context) error {
+		name := c.Param("*")
+		etag, ok := etags[name]
+		if !ok {
+			return c.NoContent(http.StatusNotFound)
+		}
+		file, err := files.Open(name)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		c.Response().Header().Set("Cache-Control", "no-cache")
+		c.Response().Header().Set("ETag", etag)
+		http.ServeContent(c.Response(), c.Request(), name, time.Time{}, file.(io.ReadSeeker))
+		return nil
+	}
 }
 
 func getThemeScript(c echo.Context) error {

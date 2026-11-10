@@ -14,6 +14,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.1
 
+      - name: Fetch Bun version
+        run: |
+          BUN_VERSION=$(perl -ne 'print "$1\n" if /FROM .*oven\/bun:([0-9.]+)/' Dockerfile | head -n1)
+          [ -n "$BUN_VERSION" ] || exit 1
+          echo "bun_version=$BUN_VERSION" >> "$GITHUB_ENV"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: "${{ env.bun_version }}"
+
+      - name: Install web dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web files
+        run: bun run vendor
+
       - name: Fetch Go version
         run: |
           GO_VERSION=$(perl -ne 'print "$1\n" if /FROM golang:([0-9.]+)/' Dockerfile | head -n1)

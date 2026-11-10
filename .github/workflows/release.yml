@@ -107,6 +107,17 @@ jobs:
         with:
           go-version: "${{ env.go_version }}"
 
+      - name: Fetch Bun version
+        run: |
+          BUN_VERSION=$(perl -ne 'print "$1\n" if /FROM .*oven\/bun:([0-9.]+)/' Dockerfile | head -n1)
+          [ -n "$BUN_VERSION" ] || exit 1
+          echo "bun_version=$BUN_VERSION" >> "$GITHUB_ENV"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: "${{ env.bun_version }}"
+
       - name: Binaries release
         uses: goreleaser/goreleaser-action@v7.3.0
         with:

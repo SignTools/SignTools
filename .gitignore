@@ -1,6 +1,9 @@
 /data/
 /certs/
 /signer-cfg*.yml
+
+# built by `bun run vendor`
+/src/assets/vendor/
 .DS_Store
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
