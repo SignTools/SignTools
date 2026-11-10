@@ -19,10 +19,14 @@ RUN apk add --no-cache git && \
     go mod download && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -buildvcs=false -o "SignTools"
 
-FROM alpine:3.24.1
+FROM scratch
 
 WORKDIR /
 
+# for HTTPS calls to builders and app URLs
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Go stores large multipart form uploads under /tmp
+COPY --from=builder --chmod=1777 /tmp /tmp
 COPY --from=builder "/src/SignTools" "/"
 
 ENTRYPOINT ["/SignTools"]
