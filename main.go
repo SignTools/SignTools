@@ -152,6 +152,8 @@ func serve(host string, port uint64) {
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/events", streamEvents, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
+	// no auth: the install page loads it too
+	e.GET("/theme.js", getThemeScript)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
 	getAndHead(e, "/apps/:id/tweaks", appResolver(getTweaks), appResolver(getEmpty200App))
@@ -387,6 +389,10 @@ func setBuilderSecrets(builder builders.Builder) error {
 		"SECRET_KEY": config.Current.BuilderKey,
 		"SECRET_URL": config.Current.ServerUrl,
 	})
+}
+
+func getThemeScript(c echo.Context) error {
+	return c.Blob(200, "text/javascript; charset=utf-8", assets.ThemeJs)
 }
 
 func getFavIcon(c echo.Context) error {

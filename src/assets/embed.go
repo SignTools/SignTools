@@ -21,6 +21,9 @@ var RenameHtml string
 //go:embed manifest.xml
 var ManifestPlist string
 
+//go:embed theme.js
+var ThemeJs []byte
+
 //go:embed favicon.png
 var favIconFS embed.FS
 
