@@ -12,6 +12,7 @@ var (
 	appsPath     string
 	profilesPath string
 	uploadsPath  string
+	tweaksPath   string
 )
 
 type ReadonlyFile interface {
@@ -24,12 +25,14 @@ var Apps = newAppResolver()
 var Profiles = newProfileResolver()
 var Jobs = newJobResolver()
 var Uploads = newUploadResolver()
+var Tweaks = newTweakResolver()
 
 func Load() {
 	appsPath = filepath.Join(config.Current.SaveDir, "apps")
 	profilesPath = filepath.Join(config.Current.SaveDir, "profiles")
 	uploadsPath = filepath.Join(config.Current.SaveDir, "uploads")
-	requiredPaths := []string{appsPath, profilesPath, uploadsPath}
+	tweaksPath = filepath.Join(config.Current.SaveDir, "tweaks")
+	requiredPaths := []string{appsPath, profilesPath, uploadsPath, tweaksPath}
 	for _, path := range requiredPaths {
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			log.Fatal().Err(err).Msg("mkdir required path")
@@ -43,6 +46,9 @@ func Load() {
 	}
 	if err := Uploads.refresh(); err != nil {
 		log.Fatal().Err(err).Msg("refresh uploads")
+	}
+	if err := Tweaks.refresh(); err != nil {
+		log.Fatal().Err(err).Msg("refresh tweaks")
 	}
 }
 

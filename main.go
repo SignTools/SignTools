@@ -58,6 +58,7 @@ var formNames = assets.FormNames{
 	FormIdPatch:         "id_patch",
 	FormIdForceOriginal: "id_force_original",
 	FormBundleName:      "bundle_name",
+	FormSavedTweakIds:   "saved_tweak_ids",
 }
 
 func main() {
@@ -160,6 +161,12 @@ func serve(host string, port uint64) {
 	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
+	e.GET("/tweaks", func(c echo.Context) error { return c.Redirect(302, "/#tweaks") }, basicAuth)
+	e.POST("/tweaks", uploadTweaks, basicAuth)
+	e.GET("/tweaks/:id/download", tweakResolver(downloadTweak), basicAuth)
+	e.GET("/tweaks/:id/delete", tweakResolver(deleteTweak), basicAuth)
+	e.GET("/tweaks/:id/rename", tweakResolver(renderRenameTweak), basicAuth)
+	e.POST("/tweaks/:id/rename", tweakResolver(renameTweak), basicAuth)
 	getAndHead(e, "/jobs", getLastJob, getEmpty200, workflowKeyAuth)
 	e.GET("/jobs/:id/2fa", jobResolver(get2FA), workflowKeyAuth)
 	e.POST("/jobs/:id/signed", jobResolver(uploadSignedApp), workflowKeyAuth)
@@ -334,7 +341,11 @@ func renderRenameApp(c echo.Context, app storage.App) error {
 	if err != nil {
 		return err
 	}
-	data := assets.RenameData{AppName: appName}
+	data := assets.RenameData{Kind: "App", Name: appName, BackUrl: "/"}
+	return renderRename(c, data)
+}
+
+func renderRename(c echo.Context, data assets.RenameData) error {
 	t, err := htmlTemplate.New("").Parse(assets.RenameHtml)
 	if err != nil {
 		return err
@@ -417,6 +428,17 @@ func appResolver(handler func(echo.Context, storage.App) error) func(c echo.Cont
 			return c.NoContent(404)
 		}
 		return handler(c, app)
+	}
+}
+
+func tweakResolver(handler func(echo.Context, storage.Tweak) error) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		id := c.Param("id")
+		tweak, ok := storage.Tweaks.Get(id)
+		if !ok {
+			return c.NoContent(404)
+		}
+		return handler(c, tweak)
 	}
 }
 
@@ -673,12 +695,32 @@ func uploadUnsignedApp(c echo.Context) error {
 			strings.TrimSuffix(fileName, filepath.Ext(fileName)), bundleName, filepath.Ext(fileName))
 	}
 	tweakMap := map[string]io.Reader{}
+	formParams, err := c.FormParams()
+	if err != nil {
+		return err
+	}
+	for _, savedId := range formParams[formNames.FormSavedTweakIds] {
+		tweak, ok := storage.Tweaks.Get(savedId)
+		if !ok {
+			return errors.New("no saved tweak with id " + savedId)
+		}
+		name, err := tweak.GetString(storage.TweakName)
+		if err != nil {
+			return err
+		}
+		readonlyFile, err := tweak.GetFile(storage.TweakFile)
+		if err != nil {
+			return err
+		}
+		defer readonlyFile.Close()
+		tweakMap[name] = readonlyFile
+	}
 	tweakIds := c.FormValue(formNames.FormTweakIds)
 	if tweakIds != "" {
 		for tweakId := range strings.SplitSeq(tweakIds, ",") {
 			tweak, ok := storage.Uploads.Get(tweakId)
 			if !ok {
-				return errors.New("no tweak upload file with id " + fileId)
+				return errors.New("no tweak upload file with id " + tweakId)
 			}
 			defer storage.Uploads.Delete(tweakId)
 			readonlyFile, err := tweak.GetData()
@@ -833,6 +875,10 @@ func renderIndex(c echo.Context) error {
 			TweakCount:          tweakCount,
 		})
 	}
+	data.Tweaks, err = getTweakViews()
+	if err != nil {
+		return err
+	}
 	profiles, err := storage.Profiles.GetAll()
 	if err != nil {
 		return err
@@ -872,4 +918,139 @@ func renderIndex(c echo.Context) error {
 		return err
 	}
 	return c.HTMLBlob(200, result.Bytes())
+}
+
+// saveUploadAsTweak moves a completed tus upload into the tweak library.
+func saveUploadAsTweak(uploadId string) (storage.Tweak, error) {
+	upload, ok := storage.Uploads.Get(uploadId)
+	if !ok {
+		return nil, errors.New("no tweak upload file with id " + uploadId)
+	}
+	defer storage.Uploads.Delete(uploadId)
+	info, err := upload.GetInfo()
+	if err != nil {
+		return nil, err
+	}
+	data, err := upload.GetData()
+	if err != nil {
+		return nil, err
+	}
+	defer data.Close()
+	return storage.Tweaks.New(data, info.MetaData["filename"])
+}
+
+func uploadTweaks(c echo.Context) error {
+	tweakIds := c.FormValue(formNames.FormTweakIds)
+	if tweakIds != "" {
+		for tweakId := range strings.SplitSeq(tweakIds, ",") {
+			if _, err := saveUploadAsTweak(tweakId); err != nil {
+				return err
+			}
+		}
+	}
+	return c.Redirect(302, "/#tweaks")
+}
+
+func downloadTweak(c echo.Context, tweak storage.Tweak) error {
+	name, err := tweak.GetString(storage.TweakName)
+	if err != nil {
+		return err
+	}
+	file, err := tweak.GetFile(storage.TweakFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	modTime, err := tweak.GetModTime()
+	if err != nil {
+		return err
+	}
+	c.Response().Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, name))
+	http.ServeContent(c.Response(), c.Request(), name, modTime, file)
+	return nil
+}
+
+func renderRenameTweak(c echo.Context, tweak storage.Tweak) error {
+	name, err := tweak.GetString(storage.TweakName)
+	if err != nil {
+		return err
+	}
+	data := assets.RenameData{Kind: "Tweak", Name: name, BackUrl: "/#tweaks"}
+	if ext := filepath.Ext(name); ext != "" {
+		data.Hint = fmt.Sprintf("The extension (%s) is kept so the tweak is still injected correctly.", ext)
+	}
+	return renderRename(c, data)
+}
+
+// renameTweak renames a library tweak, keeping its original file extension since
+// the signer uses it to decide how to inject the tweak.
+func renameTweak(c echo.Context, tweak storage.Tweak) error {
+	oldName, err := tweak.GetString(storage.TweakName)
+	if err != nil {
+		return err
+	}
+	newName, err := storage.SanitizeTweakName(c.FormValue("name"))
+	if err != nil {
+		return c.String(400, err.Error())
+	}
+	if ext := filepath.Ext(oldName); !strings.EqualFold(filepath.Ext(newName), ext) {
+		newName += ext
+	}
+	if err := tweak.SetString(storage.TweakName, newName); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/#tweaks")
+}
+
+func deleteTweak(c echo.Context, tweak storage.Tweak) error {
+	if err := storage.Tweaks.Delete(tweak.GetId()); err != nil {
+		return err
+	}
+	return c.Redirect(302, "/#tweaks")
+}
+
+func getTweakViews() ([]assets.Tweak, error) {
+	tweaks, err := storage.Tweaks.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	var views []assets.Tweak
+	for _, tweak := range tweaks {
+		name, err := tweak.GetString(storage.TweakName)
+		if err != nil {
+			log.Err(err).Str("tweak_id", tweak.GetId()).Msg("get tweak name")
+			continue
+		}
+		size := ""
+		if stat, err := tweak.Stat(storage.TweakFile); err == nil {
+			size = formatSize(stat.Size())
+		}
+		modTime := ""
+		if t, err := tweak.GetModTime(); err == nil {
+			modTime = t.Format(time.RFC822)
+		}
+		views = append(views, assets.Tweak{
+			Id:          tweak.GetId(),
+			Name:        name,
+			Size:        size,
+			ModTime:     modTime,
+			DownloadUrl: path.Join("/tweaks", tweak.GetId(), "download"),
+			DeleteUrl:   path.Join("/tweaks", tweak.GetId(), "delete"),
+			RenameUrl:   path.Join("/tweaks", tweak.GetId(), "rename"),
+		})
+	}
+	return views, nil
+}
+
+func formatSize(size int64) string {
+	const unit = 1024
+	if size < unit {
+		return fmt.Sprintf("%d B", size)
+	}
+	div, exp := int64(unit), 0
+	for n := size / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(size)/float64(div), "KMGTPE"[exp])
 }

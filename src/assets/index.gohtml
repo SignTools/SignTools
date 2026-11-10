@@ -46,19 +46,79 @@
         cursor: pointer;
         user-select: none;
       }
+      .view-toggle {
+        position: relative;
+        display: inline-flex;
+        padding: 3px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50rem;
+        user-select: none;
+      }
+      .view-toggle-slider {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 3px;
+        width: calc(50% - 3px);
+        border-radius: 50rem;
+        background: #fff;
+        transition: transform 0.2s ease;
+      }
+      .view-toggle[data-view="tweaks"] .view-toggle-slider {
+        transform: translateX(100%);
+      }
+      .view-toggle button {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 0;
+        min-width: 5.5rem;
+        padding: 0.25rem 0.75rem;
+        border: 0;
+        border-radius: 50rem;
+        background: transparent;
+        color: #fff;
+        transition: color 0.2s ease;
+      }
+      .view-toggle button.active {
+        color: #212529;
+      }
+      @media (max-width: 767.98px) {
+        /* phones: slider gets its own full-width row under the title/actions */
+        .navbar > .container {
+          flex-wrap: wrap;
+          row-gap: 0.75rem;
+        }
+        .view-toggle {
+          order: 1;
+          width: 100%;
+          margin-right: 0 !important;
+        }
+      }
+      .view-toggle button:focus-visible {
+        outline: 2px solid #86b7fe;
+        outline-offset: 1px;
+      }
     </style>
   </head>
   <body>
     <nav class="navbar navbar-expand navbar-dark bg-dark py-3">
       <div class="container px-4">
-        <ol class="breadcrumb bg-transparent py-2 my-0 me-auto text-white">
+        <ol class="breadcrumb bg-transparent py-2 my-0 me-3 text-white">
           <li class="breadcrumb-item"><a href="/">SignTools</a></li>
         </ol>
-        <div class="form-check form-switch ms-auto me-4">
+        <div class="view-toggle me-auto" id="viewToggle" data-view="apps" role="tablist">
+          <span class="view-toggle-slider"></span>
+          <button type="button" role="tab" data-view="apps" class="active" aria-selected="true">Apps</button>
+          <button type="button" role="tab" data-view="tweaks" aria-selected="false">Tweaks</button>
+        </div>
+        <div class="form-check form-switch ms-auto me-3 me-sm-4">
           <input class="form-check-input" type="checkbox" id="chkAutoRefresh" />
           <label class="form-check-label text-white" for="chkAutoRefresh" id="lblAutoRefresh">Refresh</label>
         </div>
-        <a id="btnUploadApp" class="btn btn-outline-light my-0"> Upload App </a>
+        <a id="btnUploadApp" class="btn btn-outline-light my-0">Upload<span class="d-none d-sm-inline"> App</span></a>
+        <a id="btnUploadTweaks" class="btn btn-outline-light my-0" hidden
+          >Upload<span class="d-none d-sm-inline"> Tweaks</span></a
+        >
       </div>
     </nav>
     <div class="modal" id="uploadModal" tabindex="-1">
@@ -345,6 +405,52 @@
                       title="Injects tweaks into the app. Does not always work."
                       >?</a
                     >
+                    {{if .Tweaks}}
+                    <div class="dropdown mb-2" id="savedTweaksDropdown">
+                      <button
+                        class="form-select text-start text-truncate"
+                        type="button"
+                        id="savedTweaksButton"
+                        data-bs-toggle="dropdown"
+                        data-bs-auto-close="outside"
+                        aria-expanded="false"
+                      >
+                        Select saved tweaks...
+                      </button>
+                      <div class="dropdown-menu w-100 p-0" aria-labelledby="savedTweaksButton">
+                        <div class="p-2 border-bottom">
+                          <input
+                            type="search"
+                            class="form-control form-control-sm"
+                            id="savedTweaksSearch"
+                            placeholder="Search tweaks"
+                            autocomplete="off"
+                          />
+                        </div>
+                        <div style="max-height: 12rem; overflow-y: auto" class="py-1">
+                          {{range $_, $tweak := .Tweaks}}
+                          <label class="dropdown-item d-flex align-items-center savedTweakOption">
+                            <input
+                              class="form-check-input mt-0 me-2 flex-shrink-0"
+                              type="checkbox"
+                              name="{{$.FormSavedTweakIds}}"
+                              value="{{$tweak.Id}}"
+                            />
+                            <span class="savedTweakName text-truncate" title="{{$tweak.Name}}">{{$tweak.Name}}</span>
+                          </label>
+                          {{end}}
+                          <div class="dropdown-item-text text-muted small" id="savedTweaksNoMatch" hidden>
+                            No matching tweaks
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {{else}}
+                    <div class="form-text mb-2">
+                      No saved tweaks. Add some in the
+                      <a href="#tweaks" id="linkTweaksView" style="color: blue">Tweaks</a> view.
+                    </div>
+                    {{end}}
                     <input class="form-control" type="file" id="formTweaksSelect" multiple />
                     <input
                       class="form-control"
@@ -373,11 +479,80 @@
         </div>
       </div>
     </div>
+    <div class="modal" id="tweakModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="tweakForm" action="/tweaks" method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+              <h5 class="modal-title">Upload Tweak</h5>
+              <button id="btnTweakModalClose" type="button" class="btn-close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <label for="tweakSelect" class="form-label">Tweak file</label>
+              <input class="form-control" type="file" id="tweakSelect" multiple required />
+              <input type="text" id="tweakIds" name="{{.FormTweakIds}}" hidden readonly />
+            </div>
+            <div class="modal-footer">
+              <div
+                id="tweakSpinner"
+                class="spinner-border text-primary me-3"
+                role="status"
+                style="display: none"
+              ></div>
+              <button id="tweakSubmit" type="button" class="btn btn-primary">Submit</button>
+              <div class="TweakProgressBar"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     <div class="container py-4 py-xxl-5 py-xl-5 px-4">
       <div class="row col-md-8 col-l-7 col-xl-6 px-0 mx-auto pb-3">
         <div class="input-group px-0">
           <input type="text" id="inputSearchFilter" class="form-control" placeholder="Search app name" autofocus />
           <button class="btn btn-outline-secondary" id="btnSearchClear">Clear</button>
+        </div>
+      </div>
+      <div id="viewTweaks" hidden>
+        {{if not .Tweaks}}
+        <p class="text-muted text-center py-4">
+          No saved tweaks yet. Use <b>Upload Tweaks</b> to add some, then pick them in the Advanced tab when signing.
+        </p>
+        {{end}}
+        <div class="row" id="masonryTweaksRow">
+          <div class="col-sm-6 col-lg-4 col-xl-3 p-2" id="tweakSizeItem"></div>
+          {{range $_, $tweak := .Tweaks}}
+          <div class="col-sm-6 col-lg-4 col-xl-3 p-2 tweakItem">
+            <div class="card text-white bg-dark">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col pe-0">
+                    <h5 class="card-title" style="word-break: break-all">{{$tweak.Name}}</h5>
+                  </div>
+                  <div class="col-auto">
+                    <div class="dropdown">
+                      <a class="bi bi-three-dots-vertical py-1 px-2" data-bs-toggle="dropdown"></a>
+                      <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{{$tweak.RenameUrl}}">Rename...</a>
+                        <a class="dropdown-item tweakDelete" href="{{$tweak.DeleteUrl}}" data-name="{{$tweak.Name}}"
+                          >Delete</a
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p class="card-text mb-2">
+                  Tweak <br />
+                  {{$tweak.Size}} <br />
+                  {{$tweak.ModTime}}
+                </p>
+                <div class="d-flex flex-wrap justify-content-end">
+                  <a class="btn btn-outline-light mt-2 ms-2" href="{{$tweak.DownloadUrl}}">Download</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {{end}}
         </div>
       </div>
       <div class="row" id="masonryRow">
@@ -493,6 +668,146 @@
       columnWidth: "#appSizeItem",
     });
     const navMain = new bootstrap.Tab(document.getElementById("nav-main-tab"));
+    const viewToggle = document.getElementById("viewToggle");
+    const viewTweaks = document.getElementById("viewTweaks");
+    const masonryTweaks = new Masonry(document.getElementById("masonryTweaksRow"), {
+      percentPosition: true,
+      horizontalOrder: true,
+      itemSelector: ".tweakItem",
+      columnWidth: "#tweakSizeItem",
+    });
+    const btnUploadTweaks = document.getElementById("btnUploadTweaks");
+    const tweakSelect = document.getElementById("tweakSelect");
+    const tweakIds = document.getElementById("tweakIds");
+    const tweakForm = document.getElementById("tweakForm");
+    const tweakSubmit = document.getElementById("tweakSubmit");
+    const tweakSpinner = document.getElementById("tweakSpinner");
+    const btnTweakModalClose = document.getElementById("btnTweakModalClose");
+    const tweakModal = new bootstrap.Modal(document.getElementById("tweakModal"), {
+      backdrop: "static",
+      keyboard: false,
+    });
+
+    function setView(view) {
+      if (view !== "tweaks") view = "apps";
+      viewToggle.dataset.view = view;
+      for (let btn of viewToggle.querySelectorAll("button")) {
+        const active = btn.dataset.view === view;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active);
+      }
+      const isTweaks = view === "tweaks";
+      masonryRow.hidden = isTweaks;
+      viewTweaks.hidden = !isTweaks;
+      btnUploadApp.hidden = isTweaks;
+      btnUploadTweaks.hidden = !isTweaks;
+      inputSearchFilter.placeholder = isTweaks ? "Search tweak name" : "Search app name";
+      history.replaceState(null, "", isTweaks ? "#tweaks" : location.pathname + location.search);
+      // the newly shown grid was laid out while hidden (zero width), so snap it into
+      // place instead of animating every card from the corner
+      applySearchFilter(true);
+    }
+    for (let btn of viewToggle.querySelectorAll("button")) {
+      btn.addEventListener("click", () => setView(btn.dataset.view));
+    }
+    window.addEventListener("hashchange", () => setView(location.hash.slice(1)));
+    const linkTweaksView = document.getElementById("linkTweaksView");
+    if (linkTweaksView) {
+      linkTweaksView.addEventListener("click", () => modal.hide());
+    }
+
+    const savedTweaksDropdown = document.getElementById("savedTweaksDropdown");
+    if (savedTweaksDropdown) {
+      const button = document.getElementById("savedTweaksButton");
+      const search = document.getElementById("savedTweaksSearch");
+      const noMatch = document.getElementById("savedTweaksNoMatch");
+      const options = [...savedTweaksDropdown.getElementsByClassName("savedTweakOption")];
+      const updateSummary = () => {
+        const names = options
+          .filter((o) => o.querySelector("input").checked)
+          .map((o) => o.querySelector(".savedTweakName").textContent.trim());
+        if (names.length === 0) button.textContent = "Select saved tweaks...";
+        else if (names.length === 1) button.textContent = names[0];
+        else button.textContent = `${names.length} files`;
+        button.title = names.join("\n");
+      };
+      for (let o of options) o.querySelector("input").addEventListener("change", updateSummary);
+      search.addEventListener("input", () => {
+        const q = search.value.toLowerCase();
+        let visible = 0;
+        for (let o of options) {
+          const match = o.querySelector(".savedTweakName").textContent.toLowerCase().includes(q);
+          o.classList.toggle("d-none", !match);
+          if (match) visible++;
+        }
+        noMatch.hidden = visible > 0;
+      });
+      // don't submit the form on Enter in the search box
+      search.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") e.preventDefault();
+      });
+      savedTweaksDropdown.addEventListener("shown.bs.dropdown", () => search.focus());
+      savedTweaksDropdown.addEventListener("hidden.bs.dropdown", () => {
+        search.value = "";
+        search.dispatchEvent(new Event("input"));
+      });
+    }
+
+    const tweakUppy = new Uppy.Core({ id: "tweaks", autoProceed: false });
+    tweakUppy.use(Uppy.ProgressBar, {
+      target: ".TweakProgressBar",
+      fixed: true,
+      hideAfterFinish: false,
+    });
+    tweakUppy.use(Uppy.Tus, {
+      endpoint: "/tus/",
+      parallelUploads: 6,
+    });
+    function setTweakSubmitting(submitting) {
+      tweakSubmit.disabled = submitting;
+      btnTweakModalClose.disabled = submitting;
+      tweakSpinner.style.display = submitting ? "inline-block" : "none";
+    }
+    btnUploadTweaks.addEventListener("click", () => {
+      tweakUppy.getFiles().forEach((f) => tweakUppy.removeFile(f.id));
+      tweakForm.reset();
+      tweakModal.show();
+    });
+    btnTweakModalClose.addEventListener("click", () => tweakModal.hide());
+    tweakSelect.addEventListener("change", (event) => {
+      tweakUppy.getFiles().forEach((f) => tweakUppy.removeFile(f.id));
+      for (let file of event.target.files) {
+        try {
+          tweakUppy.addFile({ name: file.name, type: file.type, data: file });
+        } catch (err) {
+          console.error(err);
+          alert(err);
+        }
+      }
+    });
+    tweakSubmit.addEventListener("click", () => {
+      if (!tweakForm.reportValidity()) return;
+      setTweakSubmitting(true);
+      tweakUppy.upload().then((result) => {
+        if (result.failed.length > 0) {
+          for (let file of result.failed) {
+            console.error(file.error);
+            alert(file.error);
+          }
+          setTweakSubmitting(false);
+          return;
+        }
+        tweakIds.value = result.successful.map((f) => f.uploadURL.split("/").pop()).join(",");
+        tweakForm.submit();
+      });
+    });
+    for (let item of document.getElementsByClassName("tweakDelete")) {
+      item.addEventListener("click", function (e) {
+        if (!confirm(`Delete tweak "${item.dataset.name}"?`)) {
+          e.preventDefault();
+        }
+      });
+    }
 
     const uppy = new Uppy.Core();
     uppy.use(Uppy.ProgressBar, {
@@ -635,24 +950,23 @@
       });
     });
 
-    inputSearchFilter.addEventListener("input", function () {
-      if (inputSearchFilter.value === "") {
-        for (let app of document.getElementsByClassName("appItem")) {
-          app.hidden = false;
+    function applySearchFilter(instant = false) {
+      const searchText = inputSearchFilter.value.toLowerCase();
+      const filter = (items, titleSelector) => {
+        for (let item of items) {
+          item.hidden =
+            searchText !== "" && !item.querySelector(titleSelector).textContent.toLowerCase().includes(searchText);
         }
-        masonry.layout();
-        return;
+      };
+      filter(document.getElementsByClassName("appItem"), ".card-title");
+      filter(document.getElementsByClassName("tweakItem"), ".card-title");
+      for (let m of [masonry, masonryTweaks]) {
+        m.options.layoutInstant = instant;
+        m.layout();
+        delete m.options.layoutInstant;
       }
-      let searchText = inputSearchFilter.value.toLowerCase();
-      for (let app of document.getElementsByClassName("appItem")) {
-        if (app.querySelector(".card-title").textContent.toLowerCase().includes(searchText)) {
-          app.hidden = false;
-        } else {
-          app.hidden = true;
-        }
-      }
-      masonry.layout();
-    });
+    }
+    inputSearchFilter.addEventListener("input", () => applySearchFilter());
 
     const searchClearHandler = function () {
       inputSearchFilter.value = "";
@@ -705,5 +1019,6 @@
     });
     chkAutoRefresh.checked = localStorage.getItem("autoRefresh") != null;
     checkAutoRefresh();
+    setView(location.hash.slice(1));
   </script>
 </html>

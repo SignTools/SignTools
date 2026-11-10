@@ -171,6 +171,110 @@ func TestIntegration(t *testing.T) {
 	validateManifest(t)
 }
 
+func TestTweakLibrary(t *testing.T) {
+	tweakName := "test.dylib"
+	tweakData := uuid.NewString()
+
+	// upload a tweak into the library
+	uploadId := tusUploadNamed(t, []byte(tweakData), tweakName)
+	postForm(t, "/tweaks", url.Values{formNames.FormTweakIds: {uploadId}})
+	tweaks, err := storage.Tweaks.GetAll()
+	assert.NoError(t, err)
+	assert.Len(t, tweaks, 1)
+	tweak := tweaks[0]
+	name, err := tweak.GetString(storage.TweakName)
+	assert.NoError(t, err)
+	assert.Equal(t, tweakName, name)
+	_, ok := storage.Uploads.Get(uploadId)
+	assert.False(t, ok, "tus upload should be consumed")
+
+	// download it back
+	resp, err := http.Get(config.Current.ServerUrl + "/tweaks/" + tweak.GetId() + "/download")
+	assert.NoError(t, err)
+	b, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	assert.NoError(t, err)
+	assert.EqualValues(t, tweakData, b)
+
+	// rename it; the original extension is kept when dropped or changed
+	resp, err = http.Get(config.Current.ServerUrl + "/tweaks/" + tweak.GetId() + "/rename")
+	assert.NoError(t, err)
+	resp.Body.Close()
+	assert.Equal(t, 200, resp.StatusCode)
+	postForm(t, "/tweaks/"+tweak.GetId()+"/rename", url.Values{"name": {"../renamed"}})
+	name, err = tweak.GetString(storage.TweakName)
+	assert.NoError(t, err)
+	assert.Equal(t, "renamed.dylib", name)
+	postForm(t, "/tweaks/"+tweak.GetId()+"/rename", url.Values{"name": {"renamed.deb"}})
+	name, err = tweak.GetString(storage.TweakName)
+	assert.NoError(t, err)
+	assert.Equal(t, "renamed.deb.dylib", name)
+	postForm(t, "/tweaks/"+tweak.GetId()+"/rename", url.Values{"name": {"renamed.dylib"}})
+	tweakName = "renamed.dylib"
+
+	// sign an app with the saved tweak
+	appsBefore, err := storage.Apps.GetAll()
+	assert.NoError(t, err)
+	fileId := tusUpload(t, []byte(unsignedData))
+	postForm(t, "/apps", url.Values{
+		formNames.FormFileId:        {fileId},
+		formNames.FormProfileId:     {profileId},
+		formNames.FormBuilderId:     {"selfhosted"},
+		formNames.FormSavedTweakIds: {tweak.GetId()},
+	})
+	appsAfter, err := storage.Apps.GetAll()
+	assert.NoError(t, err)
+	assert.Len(t, appsAfter, len(appsBefore)+1)
+	app := appsAfter[0] // newest first
+	defer func() {
+		if job, ok := storage.Jobs.GetByAppId(app.GetId()); ok {
+			storage.Jobs.DeleteById(job.Id)
+		}
+		assert.NoError(t, storage.Apps.Delete(app.GetId()))
+	}()
+	file, err := app.GetFile(storage.FSName(path.Join(string(storage.TweaksDir), tweakName)))
+	assert.NoError(t, err)
+	b, err = io.ReadAll(file)
+	file.Close()
+	assert.NoError(t, err)
+	assert.EqualValues(t, tweakData, b)
+
+	// deleting the library tweak keeps the app's copy
+	resp, err = http.Get(config.Current.ServerUrl + "/tweaks/" + tweak.GetId() + "/delete")
+	assert.NoError(t, err)
+	resp.Body.Close()
+	_, ok = storage.Tweaks.Get(tweak.GetId())
+	assert.False(t, ok)
+	_, err = app.Stat(storage.FSName(path.Join(string(storage.TweaksDir), tweakName)))
+	assert.NoError(t, err)
+}
+
+func postForm(t *testing.T, endpoint string, form url.Values) {
+	resp, err := http.PostForm(config.Current.ServerUrl+endpoint, form)
+	assert.NoError(t, err)
+	resp.Body.Close()
+	assert.NoError(t, util.Check2xxCode(resp.StatusCode))
+}
+
+func tusUploadNamed(t *testing.T, data []byte, name string) string {
+	tusClient, err := tus.NewClient(config.Current.ServerUrl+"/tus/", nil)
+	assert.NoError(t, err)
+	upload := tus.NewUploadFromBytes(data)
+	upload.Metadata["filename"] = name
+	tusUpload, err := tusClient.CreateUpload(upload)
+	assert.NoError(t, err)
+	assert.NoError(t, tusUpload.Upload())
+	// completion is delivered asynchronously via tusd's CompleteUploads channel
+	id := path.Base(tusUpload.Url())
+	for i := 0; i < 100; i++ {
+		if _, ok := storage.Uploads.Get(id); ok {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return id
+}
+
 func validateManifest(t *testing.T) {
 	apps, err := storage.Apps.GetAll()
 	assert.NoError(t, err)

@@ -32,6 +32,7 @@ By using this project, you acknowledge and agree that the developers and collabo
 - Minimalistic, mobile-friendly web interface
 - Upload unsigned apps, download signed apps
 - Inject tweaks as you are signing apps
+- Save tweaks to a library and reuse them across apps
 - Install signed apps from the website straight to your iOS device via [OTA](https://medium.com/@adrianstanecki/distributing-and-installing-non-market-ipa-application-over-the-air-ota-2e65f5ea4a46)
 - Provisioning profiles and developer accounts supported
 - Configurable signing including entitlements

@@ -57,12 +57,14 @@ type FormNames struct {
 	FormIdPatch         string
 	FormIdForceOriginal string
 	FormBundleName      string
+	FormSavedTweakIds   string
 }
 
 type IndexData struct {
 	Apps     []App
 	Profiles []Profile
 	Builders []Builder
+	Tweaks   []Tweak
 	FormNames
 }
 
@@ -73,10 +75,23 @@ type ManifestData struct {
 }
 
 type RenameData struct {
-	AppName string
+	Kind    string
+	Name    string
+	Hint    string
+	BackUrl string
 }
 
 type InstallData struct {
 	ManifestUrl string
 	AppName     string
+}
+
+type Tweak struct {
+	Id          string
+	Name        string
+	Size        string
+	ModTime     string
+	DownloadUrl string
+	DeleteUrl   string
+	RenameUrl   string
 }
