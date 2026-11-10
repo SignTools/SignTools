@@ -73,7 +73,7 @@
       .view-toggle button {
         position: relative;
         z-index: 1;
-        min-width: 5.5rem;
+        min-width: 3.5rem;
         padding: 0.25rem 0.75rem;
         border: 0;
         border-radius: 50rem;
@@ -205,8 +205,20 @@
         </ol>
         <div class="view-toggle" id="viewToggle" data-view="apps" role="tablist">
           <span class="view-toggle-slider"></span>
-          <button type="button" role="tab" data-view="apps" class="active" aria-selected="true">Apps</button>
-          <button type="button" role="tab" data-view="tweaks" aria-selected="false">Tweaks</button>
+          <button
+            type="button"
+            role="tab"
+            data-view="apps"
+            class="active"
+            aria-selected="true"
+            title="Apps"
+            aria-label="Apps"
+          >
+            <i class="bi bi-grid-fill"></i>
+          </button>
+          <button type="button" role="tab" data-view="tweaks" aria-selected="false" title="Tweaks" aria-label="Tweaks">
+            <i class="bi bi-puzzle-fill"></i>
+          </button>
         </div>
         <span
           id="liveStatus"
@@ -220,10 +232,17 @@
         <button class="btn btn-outline-light my-0 me-2" id="btnTheme" type="button">
           <i class="bi" id="themeIcon"></i>
         </button>
-        <a id="btnUploadApp" class="btn btn-outline-light my-0">Upload<span class="d-none d-sm-inline"> App</span></a>
-        <a id="btnUploadTweaks" class="btn btn-outline-light my-0" hidden
-          >Upload<span class="d-none d-sm-inline"> Tweaks</span></a
-        >
+        <a id="btnUploadApp" class="btn btn-outline-light my-0" title="Upload app" aria-label="Upload app"
+          ><i class="bi bi-upload"></i
+        ></a>
+        <a
+          id="btnUploadTweaks"
+          class="btn btn-outline-light my-0"
+          title="Upload tweak"
+          aria-label="Upload tweak"
+          hidden
+          ><i class="bi bi-upload"></i
+        ></a>
         <span class="nav-spacer nav-spacer-end d-sm-none" aria-hidden="true"></span>
       </div>
     </nav>
@@ -626,13 +645,21 @@
       <div class="row col-md-8 col-l-7 col-xl-6 px-0 mx-auto pb-3">
         <div class="input-group px-0">
           <input type="text" id="inputSearchFilter" class="form-control" placeholder="Search app name" autofocus />
-          <button class="btn btn-outline-secondary" id="btnSearchClear">Clear</button>
+          <button
+            class="btn btn-outline-secondary"
+            id="btnSearchClear"
+            type="button"
+            title="Clear search"
+            aria-label="Clear search"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
       </div>
       <div id="viewTweaks" hidden>
         <p class="text-muted text-center py-4" id="tweaksEmpty" {{if .Tweaks}}hidden{{end}}>
-          No saved tweaks yet. Use <b>Upload</b> to add some, then turn on <b>Library</b> in the Advanced tab when
-          signing to pick them.
+          No saved tweaks yet. Use the <i class="bi bi-upload"></i> button to add some, then turn on <b>Library</b> in
+          the Advanced tab when signing to pick them.
         </p>
         <div class="row" id="masonryTweaksRow">
           <div class="col-sm-6 col-lg-4 col-xl-3 p-2" id="tweakSizeItem"></div>
