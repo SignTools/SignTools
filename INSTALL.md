@@ -170,7 +170,7 @@ You have three options:
 
 ### 3b. Docker
 
-1. Use the official [Docker image](https://hub.docker.com/r/signtools/signtools)
+1. Use the official [Docker image](https://hub.docker.com/r/signtools/signtools). `latest` is the newest release; `dev` is built from every change to `master` and may be unstable
 2. Move and [mount](https://docs.docker.com/storage/volumes/) the configuration files from sections `2.1.` and `2.2.`:
    - `./signer-cfg.yml:/signer-cfg.yml`
    - `./data:/data` (or whatever you set in `save_dir`)
