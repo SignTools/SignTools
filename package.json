@@ -2,7 +2,7 @@
   "devDependencies": {
     "@types/bootstrap": "5.2.11",
     "@types/bun": "1.4.4",
-    "git-format-staged": "^4.0.1",
+    "git-format-staged": "^4.0.2",
     "husky": "^9.1.7"
   },
   "scripts": {
@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@popperjs/core": "2.11.8",
-    "@uppy/core": "6.3.0",
-    "@uppy/tus": "6.0.0",
+    "@uppy/core": "6.3.1",
+    "@uppy/tus": "6.0.1",
     "bootstrap": "5.3.8",
     "bootstrap-icons": "1.13.2",
     "masonry-layout": "4.2.2"
