@@ -38,4 +38,9 @@ for (const [pkg, pairs] of Object.entries(files)) {
   }
 }
 writeFileSync(join(outDir, "versions.json"), JSON.stringify(versions, null, 2) + "\n");
-console.log("vendored:", Object.entries(versions).map(([p, v]) => `${p}@${v}`).join(", "));
+console.log(
+  "vendored:",
+  Object.entries(versions)
+    .map(([p, v]) => `${p}@${v}`)
+    .join(", "),
+);

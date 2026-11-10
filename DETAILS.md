@@ -29,4 +29,3 @@ sequenceDiagram
     Web Service->>User: 
     User->>User: Done
 ```
-

@@ -28,6 +28,9 @@ jobs:
       - name: Install web dependencies
         run: bun install --frozen-lockfile
 
+      - name: Check formatting
+        run: bun fmt --check
+
       - name: Build web files
         run: bun run vendor
 

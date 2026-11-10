@@ -1,2 +1,2 @@
-bunx git-format-staged --formatter 'bunx prettier --stdin --stdin-filepath "{}"' '*.*html'
+bun fmt --staged
 bunx git-format-staged --formatter 'gofmt' '*.go'

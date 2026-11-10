@@ -200,6 +200,7 @@ Secure, fast, reliable, but harder to set up
 - Requires domain with valid HTTPS certificate
 - Requires manual configuration of reverse proxy with your own authentication
 - Don't protect the following endpoints:
+
   ```
   /apps/*/
   /jobs
@@ -207,6 +208,7 @@ Secure, fast, reliable, but harder to set up
   /jobs/*/tus/
   /files/*
   ```
+
   where `*` is a wildcard parameter.
 
 - Make sure the request hostname and scheme are preserved by your reverse proxy. For nginx, you need the following lines:
