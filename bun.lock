@@ -1,0 +1,20 @@
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "devDependencies": {
+        "git-format-staged": "^4.0.1",
+        "husky": "^9.1.7",
+        "prettier": "^3.7.4",
+      },
+    },
+  },
+  "packages": {
+    "git-format-staged": ["git-format-staged@4.0.2", "", { "bin": { "git-format-staged": "git-format-staged" } }, "sha512-0fHxU5ZyxeCrTL+8BWugZKxqqS2Ba6OGCdyTeZW7kQJVuLbmxWJ2eNGZTjPxVQ8FGovBZsXZCmPRD2VSOWE82g=="],
+
+    "husky": ["husky@9.1.7", "", { "bin": { "husky": "bin.js" } }, "sha512-5gs5ytaNjBrh5Ow3zrvdUUY+0VxIuWVL4i9irt6friV+BqdCfmV11CQTWMiBYWHbXhco+J1kHfTOUkePhCDvMA=="],
+
+    "prettier": ["prettier@3.9.10", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-skGHTH1Yb9QvaTC4hWnRTzEYtCpApF0UMBPz+t/0ZPzP8ihefo/btKd+QA7pUE0fEwA1SbS/NmhyEcstdXOIdA=="],
+  }
+}

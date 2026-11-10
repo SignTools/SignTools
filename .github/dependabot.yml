@@ -27,7 +27,7 @@ updates:
       include: "scope"
     open-pull-requests-limit: 20
 
-  - package-ecosystem: "npm"
+  - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "daily"

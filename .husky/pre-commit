@@ -1,2 +1,2 @@
-npx git-format-staged --formatter 'npx prettier --stdin --stdin-filepath "{}"' '*.*html'
-npx git-format-staged --formatter 'gofmt' '*.go'
+bunx git-format-staged --formatter 'bunx prettier --stdin --stdin-filepath "{}"' '*.*html'
+bunx git-format-staged --formatter 'gofmt' '*.go'
