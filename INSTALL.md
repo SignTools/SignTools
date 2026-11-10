@@ -178,7 +178,7 @@ You have three options:
 ### 3c. From source
 
 1. Install [Go](https://go.dev/dl/) and [Bun](https://bun.sh/)
-2. Build the web UI files, which are embedded into the binary: `bun install --frozen-lockfile && bun run vendor`
+2. Build the web UI files, which are embedded into the binary: `bun install --frozen-lockfile && bun run build`
 3. Build the binary: `go build`
 4. Continue as in `3a.`, with the binary you just built
 

@@ -2,13 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script src="/theme.js"></script>
+    <script src="/js/theme.js"></script>
     <title>SignTools | 2FA</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" />
-    <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="/vendor/masonry-layout/masonry.pkgd.min.js" async></script>
     <style>
       a,
       a:hover {
@@ -67,30 +65,5 @@
     </div>
   </body>
 
-  <script>
-    const modalElem = document.getElementById("uploadModal");
-    const formToken = document.getElementById("formToken");
-    let form = document.getElementById("uploadForm");
-    const modal = new bootstrap.Modal(modalElem, {
-      backdrop: "static",
-      keyboard: false,
-    });
-
-    form.addEventListener(
-      "submit",
-      function (event) {
-        formToken.classList.remove("is-invalid");
-        formToken.classList.remove("is-valid");
-        if (formToken.value.length !== 6) {
-          event.preventDefault();
-          event.stopPropagation();
-          formToken.classList.add("is-invalid");
-        }
-      },
-      false,
-    );
-
-    modal.show();
-    formToken.focus();
-  </script>
+  <script type="module" src="/js/twofa.js"></script>
 </html>

@@ -155,9 +155,9 @@ func serve(host string, port uint64) {
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/events", streamEvents, basicAuth)
 	e.GET("/favicon.png", getFavIcon, basicAuth)
-	// no auth: the install page loads it too
-	e.GET("/theme.js", getThemeScript)
-	e.GET("/vendor/*", vendorHandler())
+	// no auth: the install page loads these too
+	e.GET("/js/*", staticHandler("js"))
+	e.GET("/vendor/*", staticHandler("vendor"))
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
 	getAndHead(e, "/apps/:id/tweaks", appResolver(getTweaks), appResolver(getEmpty200App))
@@ -395,11 +395,11 @@ func setBuilderSecrets(builder builders.Builder) error {
 	})
 }
 
-// vendorHandler uses content-hash ETags, since embedded files have no modification time.
-func vendorHandler() echo.HandlerFunc {
-	files, err := fs.Sub(assets.VendorFS, "vendor")
+// staticHandler uses content-hash ETags, since embedded files have no modification time.
+func staticHandler(dir string) echo.HandlerFunc {
+	files, err := fs.Sub(assets.StaticFS, dir)
 	if err != nil {
-		log.Fatal().Err(err).Msg("vendor fs")
+		log.Fatal().Err(err).Str("dir", dir).Msg("static fs")
 	}
 	etags := map[string]string{}
 	if err := fs.WalkDir(files, ".", func(name string, d fs.DirEntry, err error) error {
@@ -414,7 +414,7 @@ func vendorHandler() echo.HandlerFunc {
 		etags[name] = `"` + hex.EncodeToString(sum[:8]) + `"`
 		return nil
 	}); err != nil {
-		log.Fatal().Err(err).Msg("hash vendor files")
+		log.Fatal().Err(err).Str("dir", dir).Msg("hash static files")
 	}
 	return func(c echo.Context) error {
 		name := c.Param("*")
@@ -432,10 +432,6 @@ func vendorHandler() echo.HandlerFunc {
 		http.ServeContent(c.Response(), c.Request(), name, time.Time{}, file.(io.ReadSeeker))
 		return nil
 	}
-}
-
-func getThemeScript(c echo.Context) error {
-	return c.Blob(200, "text/javascript; charset=utf-8", assets.ThemeJs)
 }
 
 func getFavIcon(c echo.Context) error {

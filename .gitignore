@@ -2,7 +2,8 @@
 /certs/
 /signer-cfg*.yml
 
-# built by `bun run vendor`
+# built by `bun run build`
+/src/assets/js/
 /src/assets/vendor/
 .DS_Store
 

@@ -5,12 +5,14 @@ WORKDIR /src
 COPY package.json bun.lock bunfig.toml ./
 RUN bun install --frozen-lockfile --ignore-scripts
 COPY scripts scripts
-RUN bun run vendor
+COPY src/web src/web
+RUN bun run build
 
 FROM golang:1.26.5-alpine AS builder
 
 WORKDIR /src
 COPY . .
+COPY --from=web /src/src/assets/js src/assets/js
 COPY --from=web /src/src/assets/vendor src/assets/vendor
 
 RUN apk add --no-cache git && \

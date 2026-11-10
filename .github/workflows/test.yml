@@ -31,8 +31,11 @@ jobs:
       - name: Check formatting
         run: bun fmt --check
 
+      - name: Type check
+        run: bun check
+
       - name: Build web files
-        run: bun run vendor
+        run: bun run build
 
       - name: Fetch Go version
         run: |

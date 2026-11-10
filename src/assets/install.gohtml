@@ -2,12 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script src="/theme.js"></script>
+    <script src="/js/theme.js"></script>
     <title>SignTools | Install</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" />
-    <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
   </head>
   <body>
     <div class="alert alert-success" role="alert">
@@ -17,8 +16,6 @@
       <p class="mb-0">Feel free to close this page or go back when you are done.</p>
     </div>
     <div id="manifest" href="itms-services://?action=download-manifest&url={{.ManifestUrl}}"></div>
-    <script>
-      window.location.href = document.getElementById("manifest").getAttribute("href");
-    </script>
+    <script type="module" src="/js/install.js"></script>
   </body>
 </html>

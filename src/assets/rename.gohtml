@@ -2,13 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script src="/theme.js"></script>
+    <script src="/js/theme.js"></script>
     <title>SignTools | Rename {{.Kind}}</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/vendor/bootstrap/bootstrap.min.css" />
-    <script src="/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="/vendor/masonry-layout/masonry.pkgd.min.js" async></script>
     <style>
       a,
       a:hover {
@@ -56,15 +54,5 @@
     </div>
   </body>
 
-  <script>
-    const modalElem = document.getElementById("uploadModal");
-    const formName = document.getElementById("formName");
-
-    const modal = new bootstrap.Modal(modalElem, {
-      backdrop: "static",
-      keyboard: false,
-    });
-    modal.show();
-    formName.focus();
-  </script>
+  <script type="module" src="/js/rename.js"></script>
 </html>

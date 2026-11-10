@@ -1,7 +1,7 @@
 before:
   hooks:
     - bun install --frozen-lockfile
-    - bun run vendor
+    - bun run build
 builds:
   - env:
       - CGO_ENABLED=0

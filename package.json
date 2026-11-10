@@ -1,11 +1,13 @@
 {
   "devDependencies": {
+    "@types/bootstrap": "5.2.11",
+    "@types/bun": "1.4.4",
     "git-format-staged": "^4.0.1",
     "husky": "^9.1.7"
   },
   "scripts": {
     "prepare": "husky",
-    "vendor": "bun scripts/vendor.mjs"
+    "build": "bun scripts/build.ts"
   },
   "prettier": {
     "overrides": [
@@ -19,9 +21,11 @@
     "printWidth": 119
   },
   "dependencies": {
+    "@popperjs/core": "2.11.8",
+    "@uppy/core": "6.3.0",
+    "@uppy/tus": "6.0.0",
     "bootstrap": "5.3.8",
     "bootstrap-icons": "1.13.2",
-    "masonry-layout": "4.2.2",
-    "uppy": "6.0.5"
+    "masonry-layout": "4.2.2"
   }
 }
