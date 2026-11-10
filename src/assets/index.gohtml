@@ -156,6 +156,20 @@
         white-space: pre-line;
         text-align: left;
       }
+      .card-footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      .card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-left: auto;
+      }
       .live-status {
         display: inline-flex;
         align-items: center;
@@ -689,11 +703,19 @@
                 </div>
                 <p class="card-text mb-2">
                   Tweak <br />
-                  {{$tweak.Size}} <br />
-                  {{$tweak.ModTime}}
+                  {{$tweak.Size}}
                 </p>
-                <div class="d-flex flex-wrap justify-content-end">
-                  <a class="btn btn-outline-light mt-2 ms-2" href="{{$tweak.DownloadUrl}}">Download</a>
+                <div class="card-footer-row">
+                  <span>{{$tweak.ModTime}}</span>
+                  <div class="card-actions">
+                    <a
+                      class="btn btn-outline-light"
+                      href="{{$tweak.DownloadUrl}}"
+                      title="Download"
+                      aria-label="Download"
+                      ><i class="bi bi-download"></i
+                    ></a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -747,34 +769,48 @@
                 {{end}} {{if eq $app.Status 1 }} {{$app.BundleId}} <br />
                 {{end}} {{$app.ProfileName}} <br />
                 {{if eq $app.Status 0 }} Processing {{else if eq $app.Status 1 }} Signed {{else if eq $app.Status 2 }}
-                Failed {{else if eq $app.Status 3 }} Waiting {{end}} <br />
-                {{$app.ModTime}}
+                Failed {{else if eq $app.Status 3 }} Waiting {{end}}
               </p>
-              <div class="d-flex flex-wrap justify-content-end">
-                {{if eq $app.Status 1 }}
-                <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.InstallUrl}}">Install</a>
-                {{end}} {{if ne $app.Status 1 }}
-                <a
-                  class="btn btn-outline-light mt-2 ms-2 {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
-                  href="{{$app.WorkflowUrl}}"
-                  >Status</a
-                >
-                {{end}} {{if or (eq $app.Status 0) (eq $app.Status 3)}}
-                <a class="btn btn-outline-light mt-2 ms-2" href="{{$app.TwoFactorUrl}}">Submit 2FA</a>
-                {{end}} {{if or (eq $app.Status 1) (eq $app.Status 2)}}
-                <div class="dropdown">
-                  <a class="btn btn-outline-light mt-2 ms-2 dropdown-toggle" data-bs-toggle="dropdown">Download</a>
-                  <ul class="dropdown-menu">
-                    {{if eq $app.Status 1 }}
-                    <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
-                    {{end}}
-                    <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
-                    {{if gt $app.TweakCount 0}}
-                    <li><a class="dropdown-item" href="{{$app.DownloadTweaksUrl}}">Tweaks</a></li>
-                    {{end}}
-                  </ul>
+              <div class="card-footer-row">
+                <span>{{$app.ModTime}}</span>
+                <div class="card-actions">
+                  {{if eq $app.Status 1 }}
+                  <a class="btn btn-outline-light" href="{{$app.InstallUrl}}">Install</a>
+                  {{end}} {{if ne $app.Status 1 }}
+                  <a
+                    class="btn btn-outline-light {{if lt (len $app.WorkflowUrl) 1}}disabled{{end}}"
+                    href="{{$app.WorkflowUrl}}"
+                    >Status</a
+                  >
+                  {{end}} {{if or (eq $app.Status 0) (eq $app.Status 3)}}
+                  <a
+                    class="btn btn-outline-light"
+                    href="{{$app.TwoFactorUrl}}"
+                    title="Submit 2FA"
+                    aria-label="Submit 2FA"
+                    ><i class="bi bi-key"></i
+                  ></a>
+                  {{end}} {{if or (eq $app.Status 1) (eq $app.Status 2)}}
+                  <div class="dropdown">
+                    <a
+                      class="btn btn-outline-light dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                      title="Download"
+                      aria-label="Download"
+                      ><i class="bi bi-download"></i
+                    ></a>
+                    <ul class="dropdown-menu">
+                      {{if eq $app.Status 1 }}
+                      <li><a class="dropdown-item" href="{{$app.DownloadSignedUrl}}">Signed</a></li>
+                      {{end}}
+                      <li><a class="dropdown-item" href="{{$app.DownloadUnsignedUrl}}">Original</a></li>
+                      {{if gt $app.TweakCount 0}}
+                      <li><a class="dropdown-item" href="{{$app.DownloadTweaksUrl}}">Tweaks</a></li>
+                      {{end}}
+                    </ul>
+                  </div>
+                  {{end}}
                 </div>
-                {{end}}
               </div>
             </div>
           </div>
