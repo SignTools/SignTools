@@ -479,17 +479,26 @@
                     </div>
                   </div>
                   <div class="mb-0">
-                    <label class="form-label">Tweaks (optional)</label>
-                    <a
-                      style="color: blue"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="right"
-                      title="Injects tweaks into the app. Does not always work."
-                      >?</a
-                    >
-                    <div id="savedTweaksContainer">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <label class="form-label">Tweaks (optional)</label>
+                        <a
+                          style="color: blue"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="right"
+                          title="Injects tweaks into the app. Does not always work."
+                          >?</a
+                        >
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="formTweaksUseLibrary" />
+                        <label class="form-check-label" for="formTweaksUseLibrary">Library</label>
+                      </div>
+                    </div>
+                    <!-- a fieldset so toggling can disable the picker even after live updates replace it -->
+                    <fieldset id="savedTweaksContainer" hidden disabled>
                       {{block "savedTweaks" .}} {{if .Tweaks}}
-                      <div class="dropdown mb-2" id="savedTweaksDropdown">
+                      <div class="dropdown" id="savedTweaksDropdown">
                         <button
                           class="form-select text-start text-truncate"
                           type="button"
@@ -529,12 +538,12 @@
                         </div>
                       </div>
                       {{else}}
-                      <div class="form-text mb-2">
+                      <div class="form-text">
                         No saved tweaks. Add some in the
                         <a href="#tweaks" id="linkTweaksView" style="color: blue">Tweaks</a> view.
                       </div>
                       {{end}} {{end}}
-                    </div>
+                    </fieldset>
                     <input class="form-control" type="file" id="formTweaksSelect" multiple />
                     <input
                       class="form-control"
@@ -598,7 +607,8 @@
       </div>
       <div id="viewTweaks" hidden>
         <p class="text-muted text-center py-4" id="tweaksEmpty" {{if .Tweaks}}hidden{{end}}>
-          No saved tweaks yet. Use <b>Upload Tweaks</b> to add some, then pick them in the Advanced tab when signing.
+          No saved tweaks yet. Use <b>Upload</b> to add some, then turn on <b>Library</b> in the Advanced tab when
+          signing to pick them.
         </p>
         <div class="row" id="masonryTweaksRow">
           <div class="col-sm-6 col-lg-4 col-xl-3 p-2" id="tweakSizeItem"></div>
@@ -728,6 +738,7 @@
     const formFileUrl = document.getElementById("formFileUrl");
     const formTweakIds = document.getElementById("formTweakIds");
     const formTweaksSelect = document.getElementById("formTweaksSelect");
+    const formTweaksUseLibrary = document.getElementById("formTweaksUseLibrary");
     const formSubmit = document.getElementById("formSubmit");
     const uploadForm = document.getElementById("uploadForm");
     const modalBody = document.getElementById("modalBody");
@@ -1015,6 +1026,7 @@
       resetUploads();
       formIdCustomText.disabled = true;
       formProfile.dispatchEvent(new Event("change"));
+      formTweaksUseLibrary.dispatchEvent(new Event("change"));
       updateSavedTweaksSummary();
       navMain.show();
     }
@@ -1066,6 +1078,20 @@
         .finally(() => setSubmitting(false));
     });
 
+    formTweaksUseLibrary.addEventListener("change", function () {
+      const upload = !formTweaksUseLibrary.checked;
+      savedTweaksContainer.hidden = upload;
+      savedTweaksContainer.disabled = upload;
+      formTweaksSelect.hidden = !upload;
+      formTweaksSelect.disabled = !upload;
+      if (!upload) {
+        uppy
+          .getFiles()
+          .filter((f) => f.meta.uploadType === "tweak")
+          .forEach((f) => uppy.removeFile(f.id));
+        formTweaksSelect.value = "";
+      }
+    });
     formFileUseUrl.addEventListener("change", function () {
       formFileSelect.hidden = !formFileSelect.hidden;
       formFileSelect.disabled = !formFileSelect.disabled;
