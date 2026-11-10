@@ -876,9 +876,11 @@ func buildAppViews() ([]assets.App, error) {
 			status = assets.AppStatusFailed
 		}
 
-		tweakCount := 0
+		var tweakNames []string
 		if tweaks, err := app.ReadDir(storage.TweaksDir); err == nil {
-			tweakCount = len(tweaks)
+			for _, tweak := range tweaks {
+				tweakNames = append(tweakNames, tweak.Name())
+			}
 		} else if !os.IsNotExist(err) {
 			return nil, err
 		}
@@ -899,7 +901,8 @@ func buildAppViews() ([]assets.App, error) {
 			ResignUrl:           path.Join("/apps", app.GetId(), "resign"),
 			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),
 			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
-			TweakCount:          tweakCount,
+			TweakCount:          len(tweakNames),
+			TweakNames:          strings.Join(tweakNames, "\n"),
 		})
 	}
 	return views, nil

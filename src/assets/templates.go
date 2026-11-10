@@ -17,6 +17,7 @@ type App struct {
 	ProfileName         string
 	BundleId            string
 	TweakCount          int
+	TweakNames          string
 }
 
 const (

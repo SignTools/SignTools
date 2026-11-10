@@ -146,6 +146,16 @@
       [data-bs-theme="dark"] .appItem .card {
         --bs-bg-opacity: 0.6;
       }
+      a.tweak-count,
+      a.tweak-count:hover {
+        text-decoration: underline dotted;
+        text-underline-offset: 0.25em;
+        cursor: help;
+      }
+      .tweak-tooltip .tooltip-inner {
+        white-space: pre-line;
+        text-align: left;
+      }
       .live-status {
         display: inline-flex;
         align-items: center;
@@ -702,7 +712,11 @@
                 </div>
               </div>
               <p class="card-text mb-2">
-                {{if gt $app.TweakCount 0}} {{$app.TweakCount}} tweaks <br />
+                {{if gt $app.TweakCount 0}}
+                <a class="tweak-count" tabindex="0" role="button" data-bs-title="{{$app.TweakNames}}"
+                  >{{$app.TweakCount}} tweaks</a
+                >
+                <br />
                 {{end}} {{if eq $app.Status 1 }} {{$app.BundleId}} <br />
                 {{end}} {{$app.ProfileName}} <br />
                 {{if eq $app.Status 0 }} Processing {{else if eq $app.Status 1 }} Signed {{else if eq $app.Status 2 }}
@@ -1195,6 +1209,21 @@
       new bootstrap.Tooltip(el);
     }
 
+    // created lazily since live updates replace cards; focus is what makes taps work on touch screens
+    function showTweakNames(e) {
+      const el = e.target.closest(".tweak-count");
+      if (!el || bootstrap.Tooltip.getInstance(el)) return;
+      bootstrap.Tooltip.getOrCreateInstance(el, { trigger: "hover focus", customClass: "tweak-tooltip" }).show();
+    }
+    document.addEventListener("mouseover", showTweakNames);
+    document.addEventListener("focusin", showTweakNames);
+
+    function disposeTooltips(card) {
+      for (const el of card.querySelectorAll(".tweak-count")) {
+        bootstrap.Tooltip.getInstance(el)?.dispose();
+      }
+    }
+
     // unchanged cards are left alone, so e.g. an open menu stays open
     function patchGrid(row, html, itemClass, m) {
       const tpl = document.createElement("template");
@@ -1208,6 +1237,7 @@
         let el = current.get(next.dataset.id);
         current.delete(next.dataset.id);
         if (el && cardHtml.get(el) !== nextHtml) {
+          disposeTooltips(el);
           el.replaceWith(next);
           el = null;
         }
@@ -1223,6 +1253,7 @@
         prev = el;
       }
       for (let el of current.values()) {
+        disposeTooltips(el);
         el.remove();
         changed = true;
       }
