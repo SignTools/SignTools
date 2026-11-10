@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Fetch Bun version
         run: |
@@ -21,7 +21,7 @@ jobs:
           echo "bun_version=$BUN_VERSION" >> "$GITHUB_ENV"
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2.2.0
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "${{ env.bun_version }}"
 
@@ -44,7 +44,7 @@ jobs:
           echo "go_version=$GO_VERSION" >> $GITHUB_ENV
 
       - name: Setup Go environment
-        uses: actions/setup-go@v7.0.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "${{ env.go_version }}"
 
@@ -52,7 +52,7 @@ jobs:
         run: go test ./...
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4.4.1
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Docker Build Test
         run: docker buildx build --load --tag test:test --file ./Dockerfile ./

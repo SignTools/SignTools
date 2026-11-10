@@ -1,5 +1,5 @@
 # Web UI files are platform-independent, so build them once on the build platform.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4.4-alpine AS web
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS web
 
 WORKDIR /src
 COPY package.json bun.lock bunfig.toml ./
@@ -8,7 +8,7 @@ COPY scripts scripts
 COPY src/web src/web
 RUN bun run build
 
-FROM golang:1.27.4-alpine AS builder
+FROM golang:1.27.4-alpine@sha256:0a5f7fe796599ff487605987432e7619ae45beeb2fba4c2ce0b907879932aebf AS builder
 
 WORKDIR /src
 COPY . .
