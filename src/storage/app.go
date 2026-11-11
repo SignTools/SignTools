@@ -26,6 +26,7 @@ const (
 	AppBundleName   = FSName("bundle_name")
 	AppIcon         = FSName("icon")
 	AppVersion      = FSName("version")
+	AppPlatform     = FSName("platform")
 	TweaksDir       = FSName("tweaks")
 )
 
@@ -116,7 +117,13 @@ func (a *app) ResetModTime() error {
 	return a.changed(err)
 }
 
-// SaveInfo saves the version and icon of the unsigned app. Whatever can't be read is saved as an
+// values of AppPlatform; empty if the app couldn't be read
+const (
+	PlatformIOS = "ios"
+	PlatformMac = "macos"
+)
+
+// SaveInfo saves the platform, version and icon of the unsigned app. Whatever can't be read is saved as an
 // empty file, so it isn't retried. Only the version announces a change, since the icon has its own URL.
 func (a *app) SaveInfo() error {
 	info, readErr := a.readInfo()
@@ -128,6 +135,16 @@ func (a *app) SaveInfo() error {
 	a.mu.Unlock()
 	if err != nil {
 		return errors.WithMessagef(err, "set %s", AppIcon)
+	}
+	platform := ""
+	if readErr == nil {
+		platform = PlatformIOS
+		if info.Mac {
+			platform = PlatformMac
+		}
+	}
+	if err := a.SetString(AppPlatform, platform); err != nil {
+		return errors.WithMessagef(err, "set %s", AppPlatform)
 	}
 	if err := a.SetString(AppVersion, info.Version); err != nil {
 		return errors.WithMessagef(err, "set %s", AppVersion)

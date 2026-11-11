@@ -622,10 +622,11 @@ func getSignedApp(c echo.Context, app storage.App) error {
 }
 
 func getAppIcon(c echo.Context, app storage.App) error {
-	// apps uploaded before the icon or version were read
+	// apps uploaded before their icon, version or platform were read
 	_, iconErr := app.Stat(storage.AppIcon)
 	_, versionErr := app.Stat(storage.AppVersion)
-	if os.IsNotExist(iconErr) || os.IsNotExist(versionErr) {
+	_, platformErr := app.Stat(storage.AppPlatform)
+	if os.IsNotExist(iconErr) || os.IsNotExist(versionErr) || os.IsNotExist(platformErr) {
 		if err := app.SaveInfo(); err != nil {
 			logErrApp(err, app).Msg("read app info")
 		}
@@ -925,6 +926,7 @@ func buildAppViews() ([]assets.App, error) {
 		}
 		bundleId, _ := app.GetString(storage.AppBundleId)
 		version, _ := app.GetString(storage.AppVersion)
+		platform, _ := app.GetString(storage.AppPlatform)
 		profileId, err := app.GetString(storage.AppProfileId)
 		if err != nil {
 			logErrApp(err, app).Msg("get profile id")
@@ -969,6 +971,7 @@ func buildAppViews() ([]assets.App, error) {
 			ProfileName:         profileName,
 			BundleId:            bundleId,
 			Version:             version,
+			IsMac:               platform == storage.PlatformMac,
 			InstallUrl:          path.Join("/apps", app.GetId(), "install"),
 			DownloadSignedUrl:   path.Join("/apps", app.GetId(), "signed"),
 			DownloadUnsignedUrl: path.Join("/apps", app.GetId(), "unsigned"),

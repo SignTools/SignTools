@@ -1,12 +1,14 @@
 package main
 
 import (
+	"SignTools/src/assets"
 	"SignTools/src/builders"
 	"SignTools/src/config"
 	"SignTools/src/storage"
 	"SignTools/src/util"
 	"archive/tar"
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"encoding/xml"
@@ -186,6 +188,9 @@ func validateNoIcon(t *testing.T) {
 	version, err := apps[0].GetString(storage.AppVersion)
 	assert.NoError(t, err)
 	assert.Equal(t, "", version)
+	platform, err := apps[0].GetString(storage.AppPlatform)
+	assert.NoError(t, err)
+	assert.Equal(t, "", platform)
 	resp, err := http.Get(config.Current.ServerUrl + "/apps/" + apps[0].GetId() + "/icon")
 	assert.NoError(t, err)
 	resp.Body.Close()
@@ -502,4 +507,17 @@ func TestLiveEvents(t *testing.T) {
 	waitFor("tweak deleted", func(s liveState) bool {
 		return !strings.Contains(s.Tweaks, tweakName) && !strings.Contains(s.SavedTweaks, tweakName)
 	})
+}
+
+// the install link only takes iOS apps, which iPhones, iPads and Apple silicon Macs can all install
+func TestInstallButtonOnlyForIOS(t *testing.T) {
+	render := func(app assets.App) string {
+		var buf bytes.Buffer
+		assert.NoError(t, indexTemplate.ExecuteTemplate(&buf, "apps", assets.IndexData{Apps: []assets.App{app}}))
+		return buf.String()
+	}
+	install := ">Install</a>"
+	assert.Contains(t, render(assets.App{Id: "a", Status: assets.AppStatusSigned, InstallUrl: "/install"}), install)
+	assert.NotContains(t, render(assets.App{Id: "a", Status: assets.AppStatusSigned, IsMac: true, InstallUrl: "/install"}), install)
+	assert.NotContains(t, render(assets.App{Id: "a", Status: assets.AppStatusFailed, InstallUrl: "/install"}), install)
 }

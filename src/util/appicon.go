@@ -27,6 +27,7 @@ const (
 
 // AppInfo is what's shown about an app before it's signed.
 type AppInfo struct {
+	Mac     bool // a native Mac app, rather than one for iOS
 	Version string
 	Icon    []byte // PNG of at most iconOutputSize pixels per side
 	IconErr error  // why there's no icon
@@ -53,7 +54,7 @@ func ReadAppInfo(r io.ReaderAt, size int64) (*AppInfo, error) {
 		return nil, err
 	}
 
-	info := &AppInfo{}
+	info := &AppInfo{Mac: bundle.mac}
 	var names iconNames
 	if bundle.plist != nil {
 		var plistInfo *infoPlist

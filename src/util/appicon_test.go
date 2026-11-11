@@ -311,6 +311,7 @@ func TestReadAppInfoMac(t *testing.T) {
 	})
 	info, err := ReadAppInfo(ipa, ipa.Size())
 	require.NoError(t, err)
+	assert.True(t, info.Mac)
 	assert.Equal(t, "1.2", info.Version)
 	require.NoError(t, info.IconErr)
 	assert.Equal(t, iconColor, color.NRGBAModel.Convert(decode(t, info.Icon).At(5, 5)))
@@ -347,6 +348,7 @@ func TestReadAppInfoPrefersIOS(t *testing.T) {
 	info, err := ReadAppInfo(ipa, ipa.Size())
 	require.NoError(t, err)
 	assert.Equal(t, "ios", info.Version)
+	assert.False(t, info.Mac)
 	assert.NoError(t, info.IconErr)
 }
 

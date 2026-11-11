@@ -18,6 +18,7 @@ type App struct {
 	ProfileName         string
 	BundleId            string
 	Version             string
+	IsMac               bool // the install page only works for iOS apps
 	TweakCount          int
 	TweakNames          string
 }

@@ -801,7 +801,7 @@
               <div class="card-footer-row">
                 <span>{{$app.ModTime}}</span>
                 <div class="card-actions">
-                  {{if eq $app.Status 1 }}
+                  {{if and (eq $app.Status 1) (not $app.IsMac) }}
                   <a class="btn btn-outline-light" href="{{$app.InstallUrl}}">Install</a>
                   {{end}} {{if ne $app.Status 1 }}
                   <a
