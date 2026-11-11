@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f
 	github.com/ViRb3/sling/v2 v2.0.2
+	github.com/aixiansheng/lzfse v0.2.4
 	github.com/elliotchance/orderedmap v1.8.0
 	github.com/eventials/go-tus v0.0.0-20250612203642-7827b129cd4c
 	github.com/galecore/xslog v0.0.0-20230717081035-da7669fe4648

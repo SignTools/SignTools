@@ -6,8 +6,10 @@ import (
 	"compress/flate"
 	"encoding/binary"
 	"image"
+	"image/draw"
 	"image/png"
 	"io"
+	"os"
 	"path"
 	"strings"
 
@@ -17,14 +19,20 @@ import (
 
 var pngSignature = []byte("\x89PNG\r\n\x1a\n")
 
-// ExtractIcon returns the largest app icon in an IPA as a standard PNG.
+const (
+	// cards show icons at 48px, this leaves room for high density screens
+	iconOutputSize = 192
+	maxCarSize     = 1 << 30
+)
+
+// ExtractIcon returns the app icon of an IPA as a PNG of at most iconOutputSize pixels per side.
+// Loose icon files are tried first, then the compiled asset catalog.
 func ExtractIcon(r io.ReaderAt, size int64) ([]byte, error) {
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, errors.WithMessage(err, "open zip")
 	}
 	var appDir string
-	var plistFile *zip.File
 	rootFiles := map[string]*zip.File{}
 	for _, f := range zr.File {
 		parts := strings.Split(f.Name, "/")
@@ -37,39 +45,97 @@ func ExtractIcon(r io.ReaderAt, size int64) ([]byte, error) {
 			continue
 		}
 		rootFiles[parts[2]] = f
-		if parts[2] == "Info.plist" {
-			plistFile = f
-		}
 	}
 	if appDir == "" {
 		return nil, errors.New("no app bundle in Payload")
 	}
 
-	var prefixes []string
-	if plistFile != nil {
-		prefixes, err = iconNamesFromPlist(plistFile)
-		if err != nil {
+	var names iconNames
+	if plistFile, ok := rootFiles["Info.plist"]; ok {
+		if names, err = iconNamesFromPlist(plistFile); err != nil {
 			return nil, err
 		}
 	}
-	best, bestArea := pickIcon(rootFiles, prefixes)
+	img, looseErr := looseIcon(rootFiles, names.files)
+	if img == nil || img.Bounds().Dx() < iconOutputSize {
+		if car, ok := rootFiles["Assets.car"]; ok {
+			carImg, carErr := carIcon(r, car, append(names.assets, "AppIcon"))
+			if carErr == nil && (img == nil || carImg.Bounds().Dx() > img.Bounds().Dx()) {
+				img = carImg
+			} else if img == nil {
+				return nil, errors.Errorf("%v; Assets.car: %v", looseErr, carErr)
+			}
+		}
+	}
+	if img == nil {
+		return nil, looseErr
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, shrinkImage(img, iconOutputSize)); err != nil {
+		return nil, errors.WithMessage(err, "encode png")
+	}
+	return buf.Bytes(), nil
+}
+
+func looseIcon(files map[string]*zip.File, prefixes []string) (image.Image, error) {
+	best, bestArea := pickIcon(files, prefixes)
 	if best == nil {
-		best, bestArea = pickIcon(rootFiles, []string{"AppIcon", "Icon"})
+		best, bestArea = pickIcon(files, []string{"AppIcon", "Icon"})
 	}
 	if best == nil || bestArea == 0 {
-		return nil, errors.New("no icon found")
+		return nil, errors.New("no icon file found")
 	}
 	data, err := readZipFile(best)
 	if err != nil {
 		return nil, err
 	}
-	return NormalizePNG(data)
+	return DecodeIconPNG(data)
 }
 
-func iconNamesFromPlist(f *zip.File) ([]string, error) {
-	data, err := readZipFile(f)
+func carIcon(r io.ReaderAt, f *zip.File, names []string) (image.Image, error) {
+	if f.UncompressedSize64 > maxCarSize {
+		return nil, errors.New("asset catalog too large")
+	}
+	if f.Method == zip.Store {
+		off, err := f.DataOffset()
+		if err != nil {
+			return nil, err
+		}
+		size := int64(f.UncompressedSize64)
+		return ExtractCarIcon(io.NewSectionReader(r, off, size), size, names)
+	}
+	// the catalog is read at random offsets, and can be tens of megabytes
+	rc, err := f.Open()
 	if err != nil {
 		return nil, err
+	}
+	defer rc.Close()
+	tmp, err := os.CreateTemp("", "signtools-*.car")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmp.Name())
+	defer tmp.Close()
+	size, err := io.Copy(tmp, io.LimitReader(rc, maxCarSize+1))
+	if err != nil {
+		return nil, errors.WithMessage(err, "extract asset catalog")
+	}
+	if size > maxCarSize {
+		return nil, errors.New("asset catalog too large")
+	}
+	return ExtractCarIcon(tmp, size, names)
+}
+
+type iconNames struct {
+	files  []string // prefixes of loose icon files
+	assets []string // asset catalog names
+}
+
+func iconNamesFromPlist(f *zip.File) (iconNames, error) {
+	var names iconNames
+	data, err := readZipFile(f)
+	if err != nil {
+		return names, err
 	}
 	var info struct {
 		Icons     map[string]any `plist:"CFBundleIcons"`
@@ -78,33 +144,33 @@ func iconNamesFromPlist(f *zip.File) ([]string, error) {
 		IconFile  string         `plist:"CFBundleIconFile"`
 	}
 	if _, err := plist.Unmarshal(data, &info); err != nil {
-		return nil, errors.WithMessage(err, "parse Info.plist")
+		return names, errors.WithMessage(err, "parse Info.plist")
 	}
-	var names []string
+	var files []string
 	for _, icons := range []map[string]any{info.Icons, info.IconsIpad} {
 		primary, _ := icons["CFBundlePrimaryIcon"].(map[string]any)
-		files, _ := primary["CFBundleIconFiles"].([]any)
-		for _, file := range files {
+		list, _ := primary["CFBundleIconFiles"].([]any)
+		for _, file := range list {
 			if s, ok := file.(string); ok {
-				names = append(names, s)
+				files = append(files, s)
 			}
 		}
-		if s, ok := primary["CFBundleIconName"].(string); ok {
-			names = append(names, s)
+		if s, ok := primary["CFBundleIconName"].(string); ok && s != "" {
+			files = append(files, s)
+			names.assets = append(names.assets, s)
 		}
 	}
-	names = append(names, info.IconFiles...)
+	files = append(files, info.IconFiles...)
 	if info.IconFile != "" {
-		names = append(names, info.IconFile)
+		files = append(files, info.IconFile)
 	}
-	var prefixes []string
-	for _, name := range names {
+	for _, name := range files {
 		name = strings.TrimSuffix(name, ".png")
 		if name != "" {
-			prefixes = append(prefixes, name)
+			names.files = append(names.files, name)
 		}
 	}
-	return prefixes, nil
+	return names, nil
 }
 
 func pickIcon(files map[string]*zip.File, prefixes []string) (*zip.File, int) {
@@ -195,17 +261,18 @@ func readChunks(data []byte) ([]pngChunk, error) {
 	return chunks, nil
 }
 
-// NormalizePNG converts an Xcode "CgBI" crushed PNG to a standard one, and passes other PNGs through.
-func NormalizePNG(data []byte) ([]byte, error) {
+// DecodeIconPNG decodes a PNG, including Xcode's "CgBI" crushed variant that standard decoders reject.
+func DecodeIconPNG(data []byte) (image.Image, error) {
 	chunks, err := readChunks(data)
 	if err != nil {
 		return nil, err
 	}
 	if len(chunks) == 0 || chunks[0].typ != "CgBI" {
-		if _, err := png.DecodeConfig(bytes.NewReader(data)); err != nil {
+		img, err := png.Decode(bytes.NewReader(data))
+		if err != nil {
 			return nil, errors.WithMessage(err, "decode png")
 		}
-		return data, nil
+		return img, nil
 	}
 	var ihdr []byte
 	var idat bytes.Buffer
@@ -226,7 +293,7 @@ func NormalizePNG(data []byte) ([]byte, error) {
 	if bitDepth != 8 || colorType != 6 || interlace != 0 {
 		return nil, errors.Errorf("unsupported CgBI format depth=%d color=%d interlace=%d", bitDepth, colorType, interlace)
 	}
-	if width <= 0 || height <= 0 || width > 4096 || height > 4096 {
+	if width <= 0 || height <= 0 || width > maxIconSide || height > maxIconSide {
 		return nil, errors.Errorf("unsupported CgBI size %dx%d", width, height)
 	}
 	stride := width * 4
@@ -234,7 +301,7 @@ func NormalizePNG(data []byte) ([]byte, error) {
 	if _, err := io.ReadFull(flate.NewReader(&idat), raw); err != nil {
 		return nil, errors.WithMessage(err, "inflate CgBI data")
 	}
-	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	pix := make([]byte, stride*height)
 	prev := make([]byte, stride)
 	for y := range height {
 		line := raw[y*(stride+1) : (y+1)*(stride+1)]
@@ -242,23 +309,53 @@ func NormalizePNG(data []byte) ([]byte, error) {
 		if err := unfilter(line[0], cur, prev, 4); err != nil {
 			return nil, err
 		}
-		out := img.Pix[y*img.Stride : y*img.Stride+stride]
-		for x := 0; x < stride; x += 4 {
-			b, g, r, a := cur[x], cur[x+1], cur[x+2], cur[x+3]
-			if a != 0 && a != 255 {
-				r = unpremultiply(r, a)
-				g = unpremultiply(g, a)
-				b = unpremultiply(b, a)
-			}
-			out[x], out[x+1], out[x+2], out[x+3] = r, g, b, a
-		}
+		copy(pix[y*stride:], cur)
 		prev = cur
 	}
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		return nil, errors.WithMessage(err, "encode png")
+	return premultipliedBGRAToNRGBA(pix, width, height), nil
+}
+
+// shrinkImage scales an image down with a box filter so that no side exceeds maxSide.
+func shrinkImage(src image.Image, maxSide int) *image.NRGBA {
+	b := src.Bounds()
+	img, ok := src.(*image.NRGBA)
+	if !ok || b.Min != (image.Point{}) {
+		img = image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+		draw.Draw(img, img.Bounds(), src, b.Min, draw.Src)
 	}
-	return buf.Bytes(), nil
+	w, h := b.Dx(), b.Dy()
+	if w <= maxSide && h <= maxSide {
+		return img
+	}
+	dw, dh := maxSide, maxSide
+	if w > h {
+		dh = max(1, h*maxSide/w)
+	} else {
+		dw = max(1, w*maxSide/h)
+	}
+	dst := image.NewNRGBA(image.Rect(0, 0, dw, dh))
+	for y := range dh {
+		y0, y1 := y*h/dh, (y+1)*h/dh
+		for x := range dw {
+			x0, x1 := x*w/dw, (x+1)*w/dw
+			// weight colors by alpha, so transparent pixels don't darken edges
+			var r, g, bl, a, n uint64
+			for sy := y0; sy < y1; sy++ {
+				row := img.Pix[sy*img.Stride:]
+				for sx := x0; sx < x1; sx++ {
+					p := row[sx*4 : sx*4+4]
+					pa := uint64(p[3])
+					r, g, bl, a, n = r+uint64(p[0])*pa, g+uint64(p[1])*pa, bl+uint64(p[2])*pa, a+pa, n+1
+				}
+			}
+			out := dst.Pix[y*dst.Stride+x*4 : y*dst.Stride+x*4+4]
+			if a > 0 {
+				out[0], out[1], out[2] = byte((r+a/2)/a), byte((g+a/2)/a), byte((bl+a/2)/a)
+			}
+			out[3] = byte((a + n/2) / n)
+		}
+	}
+	return dst
 }
 
 func unpremultiply(c, a byte) byte {

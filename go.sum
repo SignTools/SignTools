@@ -777,6 +777,8 @@ github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f h1:TWCymMaA0klbB
 github.com/ViRb3/koanf-extra v0.0.0-20241224160111-fad8e9827c5f/go.mod h1:bLjR79hhIfpKPm0zRhpcjby/tVStCJ8KcwItGl6Kspw=
 github.com/ViRb3/sling/v2 v2.0.2 h1:XPadHD6pQHIuGSI0UYrkgmP7HH/ZLvt9/FM7saboVWs=
 github.com/ViRb3/sling/v2 v2.0.2/go.mod h1:TsPjWWaGty4CDiezzN6f03mHzBRxBNI7o3ikMJ4pTuY=
+github.com/aixiansheng/lzfse v0.2.4 h1:pnI+nzzakffPlwYjuTVEBmgAAPtY9+pi43ITjMuu0po=
+github.com/aixiansheng/lzfse v0.2.4/go.mod h1:QFcvJcpqVSunO1DVOk9SJSB26/rJHp1+Aa7BJqNl2WQ=
 github.com/ajstarks/deck v0.0.0-20200831202436-30c9fc6549a9/go.mod h1:JynElWSGnm/4RlzPXRlREEwqTHAN3T56Bv2ITsFT3gY=
 github.com/ajstarks/deck/generate v0.0.0-20210309230005-c3f852c02e19/go.mod h1:T13YZdzov6OU0A1+RfKZiZN9ca6VeKdBdyDV+BY97Tk=
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=

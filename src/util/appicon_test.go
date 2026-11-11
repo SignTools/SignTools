@@ -115,14 +115,13 @@ func decode(t *testing.T, data []byte) image.Image {
 	return img
 }
 
-func TestNormalizePNGCgBI(t *testing.T) {
+func TestDecodeIconPNGCgBI(t *testing.T) {
 	want := testImage(7, 6)
 	want.SetNRGBA(2, 3, color.NRGBA{R: 200, G: 100, B: 50, A: 128})
 	want.SetNRGBA(4, 1, color.NRGBA{A: 0})
 
-	out, err := NormalizePNG(crushPNG(t, want))
+	got, err := DecodeIconPNG(crushPNG(t, want))
 	require.NoError(t, err)
-	got := decode(t, out)
 	require.Equal(t, want.Bounds(), got.Bounds())
 	for y := range 6 {
 		for x := range 7 {
@@ -141,14 +140,27 @@ func TestNormalizePNGCgBI(t *testing.T) {
 	}
 }
 
-func TestNormalizePNGPassthrough(t *testing.T) {
-	data := encodePNG(t, testImage(3, 3))
-	out, err := NormalizePNG(data)
+func TestDecodeIconPNGStandard(t *testing.T) {
+	want := testImage(3, 3)
+	got, err := DecodeIconPNG(encodePNG(t, want))
 	require.NoError(t, err)
-	assert.Equal(t, data, out)
+	assert.Equal(t, want.Pix, shrinkImage(got, 10).Pix)
 
-	_, err = NormalizePNG([]byte("not a png"))
+	_, err = DecodeIconPNG([]byte("not a png"))
 	assert.Error(t, err)
+}
+
+func TestShrinkImage(t *testing.T) {
+	src := image.NewNRGBA(image.Rect(0, 0, 400, 200))
+	for i := 0; i < len(src.Pix); i += 4 {
+		copy(src.Pix[i:], []byte{10, 20, 30, 255})
+	}
+	// a transparent pixel with a stray color must not tint its neighbours
+	copy(src.Pix[0:], []byte{255, 255, 255, 0})
+	got := shrinkImage(src, 192)
+	assert.Equal(t, image.Rect(0, 0, 192, 96), got.Bounds())
+	assert.Equal(t, color.NRGBA{10, 20, 30, 191}, got.NRGBAAt(0, 0))
+	assert.Equal(t, color.NRGBA{10, 20, 30, 255}, got.NRGBAAt(100, 50))
 }
 
 const testPlist = `<?xml version="1.0" encoding="UTF-8"?>
@@ -174,7 +186,7 @@ func TestExtractIconFromPlist(t *testing.T) {
 	})
 	out, err := ExtractIcon(ipa, ipa.Size())
 	require.NoError(t, err)
-	assert.Equal(t, image.Rect(0, 0, 12, 12), decode(t, out).Bounds())
+	assert.Equal(t, big.Pix, shrinkImage(decode(t, out), 100).Pix)
 }
 
 func TestExtractIconFallback(t *testing.T) {
