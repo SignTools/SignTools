@@ -50,8 +50,13 @@ func (r *tweakResolver) GetAll() ([]Tweak, error) {
 		name, _ := t.GetString(TweakName)
 		names[t.GetId()] = strings.ToLower(name)
 	}
+	// the id breaks ties, so tweaks with the same name keep their order between renders
 	sort.Slice(tweaks, func(i, j int) bool {
-		return names[tweaks[i].GetId()] < names[tweaks[j].GetId()]
+		name1, name2 := names[tweaks[i].GetId()], names[tweaks[j].GetId()]
+		if name1 != name2 {
+			return name1 < name2
+		}
+		return tweaks[i].GetId() < tweaks[j].GetId()
 	})
 	return tweaks, nil
 }

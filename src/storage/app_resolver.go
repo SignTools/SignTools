@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 )
 
 func newAppResolver() *appResolver {
@@ -42,11 +43,18 @@ func (r *appResolver) GetAll() ([]App, error) {
 	for _, app := range r.idToAppMap {
 		apps = append(apps, app)
 	}
-	// reverse sort
+	modTimes := make(map[string]time.Time, len(apps))
+	for _, app := range apps {
+		modTimes[app.GetId()], _ = app.GetModTime()
+	}
+	// newest first; the id breaks ties, since apps come from a map in random order and
+	// e.g. restored data has equal times, which would reorder cards between renders
 	sort.Slice(apps, func(i, j int) bool {
-		time1, _ := apps[i].GetModTime()
-		time2, _ := apps[j].GetModTime()
-		return time1.After(time2)
+		time1, time2 := modTimes[apps[i].GetId()], modTimes[apps[j].GetId()]
+		if !time1.Equal(time2) {
+			return time1.After(time2)
+		}
+		return apps[i].GetId() < apps[j].GetId()
 	})
 	return apps, nil
 }

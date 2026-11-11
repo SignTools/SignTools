@@ -28,6 +28,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -566,4 +568,37 @@ func validateStatus(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "<b>second line</b>\n", string(rest))
 	assert.NotContains(t, line+string(rest), workflowKey)
+}
+
+// apps come from a map, so equal times must not leave their order to chance
+func TestAppOrderIsStable(t *testing.T) {
+	profile, ok := storage.Profiles.GetById(profileId)
+	assert.True(t, ok)
+	appsDir := filepath.Join(config.Current.SaveDir, "apps")
+	same := time.Now().Add(-time.Hour).Truncate(time.Second)
+	var ids []string
+	for range 6 {
+		app, err := storage.Apps.New(strings.NewReader("x"), "same.ipa", profile, "", "", "selfhosted", nil)
+		assert.NoError(t, err)
+		defer storage.Apps.Delete(app.GetId())
+		assert.NoError(t, os.Chtimes(filepath.Join(appsDir, app.GetId()), same, same))
+		ids = append(ids, app.GetId())
+	}
+	newest, err := storage.Apps.New(strings.NewReader("x"), "newest.ipa", profile, "", "", "selfhosted", nil)
+	assert.NoError(t, err)
+	defer storage.Apps.Delete(newest.GetId())
+	sort.Strings(ids)
+	want := append([]string{newest.GetId()}, ids...)
+
+	for range 20 {
+		apps, err := storage.Apps.GetAll()
+		assert.NoError(t, err)
+		var got []string
+		for _, app := range apps {
+			if slices.Contains(want, app.GetId()) {
+				got = append(got, app.GetId())
+			}
+		}
+		assert.Equal(t, want, got)
+	}
 }
