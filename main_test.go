@@ -602,3 +602,23 @@ func TestAppOrderIsStable(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 }
+
+// reading an app's info later, e.g. after an update, must not change its date or position
+func TestSaveInfoKeepsModTime(t *testing.T) {
+	profile, ok := storage.Profiles.GetById(profileId)
+	assert.True(t, ok)
+	app, err := storage.Apps.New(strings.NewReader("x"), "old.ipa", profile, "", "", "selfhosted", nil)
+	assert.NoError(t, err)
+	defer storage.Apps.Delete(app.GetId())
+	old := time.Now().Add(-48 * time.Hour).Truncate(time.Second)
+	assert.NoError(t, os.Chtimes(filepath.Join(config.Current.SaveDir, "apps", app.GetId()), old, old))
+	assert.NoError(t, app.RemoveFile(storage.AppPlatform))
+	assert.NoError(t, os.Chtimes(filepath.Join(config.Current.SaveDir, "apps", app.GetId()), old, old))
+
+	_ = app.SaveInfo()
+	modTime, err := app.GetModTime()
+	assert.NoError(t, err)
+	assert.True(t, modTime.Equal(old), "mod time moved to %v", modTime)
+	_, err = app.Stat(storage.AppPlatform)
+	assert.NoError(t, err)
+}

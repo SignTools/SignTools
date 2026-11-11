@@ -126,6 +126,14 @@ const (
 // SaveInfo saves the platform, version and icon of the unsigned app. Whatever can't be read is saved as an
 // empty file, so it isn't retried. Only the version announces a change, since the icon has its own URL.
 func (a *app) SaveInfo() error {
+	// writing files bumps the folder's time, which is the app's date and sort order
+	if modTime, err := a.GetModTime(); err == nil {
+		defer func() {
+			a.mu.Lock()
+			_ = os.Chtimes(a.resolvePath(AppRoot), modTime, modTime)
+			a.mu.Unlock()
+		}()
+	}
 	info, readErr := a.readInfo()
 	if info == nil {
 		info = &util.AppInfo{IconErr: readErr}
