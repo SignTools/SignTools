@@ -14,6 +14,7 @@ type App struct {
 	ResignUrl           string
 	DeleteUrl           string
 	RenameUrl           string
+	IconUrl             string
 	ProfileName         string
 	BundleId            string
 	TweakCount          int

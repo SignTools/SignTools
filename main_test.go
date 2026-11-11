@@ -172,6 +172,21 @@ func TestIntegration(t *testing.T) {
 		return app.GetFile(storage.AppSignedFile)
 	})
 	validateManifest(t)
+	validateNoIcon(t)
+}
+
+// the test app isn't a real IPA, so it has no icon but must still sign
+func validateNoIcon(t *testing.T) {
+	apps, err := storage.Apps.GetAll()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(apps))
+	stat, err := apps[0].Stat(storage.AppIcon)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), stat.Size())
+	resp, err := http.Get(config.Current.ServerUrl + "/apps/" + apps[0].GetId() + "/icon")
+	assert.NoError(t, err)
+	resp.Body.Close()
+	assert.Equal(t, 404, resp.StatusCode)
 }
 
 func TestTweakLibrary(t *testing.T) {

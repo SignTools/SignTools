@@ -167,6 +167,7 @@ func serve(host string, port uint64) {
 	e.GET("/apps/:id/resign", appResolver(resignApp), basicAuth)
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
 	e.GET("/apps/:id/rename", appResolver(renderRenameApp), basicAuth)
+	e.GET("/apps/:id/icon", appResolver(getAppIcon), basicAuth)
 	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
@@ -613,6 +614,32 @@ func getSignedApp(c echo.Context, app storage.App) error {
 	return nil
 }
 
+func getAppIcon(c echo.Context, app storage.App) error {
+	stat, err := app.Stat(storage.AppIcon)
+	if os.IsNotExist(err) {
+		// apps uploaded before icons were extracted
+		if err := app.SaveIcon(); err != nil {
+			logErrApp(err, app).Msg("extract icon")
+		}
+		stat, err = app.Stat(storage.AppIcon)
+	}
+	if err != nil {
+		return err
+	}
+	if stat.Size() == 0 {
+		return c.NoContent(http.StatusNotFound)
+	}
+	file, err := app.GetFile(storage.AppIcon)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	c.Response().Header().Set("Content-Type", "image/png")
+	c.Response().Header().Set("Cache-Control", "no-cache")
+	http.ServeContent(c.Response(), c.Request(), "icon.png", stat.ModTime(), file)
+	return nil
+}
+
 func getEmpty200(c echo.Context) error {
 	return c.NoContent(200)
 }
@@ -940,6 +967,7 @@ func buildAppViews() ([]assets.App, error) {
 			ResignUrl:           path.Join("/apps", app.GetId(), "resign"),
 			DeleteUrl:           path.Join("/apps", app.GetId(), "delete"),
 			RenameUrl:           path.Join("/apps", app.GetId(), "rename"),
+			IconUrl:             path.Join("/apps", app.GetId(), "icon"),
 			TweakCount:          len(tweakNames),
 			TweakNames:          strings.Join(tweakNames, "\n"),
 		})

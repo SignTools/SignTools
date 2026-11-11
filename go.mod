@@ -24,6 +24,7 @@ require (
 	golang.org/x/exp v0.0.0-20261109185158-a52e3aef5920
 	golang.org/x/oauth2 v0.38.0
 	gopkg.in/yaml.v3 v3.0.1
+	howett.net/plist v1.0.1
 	software.sslmate.com/src/go-pkcs12 v0.7.4
 )
 

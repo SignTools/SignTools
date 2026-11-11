@@ -71,6 +71,20 @@ function layoutGrids(instant: boolean) {
   }
 }
 
+// apps without an icon keep the placeholder underneath
+document.addEventListener(
+  "error",
+  (e) => {
+    if (e.target instanceof HTMLImageElement && e.target.parentElement?.classList.contains("app-icon")) {
+      e.target.hidden = true;
+    }
+  },
+  true,
+);
+for (const img of document.querySelectorAll<HTMLImageElement>(".app-icon img")) {
+  if (img.complete && img.naturalWidth === 0) img.hidden = true;
+}
+
 // Masonry only measures cards at layout time, so a card that grows later would overlap the next
 let relayoutFrame = 0;
 const cardResizeObserver = new ResizeObserver(() => {
