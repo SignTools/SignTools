@@ -622,3 +622,41 @@ func TestSaveInfoKeepsModTime(t *testing.T) {
 	_, err = app.Stat(storage.AppPlatform)
 	assert.NoError(t, err)
 }
+
+// other builders' status pages are linked through the same route, which redirects to them
+func TestStatusRedirectsForOtherBuilders(t *testing.T) {
+	profile, ok := storage.Profiles.GetById(profileId)
+	assert.True(t, ok)
+	app, err := storage.Apps.New(strings.NewReader("x"), "other.ipa", profile, "", "", "github", nil)
+	assert.NoError(t, err)
+	defer storage.Apps.Delete(app.GetId())
+	statusPath := "/apps/" + app.GetId() + "/status"
+	viewFor := func() assets.App {
+		views, err := buildAppViews()
+		assert.NoError(t, err)
+		for _, v := range views {
+			if v.Id == app.GetId() {
+				return v
+			}
+		}
+		t.Fatal("app not in views")
+		return assets.App{}
+	}
+	noRedirect := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+
+	// no status page yet, so the button stays disabled
+	assert.Equal(t, "", viewFor().WorkflowUrl)
+	resp, err := noRedirect.Get(config.Current.ServerUrl + statusPath)
+	assert.NoError(t, err)
+	resp.Body.Close()
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	runUrl := "https://github.com/example/builder/actions/runs/1"
+	assert.NoError(t, app.SetString(storage.AppWorkflowUrl, runUrl))
+	assert.Equal(t, statusPath, viewFor().WorkflowUrl)
+	resp, err = noRedirect.Get(config.Current.ServerUrl + statusPath)
+	assert.NoError(t, err)
+	resp.Body.Close()
+	assert.Equal(t, http.StatusFound, resp.StatusCode)
+	assert.Equal(t, runUrl, resp.Header.Get("Location"))
+}

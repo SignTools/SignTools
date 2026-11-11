@@ -661,7 +661,7 @@ func selfHostedBuilder(app storage.App) (*builders.SelfHosted, bool) {
 }
 
 // getAppStatus shows a self-hosted builder's status, including the last job's live log, without
-// revealing the builder key. Other builders have their own status pages.
+// revealing the builder key. Other builders have their own status pages, which it redirects to.
 func getAppStatus(c echo.Context, app storage.App) error {
 	builder, ok := selfHostedBuilder(app)
 	if !ok {
@@ -975,8 +975,9 @@ func buildAppViews() ([]assets.App, error) {
 		if err != nil {
 			logErrApp(err, app).Msg("get workflow url")
 		}
-		if _, ok := selfHostedBuilder(app); ok {
-			// the builder's own page needs its key
+		// self-hosted builders are shown by the web service, since their page needs the key;
+		// others redirect to their own page, if they have one
+		if _, ok := selfHostedBuilder(app); ok || workflowUrl != "" {
 			workflowUrl = path.Join("/apps", app.GetId(), "status")
 		}
 		bundleId, _ := app.GetString(storage.AppBundleId)
