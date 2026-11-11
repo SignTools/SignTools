@@ -3,7 +3,11 @@ package builders
 import (
 	"SignTools/src/util"
 	"bytes"
+	"context"
 	"github.com/ViRb3/sling/v2"
+	"github.com/pkg/errors"
+	"io"
+	"net/http"
 	"net/url"
 )
 
@@ -39,6 +43,32 @@ func (g *SelfHosted) Trigger() error {
 
 func (g *SelfHosted) GetStatusUrl() (string, error) {
 	return util.JoinUrls(g.Url, "/status")
+}
+
+// Status returns the builder's status page, which streams the last job's log while it runs.
+// The page needs the builder key, so it's only shown through the web service.
+func (g *SelfHosted) Status(ctx context.Context) (io.ReadCloser, error) {
+	statusUrl, err := g.GetStatusUrl()
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, statusUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+g.Key)
+	resp, err := MakeClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if err := util.Check2xxCode(resp.StatusCode); err != nil {
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusBadRequest {
+			return nil, errors.WithMessage(err, "builder rejected the key")
+		}
+		return nil, err
+	}
+	return resp.Body, nil
 }
 
 func (g *SelfHosted) SetSecrets(secrets map[string]string) error {

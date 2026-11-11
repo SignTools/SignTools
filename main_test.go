@@ -115,6 +115,7 @@ func TestMain(m *testing.M) {
 }
 
 var triggerHit = false
+var statusFirstLineSeen = make(chan struct{})
 var secretsHit = false
 
 func startWorkflowServer(host string, port uint64) {
@@ -158,6 +159,22 @@ func startWorkflowServer(host string, port uint64) {
 		return c.NoContent(200)
 	})
 
+	// streams like the real builder: the second line only comes once the first was received
+	eg.GET("/status", func(c echo.Context) error {
+		res := c.Response()
+		res.Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
+		res.WriteHeader(200)
+		_, _ = res.Write([]byte("first line\n"))
+		res.Flush()
+		select {
+		case <-statusFirstLineSeen:
+			_, _ = res.Write([]byte("<b>second line</b>\n"))
+		case <-time.After(3 * time.Second):
+			_, _ = res.Write([]byte("the first line wasn't streamed\n"))
+		}
+		return nil
+	})
+
 	log.Fatal().Err(e.Start(fmt.Sprintf("%s:%d", host, port))).Send()
 }
 
@@ -175,6 +192,7 @@ func TestIntegration(t *testing.T) {
 	})
 	validateManifest(t)
 	validateNoIcon(t)
+	validateStatus(t)
 }
 
 // the test app isn't a real IPA, so it has no icon or version but must still sign
@@ -520,4 +538,32 @@ func TestInstallButtonOnlyForIOS(t *testing.T) {
 	assert.Contains(t, render(assets.App{Id: "a", Status: assets.AppStatusSigned, InstallUrl: "/install"}), install)
 	assert.NotContains(t, render(assets.App{Id: "a", Status: assets.AppStatusSigned, IsMac: true, InstallUrl: "/install"}), install)
 	assert.NotContains(t, render(assets.App{Id: "a", Status: assets.AppStatusFailed, InstallUrl: "/install"}), install)
+}
+
+// self-hosted builders need their key for status, so it's proxied without revealing the key
+func validateStatus(t *testing.T) {
+	apps, err := storage.Apps.GetAll()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(apps))
+	statusPath := "/apps/" + apps[0].GetId() + "/status"
+
+	views, err := buildAppViews()
+	assert.NoError(t, err)
+	assert.Equal(t, statusPath, views[0].WorkflowUrl)
+
+	resp, err := http.Get(config.Current.ServerUrl + statusPath)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, echo.MIMETextPlainCharsetUTF8, resp.Header.Get(echo.HeaderContentType))
+	assert.Equal(t, "nosniff", resp.Header.Get("X-Content-Type-Options"))
+	body := bufio.NewReader(resp.Body)
+	line, err := body.ReadString('\n')
+	assert.NoError(t, err)
+	assert.Equal(t, "first line\n", line)
+	close(statusFirstLineSeen)
+	rest, err := io.ReadAll(body)
+	assert.NoError(t, err)
+	assert.Equal(t, "<b>second line</b>\n", string(rest))
+	assert.NotContains(t, line+string(rest), workflowKey)
 }

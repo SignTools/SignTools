@@ -170,6 +170,7 @@ func serve(host string, port uint64) {
 	e.GET("/apps/:id/delete", appResolver(deleteApp), basicAuth)
 	e.GET("/apps/:id/rename", appResolver(renderRenameApp), basicAuth)
 	e.GET("/apps/:id/icon", appResolver(getAppIcon), basicAuth)
+	e.GET("/apps/:id/status", appResolver(getAppStatus), basicAuth)
 	e.POST("/apps/:id/rename", appResolver(renameApp), basicAuth)
 	e.GET("/apps/:id/2fa", appResolver(render2FAPage), basicAuth)
 	e.POST("/apps/:id/2fa", appResolver(set2FA), basicAuth)
@@ -649,6 +650,56 @@ func getAppIcon(c echo.Context, app storage.App) error {
 	return nil
 }
 
+// selfHostedBuilder returns the app's builder if it's self-hosted, whose status needs the builder key.
+func selfHostedBuilder(app storage.App) (*builders.SelfHosted, bool) {
+	builderId, err := app.GetString(storage.AppBuilderId)
+	if err != nil {
+		return nil, false
+	}
+	builder, ok := config.Current.Builder[builderId].(*builders.SelfHosted)
+	return builder, ok
+}
+
+// getAppStatus shows a self-hosted builder's status, including the last job's live log, without
+// revealing the builder key. Other builders have their own status pages.
+func getAppStatus(c echo.Context, app storage.App) error {
+	builder, ok := selfHostedBuilder(app)
+	if !ok {
+		statusUrl, err := app.GetString(storage.AppWorkflowUrl)
+		if err != nil || statusUrl == "" {
+			return c.NoContent(http.StatusNotFound)
+		}
+		return c.Redirect(http.StatusFound, statusUrl)
+	}
+	res := c.Response()
+	res.Header().Set(echo.HeaderContentType, echo.MIMETextPlainCharsetUTF8)
+	// the log is untrusted text, never a page
+	res.Header().Set("X-Content-Type-Options", "nosniff")
+	res.Header().Set("Cache-Control", "no-store")
+	status, err := builder.Status(c.Request().Context())
+	if err != nil {
+		logErrApp(err, app).Msg("get builder status")
+		res.WriteHeader(http.StatusBadGateway)
+		_, _ = fmt.Fprintf(res, "Couldn't get the builder's status: %v\n", err)
+		return nil
+	}
+	defer status.Close()
+	res.WriteHeader(http.StatusOK)
+	buf := make([]byte, 32<<10)
+	for {
+		n, err := status.Read(buf)
+		if n > 0 {
+			if _, err := res.Write(buf[:n]); err != nil {
+				return nil
+			}
+			res.Flush()
+		}
+		if err != nil {
+			return nil
+		}
+	}
+}
+
 func getEmpty200(c echo.Context) error {
 	return c.NoContent(200)
 }
@@ -923,6 +974,10 @@ func buildAppViews() ([]assets.App, error) {
 		workflowUrl, err := app.GetString(storage.AppWorkflowUrl)
 		if err != nil {
 			logErrApp(err, app).Msg("get workflow url")
+		}
+		if _, ok := selfHostedBuilder(app); ok {
+			// the builder's own page needs its key
+			workflowUrl = path.Join("/apps", app.GetId(), "status")
 		}
 		bundleId, _ := app.GetString(storage.AppBundleId)
 		version, _ := app.GetString(storage.AppVersion)
