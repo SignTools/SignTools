@@ -1,4 +1,6 @@
 /data/
+# left behind when tests are interrupted
+/data-test*/
 /certs/
 /signer-cfg*.yml
 
