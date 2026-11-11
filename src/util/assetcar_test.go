@@ -260,16 +260,21 @@ func TestExtractCarIconMalformed(t *testing.T) {
 	}
 }
 
-func TestCheckLzfseBlocks(t *testing.T) {
+func blocksErr(data []byte, want int) error {
+	_, err := lzfseBlocks(data, want)
+	return err
+}
+
+func TestLzfseBlocks(t *testing.T) {
 	data := lzfseRaw(make([]byte, 10))
-	assert.NoError(t, checkLzfseBlocks(data, 10))
-	assert.Error(t, checkLzfseBlocks(data, 9))
-	assert.Error(t, checkLzfseBlocks(data, 11))
-	assert.Error(t, checkLzfseBlocks(data[:len(data)-4], 10))
+	assert.NoError(t, blocksErr(data, 10))
+	assert.Error(t, blocksErr(data, 9))
+	assert.Error(t, blocksErr(data, 11))
+	assert.Error(t, blocksErr(data[:len(data)-4], 10))
 
 	huge := append([]byte("bvxn"), binary.LittleEndian.AppendUint32(binary.LittleEndian.AppendUint32(nil, 10), 0xffffffff)...)
-	assert.Error(t, checkLzfseBlocks(append(huge, "bvx$"...), 10))
-	assert.Error(t, checkLzfseBlocks([]byte("bvx1aaaaaaaa"), 10))
+	assert.Error(t, blocksErr(append(huge, "bvx$"...), 10))
+	assert.Error(t, blocksErr([]byte("bvx1aaaaaaaa"), 10))
 
 	out, err := decompressLzfse(data, 10)
 	require.NoError(t, err)

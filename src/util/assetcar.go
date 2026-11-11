@@ -3,6 +3,8 @@ package util
 import (
 	"bytes"
 	"compress/flate"
+	"compress/gzip"
+	"compress/zlib"
 	"encoding/binary"
 	"fmt"
 	"image"
@@ -173,17 +175,28 @@ func (b *bomStore) walkTree(name string, fn func(key []byte, value uint32) error
 	}
 }
 
+// pixel formats, as stored on disk
+const (
+	carFormatARGB = "BGRA"
+	carFormatGA8  = " 8AG"
+)
+
 type carRendition struct {
 	value      uint32
 	appearance uint16
+	gray       bool
 	width      int
 	height     int
 }
 
-// betterThan prefers the default appearance over dark and tinted variants, then the bigger image.
+// betterThan prefers the default appearance over dark and tinted variants, then color over
+// grayscale, then the bigger image.
 func (c *carRendition) betterThan(o *carRendition) bool {
 	if (c.appearance == 0) != (o.appearance == 0) {
 		return c.appearance == 0
+	}
+	if c.gray != o.gray {
+		return !c.gray
 	}
 	return c.width*c.height > o.width*o.height
 }
@@ -275,10 +288,11 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 		if err != nil || string(head[:4]) != "ISTC" {
 			continue
 		}
-		layout := le.Uint16(head[36:])
-		if layout < carLayoutImageMin || layout > carLayoutImageMax || string(head[24:28]) != "BGRA" {
+		layout, format := le.Uint16(head[36:]), string(head[24:28])
+		if layout < carLayoutImageMin || layout > carLayoutImageMax || format != carFormatARGB && format != carFormatGA8 {
 			continue
 		}
+		c.gray = format == carFormatGA8
 		c.width, c.height = int(le.Uint32(head[12:])), int(le.Uint32(head[16:]))
 		if c.width <= 0 || c.height <= 0 || c.width > maxIconSide || c.height > maxIconSide {
 			continue
@@ -294,10 +308,10 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 	if err != nil {
 		return nil, err
 	}
-	return decodeCsiBitmap(csi, best.width, best.height)
+	return decodeCsiBitmap(csi, best.width, best.height, best.gray)
 }
 
-func decodeCsiBitmap(csi []byte, width, height int) (*image.NRGBA, error) {
+func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, error) {
 	le := binary.LittleEndian
 	tlvLen, dataLen := int(le.Uint32(csi[168:])), int(le.Uint32(csi[180:]))
 	start := csiHeaderSize + tlvLen
@@ -309,7 +323,11 @@ func decodeCsiBitmap(csi []byte, width, height int) (*image.NRGBA, error) {
 		return nil, errors.New("unsupported rendition data")
 	}
 	compression, field := le.Uint32(data[8:]), int(le.Uint32(data[12:]))
-	stride := width * 4
+	bpp := 4
+	if gray {
+		bpp = 2
+	}
+	stride := width * bpp
 	var pixels []byte
 	if len(data) >= 20 && string(data[16:20]) == "KCBC" {
 		// the image is split into bands of rows, each compressed on its own
@@ -341,6 +359,9 @@ func decodeCsiBitmap(csi []byte, width, height int) (*image.NRGBA, error) {
 	if len(pixels) != height*stride {
 		return nil, errors.Errorf("decoded %d bytes, want %d", len(pixels), height*stride)
 	}
+	if gray {
+		return premultipliedGrayToNRGBA(pixels, width, height), nil
+	}
 	return premultipliedBGRAToNRGBA(pixels, width, height), nil
 }
 
@@ -351,8 +372,14 @@ func decompressCsi(compression uint32, data []byte, want int) ([]byte, error) {
 	case 0:
 		out = data
 	case 2:
-		out, err = io.ReadAll(io.LimitReader(flate.NewReader(bytes.NewReader(data)), int64(want)+1))
-	case 3, 4:
+		out, err = inflate(data, want)
+	case 3:
+		if bytes.HasPrefix(data, []byte("bvx")) {
+			out, err = decompressLzfse(data, want)
+		} else {
+			out, err = decodeLZVN(make([]byte, 0, want), data, want)
+		}
+	case 4:
 		out, err = decompressLzfse(data, want)
 	default:
 		return nil, errors.Errorf("unsupported csi compression %d", compression)
@@ -366,15 +393,64 @@ func decompressCsi(compression uint32, data []byte, want int) ([]byte, error) {
 	return out, nil
 }
 
+// inflate handles the gzip, zlib and raw deflate streams that all appear as "zip" compression.
+func inflate(data []byte, want int) ([]byte, error) {
+	var r io.Reader
+	switch {
+	case len(data) >= 2 && data[0] == 0x1f && data[1] == 0x8b:
+		gz, err := gzip.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+		r = gz
+	case len(data) >= 2 && data[0]&0x0f == 8 && (uint16(data[0])<<8|uint16(data[1]))%31 == 0:
+		zr, err := zlib.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, err
+		}
+		r = zr
+	default:
+		r = flate.NewReader(bytes.NewReader(data))
+	}
+	return io.ReadAll(io.LimitReader(r, int64(want)+1))
+}
+
 // The decoder reads compressed block headers into a fixed 752 byte struct before seeking back to
 // their real, shorter end, so a block near the end of the input fails with EOF without padding.
 const lzfseHeaderPadding = 1024
 
-// decompressLzfse checks the block sizes first, since the decoder trusts them and allocates
-// accordingly, and recovers its panics on malformed input.
+// decompressLzfse checks the block sizes first, since the library decoder trusts them and
+// allocates accordingly. The library only handles bvx2 blocks correctly, so streams without them
+// are decoded here. Apple's encoder doesn't mix bvx2 and LZVN blocks in one stream.
 func decompressLzfse(data []byte, want int) (out []byte, err error) {
-	if err := checkLzfseBlocks(data, want); err != nil {
+	blocks, err := lzfseBlocks(data, want)
+	if err != nil {
 		return nil, err
+	}
+	hasV2, hasLZVN := false, false
+	for _, b := range blocks {
+		hasV2 = hasV2 || b.magic == "bvx2"
+		hasLZVN = hasLZVN || b.magic == "bvxn"
+	}
+	if hasV2 && hasLZVN {
+		return nil, errors.New("lzfse stream mixes block types")
+	}
+	if !hasV2 {
+		out = make([]byte, 0, want)
+		for _, b := range blocks {
+			if b.magic == "bvx-" {
+				out = append(out, b.payload...)
+				continue
+			}
+			start := len(out)
+			if out, err = decodeLZVN(out, b.payload, start+b.rawSize); err != nil {
+				return nil, err
+			}
+			if len(out)-start != b.rawSize {
+				return nil, errors.New("lzvn block size mismatch")
+			}
+		}
+		return out, nil
 	}
 	defer func() {
 		if r := recover(); r != nil {
@@ -386,51 +462,81 @@ func decompressLzfse(data []byte, want int) (out []byte, err error) {
 	return io.ReadAll(lzfse.NewReader(bytes.NewReader(padded)))
 }
 
-func checkLzfseBlocks(data []byte, want int) error {
+type lzfseBlock struct {
+	magic   string
+	rawSize int
+	payload []byte // only for uncompressed and LZVN blocks
+}
+
+// lzfseBlocks splits an LZFSE stream into blocks, checking that they fit and decode to want bytes.
+func lzfseBlocks(data []byte, want int) ([]lzfseBlock, error) {
 	le := binary.LittleEndian
 	raw := 0
+	var blocks []lzfseBlock
 	for pos := 0; ; {
 		if pos+4 > len(data) {
-			return errors.New("lzfse stream truncated")
+			return nil, errors.New("lzfse stream truncated")
 		}
-		magic := string(data[pos : pos+4])
-		var size, rawSize int
-		switch magic {
+		b := lzfseBlock{magic: string(data[pos : pos+4])}
+		var size, headerSize int
+		switch b.magic {
 		case "bvx$":
 			if raw != want {
-				return errors.Errorf("lzfse stream has %d raw bytes, want %d", raw, want)
+				return nil, errors.Errorf("lzfse stream has %d raw bytes, want %d", raw, want)
 			}
-			return nil
+			return blocks, nil
 		case "bvx-":
-			if pos+8 > len(data) {
-				return errors.New("lzfse block truncated")
+			headerSize = 8
+			if pos+headerSize > len(data) {
+				return nil, errors.New("lzfse block truncated")
 			}
-			rawSize = int(le.Uint32(data[pos+4:]))
-			size = 8 + rawSize
+			b.rawSize = int(le.Uint32(data[pos+4:]))
+			size = headerSize + b.rawSize
 		case "bvxn":
-			if pos+12 > len(data) {
-				return errors.New("lzfse block truncated")
+			headerSize = 12
+			if pos+headerSize > len(data) {
+				return nil, errors.New("lzfse block truncated")
 			}
-			rawSize = int(le.Uint32(data[pos+4:]))
-			size = 12 + int(le.Uint32(data[pos+8:]))
+			b.rawSize = int(le.Uint32(data[pos+4:]))
+			size = headerSize + int(le.Uint32(data[pos+8:]))
 		case "bvx2":
 			if pos+32 > len(data) {
-				return errors.New("lzfse block truncated")
+				return nil, errors.New("lzfse block truncated")
 			}
-			rawSize = int(le.Uint32(data[pos+4:]))
+			b.rawSize = int(le.Uint32(data[pos+4:]))
 			f0, f1, f2 := le.Uint64(data[pos+8:]), le.Uint64(data[pos+16:]), le.Uint64(data[pos+24:])
 			literalBytes := int(f0 >> 20 & (1<<20 - 1))
 			lmdBytes := int(f1 >> 40 & (1<<20 - 1))
 			size = int(uint32(f2)) + literalBytes + lmdBytes
 		default:
-			return errors.Errorf("unsupported lzfse block %q", magic)
+			return nil, errors.Errorf("unsupported lzfse block %q", b.magic)
 		}
-		raw += rawSize
-		if rawSize < 0 || raw > want || size <= 0 || pos+size > len(data) {
-			return errors.New("lzfse block out of bounds")
+		raw += b.rawSize
+		if b.rawSize < 0 || raw > want || size <= 0 || pos+size > len(data) {
+			return nil, errors.New("lzfse block out of bounds")
 		}
+		if headerSize > 0 {
+			b.payload = data[pos+headerSize : pos+size]
+		}
+		blocks = append(blocks, b)
 		pos += size
 	}
+}
+
+func premultipliedGrayToNRGBA(pix []byte, width, height int) *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, width, height))
+	for y := range height {
+		src := pix[y*width*2 : (y+1)*width*2]
+		dst := img.Pix[y*img.Stride : y*img.Stride+width*4]
+		for x := range width {
+			v, a := src[x*2], src[x*2+1]
+			if a != 0 && a != 255 {
+				v = unpremultiply(v, a)
+			}
+			dst[x*4], dst[x*4+1], dst[x*4+2], dst[x*4+3] = v, v, v, a
+		}
+	}
+	return img
 }
 
 func premultipliedBGRAToNRGBA(pix []byte, width, height int) *image.NRGBA {
