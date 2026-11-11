@@ -25,9 +25,25 @@ const (
 	maxCarSize     = 1 << 30
 )
 
+// AppInfo is what's shown about an app before it's signed.
+type AppInfo struct {
+	Version string
+	Icon    []byte // PNG of at most iconOutputSize pixels per side
+	IconErr error  // why there's no icon
+}
+
 // ExtractIcon returns the app icon of an IPA as a PNG of at most iconOutputSize pixels per side.
-// Loose icon files are tried first, then the compiled asset catalog.
 func ExtractIcon(r io.ReaderAt, size int64) ([]byte, error) {
+	info, err := ReadAppInfo(r, size)
+	if err != nil {
+		return nil, err
+	}
+	return info.Icon, info.IconErr
+}
+
+// ReadAppInfo reads an IPA's version and icon. For the icon, loose files are tried first, then the
+// compiled asset catalog. It only fails if the file isn't an app at all.
+func ReadAppInfo(r io.ReaderAt, size int64) (*AppInfo, error) {
 	zr, err := zip.NewReader(r, size)
 	if err != nil {
 		return nil, errors.WithMessage(err, "open zip")
@@ -50,12 +66,21 @@ func ExtractIcon(r io.ReaderAt, size int64) ([]byte, error) {
 		return nil, errors.New("no app bundle in Payload")
 	}
 
+	info := &AppInfo{}
 	var names iconNames
 	if plistFile, ok := rootFiles["Info.plist"]; ok {
-		if names, err = iconNamesFromPlist(plistFile); err != nil {
+		var plistInfo *infoPlist
+		if plistInfo, err = readInfoPlist(plistFile); err != nil {
 			return nil, err
 		}
+		info.Version = plistInfo.version()
+		names = plistInfo.iconNames()
 	}
+	info.Icon, info.IconErr = extractIcon(r, rootFiles, names)
+	return info, nil
+}
+
+func extractIcon(r io.ReaderAt, rootFiles map[string]*zip.File, names iconNames) ([]byte, error) {
 	img, looseErr := looseIcon(rootFiles, names.files)
 	if img == nil || img.Bounds().Dx() < iconOutputSize {
 		if car, ok := rootFiles["Assets.car"]; ok {
@@ -131,21 +156,44 @@ type iconNames struct {
 	assets []string // asset catalog names
 }
 
-func iconNamesFromPlist(f *zip.File) (iconNames, error) {
-	var names iconNames
+type infoPlist struct {
+	ShortVersion string         `plist:"CFBundleShortVersionString"`
+	BuildVersion string         `plist:"CFBundleVersion"`
+	Icons        map[string]any `plist:"CFBundleIcons"`
+	IconsIpad    map[string]any `plist:"CFBundleIcons~ipad"`
+	IconFiles    []string       `plist:"CFBundleIconFiles"`
+	IconFile     string         `plist:"CFBundleIconFile"`
+}
+
+func readInfoPlist(f *zip.File) (*infoPlist, error) {
 	data, err := readZipFile(f)
 	if err != nil {
-		return names, err
+		return nil, err
 	}
-	var info struct {
-		Icons     map[string]any `plist:"CFBundleIcons"`
-		IconsIpad map[string]any `plist:"CFBundleIcons~ipad"`
-		IconFiles []string       `plist:"CFBundleIconFiles"`
-		IconFile  string         `plist:"CFBundleIconFile"`
-	}
+	var info infoPlist
 	if _, err := plist.Unmarshal(data, &info); err != nil {
-		return names, errors.WithMessage(err, "parse Info.plist")
+		return nil, errors.WithMessage(err, "parse Info.plist")
 	}
+	return &info, nil
+}
+
+// maxVersionLength keeps a bogus version from stretching the card
+const maxVersionLength = 32
+
+// version is the user facing version, or the build number if an app has none.
+func (info *infoPlist) version() string {
+	v := strings.TrimSpace(info.ShortVersion)
+	if v == "" {
+		v = strings.TrimSpace(info.BuildVersion)
+	}
+	if r := []rune(v); len(r) > maxVersionLength {
+		v = string(r[:maxVersionLength])
+	}
+	return v
+}
+
+func (info *infoPlist) iconNames() iconNames {
+	var names iconNames
 	var files []string
 	for _, icons := range []map[string]any{info.Icons, info.IconsIpad} {
 		primary, _ := icons["CFBundlePrimaryIcon"].(map[string]any)
@@ -170,7 +218,7 @@ func iconNamesFromPlist(f *zip.File) (iconNames, error) {
 			names.files = append(names.files, name)
 		}
 	}
-	return names, nil
+	return names
 }
 
 func pickIcon(files map[string]*zip.File, prefixes []string) (*zip.File, int) {

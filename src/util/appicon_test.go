@@ -9,6 +9,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -212,4 +213,37 @@ func TestExtractIconMissing(t *testing.T) {
 	notZip := bytes.NewReader([]byte("nope"))
 	_, err = ExtractIcon(notZip, notZip.Size())
 	assert.Error(t, err)
+}
+
+func plistWith(entries string) []byte {
+	return []byte(`<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict>` + entries + `</dict></plist>`)
+}
+
+func TestReadAppInfoVersion(t *testing.T) {
+	for _, tc := range []struct{ entries, want string }{
+		{`<key>CFBundleShortVersionString</key><string> 4.11.3 </string><key>CFBundleVersion</key><string>1234</string>`, "4.11.3"},
+		{`<key>CFBundleVersion</key><string>1234</string>`, "1234"},
+		{`<key>CFBundleShortVersionString</key><string>` + strings.Repeat("9", 50) + `</string>`, strings.Repeat("9", maxVersionLength)},
+		{``, ""},
+	} {
+		ipa := makeIPA(t, map[string][]byte{
+			"Payload/Test.app/Info.plist": plistWith(tc.entries),
+			"Payload/Test.app/Icon.png":   encodePNG(t, testImage(4, 4)),
+		})
+		info, err := ReadAppInfo(ipa, ipa.Size())
+		require.NoError(t, err)
+		assert.Equal(t, tc.want, info.Version)
+		assert.NoError(t, info.IconErr)
+		assert.NotEmpty(t, info.Icon)
+	}
+
+	// the version is still read without an icon
+	ipa := makeIPA(t, map[string][]byte{
+		"Payload/Test.app/Info.plist": plistWith(`<key>CFBundleShortVersionString</key><string>2.0</string>`),
+	})
+	info, err := ReadAppInfo(ipa, ipa.Size())
+	require.NoError(t, err)
+	assert.Equal(t, "2.0", info.Version)
+	assert.Error(t, info.IconErr)
+	assert.Empty(t, info.Icon)
 }

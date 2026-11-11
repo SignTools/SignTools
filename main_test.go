@@ -175,7 +175,7 @@ func TestIntegration(t *testing.T) {
 	validateNoIcon(t)
 }
 
-// the test app isn't a real IPA, so it has no icon but must still sign
+// the test app isn't a real IPA, so it has no icon or version but must still sign
 func validateNoIcon(t *testing.T) {
 	apps, err := storage.Apps.GetAll()
 	assert.NoError(t, err)
@@ -183,6 +183,9 @@ func validateNoIcon(t *testing.T) {
 	stat, err := apps[0].Stat(storage.AppIcon)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), stat.Size())
+	version, err := apps[0].GetString(storage.AppVersion)
+	assert.NoError(t, err)
+	assert.Equal(t, "", version)
 	resp, err := http.Get(config.Current.ServerUrl + "/apps/" + apps[0].GetId() + "/icon")
 	assert.NoError(t, err)
 	resp.Body.Close()

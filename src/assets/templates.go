@@ -17,6 +17,7 @@ type App struct {
 	IconUrl             string
 	ProfileName         string
 	BundleId            string
+	Version             string
 	TweakCount          int
 	TweakNames          string
 }

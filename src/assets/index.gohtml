@@ -139,6 +139,14 @@
         background-color: rgba(255, 255, 255, 0.15);
         font-size: 1.5rem;
       }
+      /* with a one-line title this still fits beside the icon */
+      .app-version {
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.25;
+        opacity: 0.75;
+        word-break: break-all;
+      }
       .app-icon img {
         position: absolute;
         inset: 0;
@@ -749,7 +757,12 @@
                   /></span>
                 </div>
                 <div class="col pe-0">
-                  <h5 class="card-title" style="word-break: break-all">{{$app.Name}}</h5>
+                  <h5 class="card-title {{if $app.Version}}mb-1{{end}}" style="word-break: break-all">
+                    {{$app.Name}}
+                  </h5>
+                  {{if $app.Version}}
+                  <div class="app-version">v{{$app.Version}}</div>
+                  {{end}}
                 </div>
                 <div class="col-auto">
                   <div class="dropdown">

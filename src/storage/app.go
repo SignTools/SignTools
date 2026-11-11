@@ -25,12 +25,13 @@ const (
 	AppBuilderId    = FSName("builder_id")
 	AppBundleName   = FSName("bundle_name")
 	AppIcon         = FSName("icon")
+	AppVersion      = FSName("version")
 	TweaksDir       = FSName("tweaks")
 )
 
 type App interface {
 	GetId() string
-	SaveIcon() error
+	SaveInfo() error
 	IsSigned() (bool, error)
 	GetModTime() (time.Time, error)
 	ResetModTime() error
@@ -64,8 +65,8 @@ func createApp(unsignedFile io.Reader, name string, profile Profile, signArgs st
 	if err := app.SetFile(AppUnsignedFile, unsignedFile); err != nil {
 		return nil, errors.WithMessagef(err, "set %s", AppUnsignedFile)
 	}
-	if err := app.SaveIcon(); err != nil {
-		log.Warn().Err(err).Str("app_id", app.id).Msg("extract icon")
+	if err := app.SaveInfo(); err != nil {
+		log.Warn().Err(err).Str("app_id", app.id).Msg("read app info")
 	}
 	if len(tweakMap) > 0 {
 		if err := app.MkDir(TweaksDir); err != nil {
@@ -115,19 +116,29 @@ func (a *app) ResetModTime() error {
 	return a.changed(err)
 }
 
-// SaveIcon extracts the icon from the unsigned app. On failure it saves an empty file, so the
-// extraction isn't retried. It doesn't announce a change, since nothing else on the card depends on it.
-func (a *app) SaveIcon() error {
-	icon, extractErr := a.extractIcon()
+// SaveInfo saves the version and icon of the unsigned app. Whatever can't be read is saved as an
+// empty file, so it isn't retried. Only the version announces a change, since the icon has its own URL.
+func (a *app) SaveInfo() error {
+	info, readErr := a.readInfo()
+	if info == nil {
+		info = &util.AppInfo{IconErr: readErr}
+	}
 	a.mu.Lock()
-	defer a.mu.Unlock()
-	if err := atomic.WriteFile(a.resolvePath(AppIcon), bytes.NewReader(icon)); err != nil {
+	err := atomic.WriteFile(a.resolvePath(AppIcon), bytes.NewReader(info.Icon))
+	a.mu.Unlock()
+	if err != nil {
 		return errors.WithMessagef(err, "set %s", AppIcon)
 	}
-	return extractErr
+	if err := a.SetString(AppVersion, info.Version); err != nil {
+		return errors.WithMessagef(err, "set %s", AppVersion)
+	}
+	if readErr != nil {
+		return readErr
+	}
+	return errors.WithMessage(info.IconErr, "extract icon")
 }
 
-func (a *app) extractIcon() ([]byte, error) {
+func (a *app) readInfo() (*util.AppInfo, error) {
 	file, err := a.GetFile(AppUnsignedFile)
 	if err != nil {
 		return nil, err
@@ -137,5 +148,5 @@ func (a *app) extractIcon() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return util.ExtractIcon(file, stat.Size())
+	return util.ReadAppInfo(file, stat.Size())
 }
