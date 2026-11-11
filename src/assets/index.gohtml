@@ -778,9 +778,12 @@
                 >
                 <br />
                 {{end}} {{if eq $app.Status 1 }} {{$app.BundleId}} <br />
-                {{end}} {{$app.ProfileName}} <br />
-                {{if eq $app.Status 0 }} Processing {{else if eq $app.Status 1 }} Signed {{else if eq $app.Status 2 }}
-                Failed {{else if eq $app.Status 3 }} Waiting {{end}}
+                {{end}} {{$app.ProfileName}}
+                <!-- signed is clear from the green card and the install button -->
+                {{if eq $app.Status 0 }} <br />
+                Processing {{else if eq $app.Status 2 }} <br />
+                Failed {{else if eq $app.Status 3 }} <br />
+                Waiting {{end}}
               </p>
               <div class="card-footer-row">
                 <span>{{$app.ModTime}}</span>
