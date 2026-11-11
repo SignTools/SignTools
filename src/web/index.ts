@@ -52,6 +52,8 @@ const masonry = new Masonry(masonryRow, {
   horizontalOrder: true,
   itemSelector: ".appItem",
   columnWidth: "#appSizeItem",
+  // cards jump to their place; animating every search keystroke sends them flying
+  transitionDuration: 0,
 });
 const navMain = new Tab(byId("nav-main-tab", HTMLButtonElement));
 const viewToggle = byId("viewToggle", HTMLDivElement);
@@ -61,14 +63,12 @@ const masonryTweaks = new Masonry(masonryTweaksRow, {
   horizontalOrder: true,
   itemSelector: ".tweakItem",
   columnWidth: "#tweakSizeItem",
+  transitionDuration: 0,
 });
 
-function layoutGrids(instant: boolean) {
-  for (const m of [masonry, masonryTweaks]) {
-    m.options.layoutInstant = instant;
-    m.layout();
-    delete m.options.layoutInstant;
-  }
+function layoutGrids() {
+  masonry.layout();
+  masonryTweaks.layout();
 }
 
 // apps without an icon keep the placeholder underneath
@@ -89,7 +89,7 @@ for (const img of document.querySelectorAll<HTMLImageElement>(".app-icon img")) 
 let relayoutFrame = 0;
 const cardResizeObserver = new ResizeObserver(() => {
   cancelAnimationFrame(relayoutFrame);
-  relayoutFrame = requestAnimationFrame(() => layoutGrids(true));
+  relayoutFrame = requestAnimationFrame(() => layoutGrids());
 });
 for (const el of document.querySelectorAll(".appItem, .tweakItem")) {
   cardResizeObserver.observe(el);
@@ -193,7 +193,7 @@ function setView(view: string | undefined) {
   history.replaceState(null, "", isTweaks ? "#tweaks" : location.pathname + location.search);
   // the newly shown grid was laid out while hidden (zero width), so snap it into
   // place instead of animating every card from the corner
-  applySearchFilter(true);
+  applySearchFilter();
 }
 for (const btn of viewToggle.querySelectorAll("button")) {
   btn.addEventListener("click", () => setView(btn.dataset.view));
@@ -456,13 +456,13 @@ document.addEventListener("click", (e) => {
   }
 });
 
-function applySearchFilter(instant = false) {
+function applySearchFilter() {
   const searchText = inputSearchFilter.value.toLowerCase();
   for (const item of document.querySelectorAll<HTMLElement>(".appItem, .tweakItem")) {
     const title = item.querySelector(".card-title")?.textContent?.toLowerCase() ?? "";
     item.hidden = searchText !== "" && !title.includes(searchText);
   }
-  layoutGrids(instant);
+  layoutGrids();
 }
 inputSearchFilter.addEventListener("input", () => applySearchFilter());
 
@@ -578,7 +578,7 @@ function applyLiveState(state: LiveState) {
   changed = patchGrid(masonryTweaksRow, state.tweaks, "tweakItem", masonryTweaks) || changed;
   tweaksEmpty.hidden = masonryTweaksRow.getElementsByClassName("tweakItem").length > 0;
   setSavedTweaks(state.savedTweaks);
-  if (changed) applySearchFilter(true);
+  if (changed) applySearchFilter();
 }
 
 function setLiveStatus(state: "live" | "offline", text: string, title: string) {
