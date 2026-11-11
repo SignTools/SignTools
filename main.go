@@ -154,10 +154,12 @@ func serve(host string, port uint64) {
 
 	e.GET("/", renderIndex, basicAuth)
 	e.GET("/events", streamEvents, basicAuth)
-	e.GET("/favicon.png", getFavIcon, basicAuth)
+	static := staticHandler()
+	staticGzip := middleware.GzipWithConfig(middleware.GzipConfig{Skipper: skipStaticGzip})
+	e.GET("/favicon.png", static, basicAuth)
 	// no auth: the install page loads these too
-	e.GET("/js/*", staticHandler("js"))
-	e.GET("/vendor/*", staticHandler("vendor"))
+	e.GET("/js/*", static, staticGzip)
+	e.GET("/vendor/*", static, staticGzip)
 	e.POST("/apps", uploadUnsignedApp, basicAuth)
 	getAndHead(e, "/apps/:id/signed", appResolver(getSignedApp), appResolver(getSignedApp))
 	getAndHead(e, "/apps/:id/tweaks", appResolver(getTweaks), appResolver(getEmpty200App))
@@ -396,34 +398,31 @@ func setBuilderSecrets(builder builders.Builder) error {
 	})
 }
 
-// staticHandler uses content-hash ETags, since embedded files have no modification time.
-func staticHandler(dir string) echo.HandlerFunc {
-	files, err := fs.Sub(assets.StaticFS, dir)
-	if err != nil {
-		log.Fatal().Err(err).Str("dir", dir).Msg("static fs")
-	}
+// staticHandler serves StaticFS by request path, with content-hash ETags since embedded files have no
+// modification time. The ETags are weak because the gzip middleware may change the encoding.
+func staticHandler() echo.HandlerFunc {
 	etags := map[string]string{}
-	if err := fs.WalkDir(files, ".", func(name string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(assets.StaticFS, ".", func(name string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
-		data, err := fs.ReadFile(files, name)
+		data, err := fs.ReadFile(assets.StaticFS, name)
 		if err != nil {
 			return err
 		}
 		sum := sha256.Sum256(data)
-		etags[name] = `"` + hex.EncodeToString(sum[:8]) + `"`
+		etags[name] = `W/"` + hex.EncodeToString(sum[:8]) + `"`
 		return nil
 	}); err != nil {
-		log.Fatal().Err(err).Str("dir", dir).Msg("hash static files")
+		log.Fatal().Err(err).Msg("hash static files")
 	}
 	return func(c echo.Context) error {
-		name := c.Param("*")
+		name := strings.TrimPrefix(c.Request().URL.Path, "/")
 		etag, ok := etags[name]
 		if !ok {
 			return c.NoContent(http.StatusNotFound)
 		}
-		file, err := files.Open(name)
+		file, err := assets.StaticFS.Open(name)
 		if err != nil {
 			return err
 		}
@@ -435,9 +434,17 @@ func staticHandler(dir string) echo.HandlerFunc {
 	}
 }
 
-func getFavIcon(c echo.Context) error {
-	http.ServeContent(c.Response(), c.Request(), assets.FavIconStat.Name(), assets.FavIconStat.ModTime(), bytes.NewReader(assets.FavIconBytes))
-	return nil
+// skipStaticGzip skips already-compressed formats, and range requests, whose byte offsets refer to the
+// uncompressed file.
+func skipStaticGzip(c echo.Context) bool {
+	if c.Request().Header.Get("Range") != "" {
+		return true
+	}
+	switch path.Ext(c.Request().URL.Path) {
+	case ".png", ".woff", ".woff2":
+		return true
+	}
+	return false
 }
 
 func uploadSignedApp(c echo.Context, job *storage.ReturnJob) error {
