@@ -349,3 +349,24 @@ func TestReadAppInfoPrefersIOS(t *testing.T) {
 	assert.Equal(t, "ios", info.Version)
 	assert.NoError(t, info.IconErr)
 }
+
+func TestExtractIconInSubfolder(t *testing.T) {
+	big := testImage(15, 15)
+	ipa := makeIPA(t, map[string][]byte{
+		"Payload/Test.app/Info.plist":         plistWith(`<key>CFBundleIconFiles</key><array><string>assets/Icon.png</string></array>`),
+		"Payload/Test.app/assets/Icon.png":    encodePNG(t, testImage(5, 5)),
+		"Payload/Test.app/assets/Icon@3x.png": encodePNG(t, big),
+		// names without a folder only match files at the root
+		"Payload/Test.app/PlugIns/Ext.appex/Icon.png": encodePNG(t, testImage(40, 40)),
+	})
+	out, err := ExtractIcon(ipa, ipa.Size())
+	require.NoError(t, err)
+	assert.Equal(t, big.Pix, toNRGBA(decode(t, out)).Pix)
+
+	ipa = makeIPA(t, map[string][]byte{
+		"Payload/Test.app/Info.plist":                 plistWith(``),
+		"Payload/Test.app/PlugIns/Ext.appex/Icon.png": encodePNG(t, testImage(40, 40)),
+	})
+	_, err = ExtractIcon(ipa, ipa.Size())
+	assert.Error(t, err)
+}

@@ -69,9 +69,11 @@ func ReadAppInfo(r io.ReaderAt, size int64) (*AppInfo, error) {
 
 // appBundle is an iOS app (Payload/X.app/Info.plist) or a native Mac app (X.app/Contents/Info.plist).
 type appBundle struct {
-	mac       bool
-	plist     *zip.File
-	resources map[string]*zip.File // files directly in the folder holding the icon files
+	mac   bool
+	plist *zip.File
+	// files under the folder holding the icon files, by relative path, since Info.plist may list
+	// icons in subfolders
+	resources map[string]*zip.File
 }
 
 func findBundle(files []*zip.File) (*appBundle, error) {
@@ -119,7 +121,7 @@ func findBundle(files []*zip.File) (*appBundle, error) {
 	}
 	bundle := &appBundle{mac: best.mac, plist: best.plist, resources: map[string]*zip.File{}}
 	for _, f := range files {
-		if name, ok := strings.CutPrefix(f.Name, best.resourcesDir); ok && name != "" && !strings.Contains(name, "/") {
+		if name, ok := strings.CutPrefix(f.Name, best.resourcesDir); ok && name != "" && !strings.HasSuffix(name, "/") {
 			bundle.resources[name] = f
 		}
 	}
