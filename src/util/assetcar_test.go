@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"image"
 	"image/color"
+	"image/draw"
+	"image/jpeg"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -105,9 +107,12 @@ func lzfseRaw(data []byte) []byte {
 
 type testRendition struct {
 	appearance, identifier uint16
+	idiom                  uint16
 	layout                 uint16
 	width, height          int
 	color                  color.NRGBA
+	pad                    int    // alignment bytes after each row
+	jpeg                   []byte // stored as a JPEG file instead of a bitmap
 }
 
 func (r testRendition) csi() []byte {
@@ -123,6 +128,15 @@ func (r testRendition) csi() []byte {
 	if r.layout == 1010 {
 		return head
 	}
+	if r.jpeg != nil {
+		copy(head[24:], "GEPJ")
+		le.PutUint32(head[12:], 0)
+		le.PutUint32(head[16:], 0)
+		data := append([]byte("DWAR"), le.AppendUint32(le.AppendUint32(nil, 0), uint32(len(r.jpeg)))...)
+		data = append(data, r.jpeg...)
+		le.PutUint32(head[180:], uint32(len(data)))
+		return append(head, data...)
+	}
 	a := uint32(r.color.A)
 	px := []byte{byte(uint32(r.color.B) * a / 255), byte(uint32(r.color.G) * a / 255), byte(uint32(r.color.R) * a / 255), r.color.A}
 	// two bands of rows, like Xcode's output
@@ -131,8 +145,9 @@ func (r testRendition) csi() []byte {
 	le.PutUint32(data[4:], 3)
 	le.PutUint32(data[8:], 4)
 	le.PutUint32(data[12:], uint32(len(bands)))
+	row := append(bytes.Repeat(px, r.width), make([]byte, r.pad)...)
 	for _, rows := range bands {
-		chunk := lzfseRaw(bytes.Repeat(px, rows*r.width))
+		chunk := lzfseRaw(bytes.Repeat(row, rows))
 		hdr := append([]byte("KCBC"), make([]byte, 16)...)
 		le.PutUint32(hdr[12:], uint32(rows))
 		le.PutUint32(hdr[16:], uint32(len(chunk)))
@@ -145,10 +160,10 @@ func (r testRendition) csi() []byte {
 func makeCar(renditions []testRendition) []byte {
 	le := binary.LittleEndian
 	b := &bomBuilder{}
-	// key format: appearance, identifier, scale
+	// key format: appearance, identifier, scale, idiom
 	kf := append([]byte("tmfk"), make([]byte, 8)...)
-	le.PutUint32(kf[8:], 3)
-	for _, attr := range []uint32{carAttrAppearance, carAttrIdentifier, 12} {
+	le.PutUint32(kf[8:], 4)
+	for _, attr := range []uint32{carAttrAppearance, carAttrIdentifier, 12, carAttrIdiom} {
 		kf = le.AppendUint32(kf, attr)
 	}
 	b.setVar("KEYFORMAT", b.add(kf))
@@ -163,7 +178,7 @@ func makeCar(renditions []testRendition) []byte {
 	})
 	var entries []bomEntry
 	for _, r := range renditions {
-		key := le.AppendUint16(le.AppendUint16(le.AppendUint16(nil, r.appearance), r.identifier), 1)
+		key := le.AppendUint16(le.AppendUint16(le.AppendUint16(le.AppendUint16(nil, r.appearance), r.identifier), 1), r.idiom)
 		entries = append(entries, bomEntry{key, r.csi()})
 	}
 	b.addTree("RENDITIONS", entries)
@@ -260,21 +275,25 @@ func TestExtractCarIconMalformed(t *testing.T) {
 	}
 }
 
-func blocksErr(data []byte, want int) error {
-	_, err := lzfseBlocks(data, want)
-	return err
-}
-
 func TestLzfseBlocks(t *testing.T) {
 	data := lzfseRaw(make([]byte, 10))
-	assert.NoError(t, blocksErr(data, 10))
-	assert.Error(t, blocksErr(data, 9))
-	assert.Error(t, blocksErr(data, 11))
-	assert.Error(t, blocksErr(data[:len(data)-4], 10))
+	blocks, total, err := lzfseBlocks(data, 10)
+	require.NoError(t, err)
+	assert.Equal(t, 10, total)
+	assert.Len(t, blocks, 1)
+	_, total, err = lzfseBlocks(data, 11)
+	assert.NoError(t, err)
+	assert.Equal(t, 10, total)
+	_, _, err = lzfseBlocks(data, 9)
+	assert.Error(t, err)
+	_, _, err = lzfseBlocks(data[:len(data)-4], 10)
+	assert.Error(t, err)
 
 	huge := append([]byte("bvxn"), binary.LittleEndian.AppendUint32(binary.LittleEndian.AppendUint32(nil, 10), 0xffffffff)...)
-	assert.Error(t, blocksErr(append(huge, "bvx$"...), 10))
-	assert.Error(t, blocksErr([]byte("bvx1aaaaaaaa"), 10))
+	_, _, err = lzfseBlocks(append(huge, "bvx$"...), 10)
+	assert.Error(t, err)
+	_, _, err = lzfseBlocks([]byte("bvx1aaaaaaaa"), 10)
+	assert.Error(t, err)
 
 	out, err := decompressLzfse(data, 10)
 	require.NoError(t, err)
@@ -298,4 +317,42 @@ func TestDecompressLzfseShortBlock(t *testing.T) {
 	out, err := decompressLzfse(data, len(want))
 	require.NoError(t, err)
 	assert.Equal(t, want, out)
+}
+
+func carImage(t *testing.T, car []byte) *image.NRGBA {
+	img, err := ExtractCarIcon(bytes.NewReader(car), int64(len(car)), []string{"AppIcon"})
+	require.NoError(t, err)
+	return img
+}
+
+func TestExtractCarIconRowPadding(t *testing.T) {
+	// 180px rows of 720 bytes stored as 736, as in older catalogs
+	img := carImage(t, makeCar([]testRendition{{identifier: 42, layout: 12, width: 180, height: 9, color: iconColor, pad: 16}}))
+	assert.Equal(t, image.Rect(0, 0, 180, 9), img.Bounds())
+	assert.Equal(t, iconColor, img.NRGBAAt(179, 8))
+
+	car := makeCar([]testRendition{{identifier: 42, layout: 12, width: 4, height: 3, color: iconColor, pad: maxRowPadding + 4}})
+	_, err := ExtractCarIcon(bytes.NewReader(car), int64(len(car)), []string{"AppIcon"})
+	assert.Error(t, err)
+}
+
+func TestExtractCarIconJPEG(t *testing.T) {
+	var buf bytes.Buffer
+	src := image.NewRGBA(image.Rect(0, 0, 64, 48))
+	draw.Draw(src, src.Bounds(), image.NewUniform(color.RGBA{0, 0, 255, 255}), image.Point{}, draw.Src)
+	require.NoError(t, jpeg.Encode(&buf, src, &jpeg.Options{Quality: 100}))
+	device := testRendition{identifier: 42, idiom: 1, layout: 12, width: 20, height: 20, color: iconColor}
+	marketing := testRendition{identifier: 42, idiom: carIdiomMarketing, layout: 12, jpeg: buf.Bytes()}
+	plain := testRendition{identifier: 42, layout: 12, jpeg: buf.Bytes()}
+
+	// a stored JPEG is used like a bitmap
+	img := carImage(t, makeCar([]testRendition{device, plain}))
+	assert.Equal(t, image.Rect(0, 0, 64, 48), img.Bounds())
+	got := img.NRGBAAt(10, 10)
+	assert.InDelta(t, 255, got.B, 3)
+	assert.InDelta(t, 0, got.R, 3)
+
+	// the App Store icon only if there's nothing else, even though it's bigger
+	assert.Equal(t, image.Rect(0, 0, 20, 20), carImage(t, makeCar([]testRendition{marketing, device})).Bounds())
+	assert.Equal(t, image.Rect(0, 0, 64, 48), carImage(t, makeCar([]testRendition{marketing})).Bounds())
 }

@@ -8,6 +8,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 
 	"github.com/aixiansheng/lzfse"
@@ -19,6 +21,8 @@ import (
 
 const (
 	carAttrAppearance = 7
+	carAttrIdiom      = 15
+	carIdiomMarketing = 6 // the App Store icon, whose artwork can differ from the app's
 	carAttrIdentifier = 17
 
 	carLayoutImageMin = 10 // one-part fixed size
@@ -179,21 +183,29 @@ func (b *bomStore) walkTree(name string, fn func(key []byte, value uint32) error
 const (
 	carFormatARGB = "BGRA"
 	carFormatGA8  = " 8AG"
+	carFormatJPEG = "GEPJ"
+	carFormatPNG  = " GNP"
 )
 
 type carRendition struct {
 	value      uint32
 	appearance uint16
+	marketing  bool
 	gray       bool
+	format     string
+	encoded    []byte // JPEG or PNG data, for renditions stored as files
 	width      int
 	height     int
 }
 
-// betterThan prefers the default appearance over dark and tinted variants, then color over
-// grayscale, then the bigger image.
+// betterThan prefers the default appearance over dark and tinted variants, then device icons over
+// the App Store one, then color over grayscale, then the bigger image.
 func (c *carRendition) betterThan(o *carRendition) bool {
 	if (c.appearance == 0) != (o.appearance == 0) {
 		return c.appearance == 0
+	}
+	if c.marketing != o.marketing {
+		return !c.marketing
 	}
 	if c.gray != o.gray {
 		return !c.gray
@@ -253,13 +265,15 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 	if 12+4*attrCount > len(keyFormat) {
 		return nil, errors.New("key format truncated")
 	}
-	identifierPos, appearancePos := -1, -1
+	identifierPos, appearancePos, idiomPos := -1, -1, -1
 	for i := range attrCount {
 		switch le.Uint32(keyFormat[12+4*i:]) {
 		case carAttrIdentifier:
 			identifierPos = i
 		case carAttrAppearance:
 			appearancePos = i
+		case carAttrIdiom:
+			idiomPos = i
 		}
 	}
 	if identifierPos < 0 {
@@ -275,6 +289,9 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 		if appearancePos >= 0 {
 			c.appearance = le.Uint16(key[2*appearancePos:])
 		}
+		if idiomPos >= 0 {
+			c.marketing = le.Uint16(key[2*idiomPos:]) == carIdiomMarketing
+		}
 		candidates = append(candidates, c)
 		return nil
 	}); err != nil {
@@ -288,12 +305,23 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 		if err != nil || string(head[:4]) != "ISTC" {
 			continue
 		}
-		layout, format := le.Uint16(head[36:]), string(head[24:28])
-		if layout < carLayoutImageMin || layout > carLayoutImageMax || format != carFormatARGB && format != carFormatGA8 {
+		layout := le.Uint16(head[36:])
+		if layout < carLayoutImageMin || layout > carLayoutImageMax {
 			continue
 		}
-		c.gray = format == carFormatGA8
-		c.width, c.height = int(le.Uint32(head[12:])), int(le.Uint32(head[16:]))
+		c.format = string(head[24:28])
+		switch c.format {
+		case carFormatARGB, carFormatGA8:
+			c.gray = c.format == carFormatGA8
+			c.width, c.height = int(le.Uint32(head[12:])), int(le.Uint32(head[16:]))
+		case carFormatJPEG, carFormatPNG:
+			// e.g. the App Store icon, whose header has no size
+			if c.encoded, c.width, c.height, err = readEncodedRendition(bom, c.value, c.format); err != nil {
+				continue
+			}
+		default:
+			continue
+		}
 		if c.width <= 0 || c.height <= 0 || c.width > maxIconSide || c.height > maxIconSide {
 			continue
 		}
@@ -304,6 +332,18 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 	if best == nil {
 		return nil, errors.New("no bitmap rendition for icon asset")
 	}
+	if best.encoded != nil {
+		var img image.Image
+		if best.format == carFormatJPEG {
+			img, err = jpeg.Decode(bytes.NewReader(best.encoded))
+		} else {
+			img, err = png.Decode(bytes.NewReader(best.encoded))
+		}
+		if err != nil {
+			return nil, errors.WithMessage(err, "decode rendition image")
+		}
+		return toNRGBA(img), nil
+	}
 	csi, err := bom.block(best.value)
 	if err != nil {
 		return nil, err
@@ -311,14 +351,46 @@ func ExtractCarIcon(r io.ReaderAt, size int64, names []string) (*image.NRGBA, er
 	return decodeCsiBitmap(csi, best.width, best.height, best.gray)
 }
 
+// readEncodedRendition returns the image file in a rendition's raw data ("RAWD") and its size.
+func readEncodedRendition(bom *bomStore, value uint32, format string) ([]byte, int, int, error) {
+	csi, err := bom.block(value)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	data, err := csiData(csi)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	if len(data) < 12 || string(data[:4]) != "DWAR" {
+		return nil, 0, 0, errors.New("unsupported raw rendition")
+	}
+	n := int(binary.LittleEndian.Uint32(data[8:]))
+	if n < 0 || 12+n > len(data) {
+		return nil, 0, 0, errors.New("raw rendition truncated")
+	}
+	encoded := data[12 : 12+n]
+	var cfg image.Config
+	if format == carFormatJPEG {
+		cfg, err = jpeg.DecodeConfig(bytes.NewReader(encoded))
+	} else {
+		cfg, err = png.DecodeConfig(bytes.NewReader(encoded))
+	}
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return encoded, cfg.Width, cfg.Height, nil
+}
+
+// maxRowPadding bounds the alignment padding at the end of bitmap rows, e.g. 720 byte rows are
+// stored as 736 bytes in some catalogs.
+const maxRowPadding = 128
+
 func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, error) {
 	le := binary.LittleEndian
-	tlvLen, dataLen := int(le.Uint32(csi[168:])), int(le.Uint32(csi[180:]))
-	start := csiHeaderSize + tlvLen
-	if tlvLen < 0 || dataLen < 0 || start+dataLen > len(csi) {
-		return nil, errors.New("csi data truncated")
+	data, err := csiData(csi)
+	if err != nil {
+		return nil, err
 	}
-	data := csi[start : start+dataLen]
 	if len(data) < 16 || string(data[:4]) != "MLEC" {
 		return nil, errors.New("unsupported rendition data")
 	}
@@ -327,7 +399,7 @@ func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, er
 	if gray {
 		bpp = 2
 	}
-	stride := width * bpp
+	rowBytes := width * bpp
 	var pixels []byte
 	if len(data) >= 20 && string(data[16:20]) == "KCBC" {
 		// the image is split into bands of rows, each compressed on its own
@@ -337,10 +409,10 @@ func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, er
 				return nil, errors.New("bad csi chunk")
 			}
 			rows, n := int(le.Uint32(data[pos+12:])), int(le.Uint32(data[pos+16:]))
-			if rows < 0 || n < 0 || pos+20+n > len(data) || len(pixels)/stride+rows > height {
+			if rows <= 0 || n < 0 || pos+20+n > len(data) || len(pixels)/rowBytes+rows > height {
 				return nil, errors.New("csi chunk out of bounds")
 			}
-			chunk, err := decompressCsi(compression, data[pos+20:pos+20+n], rows*stride)
+			chunk, err := decompressRows(compression, data[pos+20:pos+20+n], rows, rowBytes)
 			if err != nil {
 				return nil, err
 			}
@@ -351,13 +423,12 @@ func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, er
 		if field < 0 || 16+field > len(data) {
 			return nil, errors.New("csi data out of bounds")
 		}
-		var err error
-		if pixels, err = decompressCsi(compression, data[16:16+field], height*stride); err != nil {
+		if pixels, err = decompressRows(compression, data[16:16+field], height, rowBytes); err != nil {
 			return nil, err
 		}
 	}
-	if len(pixels) != height*stride {
-		return nil, errors.Errorf("decoded %d bytes, want %d", len(pixels), height*stride)
+	if len(pixels) != height*rowBytes {
+		return nil, errors.Errorf("decoded %d bytes, want %d", len(pixels), height*rowBytes)
 	}
 	if gray {
 		return premultipliedGrayToNRGBA(pixels, width, height), nil
@@ -365,36 +436,68 @@ func decodeCsiBitmap(csi []byte, width, height int, gray bool) (*image.NRGBA, er
 	return premultipliedBGRAToNRGBA(pixels, width, height), nil
 }
 
-func decompressCsi(compression uint32, data []byte, want int) ([]byte, error) {
+// csiData returns the rendition data that follows the CSI header and its TLV metadata.
+func csiData(csi []byte) ([]byte, error) {
+	le := binary.LittleEndian
+	tlvLen, dataLen := int(le.Uint32(csi[168:])), int(le.Uint32(csi[180:]))
+	start := csiHeaderSize + tlvLen
+	if tlvLen < 0 || dataLen < 0 || start+dataLen > len(csi) {
+		return nil, errors.New("csi data truncated")
+	}
+	return csi[start : start+dataLen], nil
+}
+
+// decompressRows returns rows of rowBytes each, with any row padding removed.
+func decompressRows(compression uint32, data []byte, rows, rowBytes int) ([]byte, error) {
+	out, err := decompressCsi(compression, data, rows*(rowBytes+maxRowPadding))
+	if err != nil {
+		return nil, err
+	}
+	stride := len(out) / rows
+	if len(out)%rows != 0 || stride < rowBytes {
+		return nil, errors.Errorf("decompressed %d bytes for %d rows of %d bytes", len(out), rows, rowBytes)
+	}
+	if stride == rowBytes {
+		return out, nil
+	}
+	pixels := make([]byte, 0, rows*rowBytes)
+	for y := range rows {
+		pixels = append(pixels, out[y*stride:y*stride+rowBytes]...)
+	}
+	return pixels, nil
+}
+
+// decompressCsi decompresses rendition data, which must not exceed limit bytes.
+func decompressCsi(compression uint32, data []byte, limit int) ([]byte, error) {
 	var out []byte
 	var err error
 	switch compression {
 	case 0:
 		out = data
 	case 2:
-		out, err = inflate(data, want)
+		out, err = inflate(data, limit)
 	case 3:
 		if bytes.HasPrefix(data, []byte("bvx")) {
-			out, err = decompressLzfse(data, want)
+			out, err = decompressLzfse(data, limit)
 		} else {
-			out, err = decodeLZVN(make([]byte, 0, want), data, want)
+			out, err = decodeLZVN(nil, data, limit)
 		}
 	case 4:
-		out, err = decompressLzfse(data, want)
+		out, err = decompressLzfse(data, limit)
 	default:
 		return nil, errors.Errorf("unsupported csi compression %d", compression)
 	}
 	if err != nil {
 		return nil, errors.WithMessagef(err, "decompress csi type %d", compression)
 	}
-	if len(out) != want {
-		return nil, errors.Errorf("decompressed %d bytes, want %d", len(out), want)
+	if len(out) > limit {
+		return nil, errors.Errorf("decompressed more than %d bytes", limit)
 	}
 	return out, nil
 }
 
 // inflate handles the gzip, zlib and raw deflate streams that all appear as "zip" compression.
-func inflate(data []byte, want int) ([]byte, error) {
+func inflate(data []byte, limit int) ([]byte, error) {
 	var r io.Reader
 	switch {
 	case len(data) >= 2 && data[0] == 0x1f && data[1] == 0x8b:
@@ -412,7 +515,7 @@ func inflate(data []byte, want int) ([]byte, error) {
 	default:
 		r = flate.NewReader(bytes.NewReader(data))
 	}
-	return io.ReadAll(io.LimitReader(r, int64(want)+1))
+	return io.ReadAll(io.LimitReader(r, int64(limit)+1))
 }
 
 // The decoder reads compressed block headers into a fixed 752 byte struct before seeking back to
@@ -422,8 +525,8 @@ const lzfseHeaderPadding = 1024
 // decompressLzfse checks the block sizes first, since the library decoder trusts them and
 // allocates accordingly. The library only handles bvx2 blocks correctly, so streams without them
 // are decoded here. Apple's encoder doesn't mix bvx2 and LZVN blocks in one stream.
-func decompressLzfse(data []byte, want int) (out []byte, err error) {
-	blocks, err := lzfseBlocks(data, want)
+func decompressLzfse(data []byte, limit int) (out []byte, err error) {
+	blocks, total, err := lzfseBlocks(data, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +539,7 @@ func decompressLzfse(data []byte, want int) (out []byte, err error) {
 		return nil, errors.New("lzfse stream mixes block types")
 	}
 	if !hasV2 {
-		out = make([]byte, 0, want)
+		out = make([]byte, 0, total)
 		for _, b := range blocks {
 			if b.magic == "bvx-" {
 				out = append(out, b.payload...)
@@ -459,7 +562,13 @@ func decompressLzfse(data []byte, want int) (out []byte, err error) {
 	}()
 	padded := make([]byte, len(data)+lzfseHeaderPadding)
 	copy(padded, data)
-	return io.ReadAll(lzfse.NewReader(bytes.NewReader(padded)))
+	if out, err = io.ReadAll(lzfse.NewReader(bytes.NewReader(padded))); err != nil {
+		return nil, err
+	}
+	if len(out) != total {
+		return nil, errors.Errorf("lzfse decoded %d bytes, blocks declare %d", len(out), total)
+	}
+	return out, nil
 }
 
 type lzfseBlock struct {
@@ -468,40 +577,38 @@ type lzfseBlock struct {
 	payload []byte // only for uncompressed and LZVN blocks
 }
 
-// lzfseBlocks splits an LZFSE stream into blocks, checking that they fit and decode to want bytes.
-func lzfseBlocks(data []byte, want int) ([]lzfseBlock, error) {
+// lzfseBlocks splits an LZFSE stream into blocks, checking that they fit and decode to at most
+// limit bytes, and returns their total decoded size.
+func lzfseBlocks(data []byte, limit int) ([]lzfseBlock, int, error) {
 	le := binary.LittleEndian
 	raw := 0
 	var blocks []lzfseBlock
 	for pos := 0; ; {
 		if pos+4 > len(data) {
-			return nil, errors.New("lzfse stream truncated")
+			return nil, 0, errors.New("lzfse stream truncated")
 		}
 		b := lzfseBlock{magic: string(data[pos : pos+4])}
 		var size, headerSize int
 		switch b.magic {
 		case "bvx$":
-			if raw != want {
-				return nil, errors.Errorf("lzfse stream has %d raw bytes, want %d", raw, want)
-			}
-			return blocks, nil
+			return blocks, raw, nil
 		case "bvx-":
 			headerSize = 8
 			if pos+headerSize > len(data) {
-				return nil, errors.New("lzfse block truncated")
+				return nil, 0, errors.New("lzfse block truncated")
 			}
 			b.rawSize = int(le.Uint32(data[pos+4:]))
 			size = headerSize + b.rawSize
 		case "bvxn":
 			headerSize = 12
 			if pos+headerSize > len(data) {
-				return nil, errors.New("lzfse block truncated")
+				return nil, 0, errors.New("lzfse block truncated")
 			}
 			b.rawSize = int(le.Uint32(data[pos+4:]))
 			size = headerSize + int(le.Uint32(data[pos+8:]))
 		case "bvx2":
 			if pos+32 > len(data) {
-				return nil, errors.New("lzfse block truncated")
+				return nil, 0, errors.New("lzfse block truncated")
 			}
 			b.rawSize = int(le.Uint32(data[pos+4:]))
 			f0, f1, f2 := le.Uint64(data[pos+8:]), le.Uint64(data[pos+16:]), le.Uint64(data[pos+24:])
@@ -509,11 +616,11 @@ func lzfseBlocks(data []byte, want int) ([]lzfseBlock, error) {
 			lmdBytes := int(f1 >> 40 & (1<<20 - 1))
 			size = int(uint32(f2)) + literalBytes + lmdBytes
 		default:
-			return nil, errors.Errorf("unsupported lzfse block %q", b.magic)
+			return nil, 0, errors.Errorf("unsupported lzfse block %q", b.magic)
 		}
 		raw += b.rawSize
-		if b.rawSize < 0 || raw > want || size <= 0 || pos+size > len(data) {
-			return nil, errors.New("lzfse block out of bounds")
+		if b.rawSize < 0 || raw > limit || size <= 0 || pos+size > len(data) {
+			return nil, 0, errors.New("lzfse block out of bounds")
 		}
 		if headerSize > 0 {
 			b.payload = data[pos+headerSize : pos+size]

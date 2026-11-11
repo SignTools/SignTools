@@ -48,58 +48,158 @@ func ReadAppInfo(r io.ReaderAt, size int64) (*AppInfo, error) {
 	if err != nil {
 		return nil, errors.WithMessage(err, "open zip")
 	}
-	var appDir string
-	rootFiles := map[string]*zip.File{}
-	for _, f := range zr.File {
-		parts := strings.Split(f.Name, "/")
-		if len(parts) != 3 || parts[0] != "Payload" || !strings.HasSuffix(parts[1], ".app") {
-			continue
-		}
-		if appDir == "" {
-			appDir = parts[1]
-		} else if appDir != parts[1] {
-			continue
-		}
-		rootFiles[parts[2]] = f
-	}
-	if appDir == "" {
-		return nil, errors.New("no app bundle in Payload")
+	bundle, err := findBundle(zr.File)
+	if err != nil {
+		return nil, err
 	}
 
 	info := &AppInfo{}
 	var names iconNames
-	if plistFile, ok := rootFiles["Info.plist"]; ok {
+	if bundle.plist != nil {
 		var plistInfo *infoPlist
-		if plistInfo, err = readInfoPlist(plistFile); err != nil {
+		if plistInfo, err = readInfoPlist(bundle.plist); err != nil {
 			return nil, err
 		}
 		info.Version = plistInfo.version()
 		names = plistInfo.iconNames()
 	}
-	info.Icon, info.IconErr = extractIcon(r, rootFiles, names)
+	info.Icon, info.IconErr = extractIcon(r, bundle, names)
 	return info, nil
 }
 
-func extractIcon(r io.ReaderAt, rootFiles map[string]*zip.File, names iconNames) ([]byte, error) {
-	img, looseErr := looseIcon(rootFiles, names.files)
+// appBundle is an iOS app (Payload/X.app/Info.plist) or a native Mac app (X.app/Contents/Info.plist).
+type appBundle struct {
+	mac       bool
+	plist     *zip.File
+	resources map[string]*zip.File // files directly in the folder holding the icon files
+}
+
+func findBundle(files []*zip.File) (*appBundle, error) {
+	type candidate struct {
+		dir, resourcesDir string
+		mac               bool
+		plist             *zip.File
+	}
+	var best *candidate
+	for _, f := range files {
+		parts := strings.Split(f.Name, "/")
+		if parts[0] == "Payload" {
+			parts = parts[1:]
+		}
+		var c candidate
+		switch {
+		case len(parts) == 2 && strings.HasSuffix(parts[0], ".app") && parts[1] == "Info.plist":
+			c = candidate{dir: strings.TrimSuffix(f.Name, "Info.plist")}
+			c.resourcesDir = c.dir
+		case len(parts) == 3 && strings.HasSuffix(parts[0], ".app") && parts[1] == "Contents" && parts[2] == "Info.plist":
+			c = candidate{dir: strings.TrimSuffix(f.Name, "Contents/Info.plist"), mac: true}
+			c.resourcesDir = c.dir + "Contents/Resources/"
+		default:
+			continue
+		}
+		c.plist = f
+		// prefer iOS apps, then the first bundle
+		if best == nil || best.mac && !c.mac {
+			best = &c
+		}
+	}
+	if best == nil {
+		// an IPA without Info.plist still has the usual layout
+		for _, f := range files {
+			parts := strings.Split(f.Name, "/")
+			if len(parts) >= 2 && parts[0] == "Payload" && strings.HasSuffix(parts[1], ".app") {
+				best = &candidate{dir: "Payload/" + parts[1] + "/"}
+				best.resourcesDir = best.dir
+				break
+			}
+		}
+	}
+	if best == nil {
+		return nil, errors.New("no app bundle found")
+	}
+	bundle := &appBundle{mac: best.mac, plist: best.plist, resources: map[string]*zip.File{}}
+	for _, f := range files {
+		if name, ok := strings.CutPrefix(f.Name, best.resourcesDir); ok && name != "" && !strings.Contains(name, "/") {
+			bundle.resources[name] = f
+		}
+	}
+	return bundle, nil
+}
+
+func extractIcon(r io.ReaderAt, bundle *appBundle, names iconNames) ([]byte, error) {
+	var img image.Image
+	var errs []string
+	if !bundle.mac {
+		var err error
+		if img, err = looseIcon(bundle.resources, names.files); err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
 	if img == nil || img.Bounds().Dx() < iconOutputSize {
-		if car, ok := rootFiles["Assets.car"]; ok {
-			carImg, carErr := carIcon(r, car, append(names.assets, "AppIcon"))
-			if carErr == nil && (img == nil || carImg.Bounds().Dx() > img.Bounds().Dx()) {
+		if car, ok := bundle.resources["Assets.car"]; ok {
+			carImg, err := carIcon(r, car, append(names.assets, "AppIcon"))
+			if err != nil {
+				errs = append(errs, "Assets.car: "+err.Error())
+			} else if img == nil || carImg.Bounds().Dx() > img.Bounds().Dx() {
 				img = carImg
-			} else if img == nil {
-				return nil, errors.Errorf("%v; Assets.car: %v", looseErr, carErr)
+			}
+		}
+	}
+	if img == nil && bundle.mac {
+		if f, ok := bundle.resources[names.icns]; ok && names.icns != "" {
+			var err error
+			if img, err = icnsIcon(f); err != nil {
+				errs = append(errs, names.icns+": "+err.Error())
 			}
 		}
 	}
 	if img == nil {
-		return nil, looseErr
+		if len(errs) == 0 {
+			return nil, errors.New("no icon found")
+		}
+		return nil, errors.New(strings.Join(errs, "; "))
 	}
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, shrinkImage(img, iconOutputSize)); err != nil {
 		return nil, errors.WithMessage(err, "encode png")
 	}
 	return buf.Bytes(), nil
+}
+
+// icnsIcon returns the largest PNG in a Mac .icns file. Modern files store every size from
+// 128px up as PNG; older formats aren't supported.
+func icnsIcon(f *zip.File) (image.Image, error) {
+	data, err := readZipFile(f)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) < 8 || string(data[:4]) != "icns" {
+		return nil, errors.New("not an icns file")
+	}
+	var best []byte
+	bestArea := 0
+	for pos := 8; pos+8 <= len(data); {
+		n := int(binary.BigEndian.Uint32(data[pos+4:]))
+		if n < 8 || pos+n > len(data) {
+			return nil, errors.New("icns entry out of bounds")
+		}
+		entry := data[pos+8 : pos+n]
+		pos += n
+		if !bytes.HasPrefix(entry, pngSignature) {
+			continue
+		}
+		cfg, err := png.DecodeConfig(bytes.NewReader(entry))
+		if err != nil || cfg.Width > maxIconSide || cfg.Height > maxIconSide {
+			continue
+		}
+		if area := cfg.Width * cfg.Height; area > bestArea {
+			best, bestArea = entry, area
+		}
+	}
+	if best == nil {
+		return nil, errors.New("no png in icns")
+	}
+	return png.Decode(bytes.NewReader(best))
 }
 
 func looseIcon(files map[string]*zip.File, prefixes []string) (image.Image, error) {
@@ -154,6 +254,7 @@ func carIcon(r io.ReaderAt, f *zip.File, names []string) (image.Image, error) {
 type iconNames struct {
 	files  []string // prefixes of loose icon files
 	assets []string // asset catalog names
+	icns   string   // Mac icon file
 }
 
 type infoPlist struct {
@@ -211,6 +312,7 @@ func (info *infoPlist) iconNames() iconNames {
 	files = append(files, info.IconFiles...)
 	if info.IconFile != "" {
 		files = append(files, info.IconFile)
+		names.icns = strings.TrimSuffix(info.IconFile, ".icns") + ".icns"
 	}
 	for _, name := range files {
 		name = strings.TrimSuffix(name, ".png")
@@ -338,40 +440,80 @@ func DecodeIconPNG(data []byte) (image.Image, error) {
 	width := int(binary.BigEndian.Uint32(ihdr[0:]))
 	height := int(binary.BigEndian.Uint32(ihdr[4:]))
 	bitDepth, colorType, interlace := ihdr[8], ihdr[9], ihdr[12]
-	if bitDepth != 8 || colorType != 6 || interlace != 0 {
+	if bitDepth != 8 || colorType != 6 || interlace > 1 {
 		return nil, errors.Errorf("unsupported CgBI format depth=%d color=%d interlace=%d", bitDepth, colorType, interlace)
 	}
 	if width <= 0 || height <= 0 || width > maxIconSide || height > maxIconSide {
 		return nil, errors.Errorf("unsupported CgBI size %dx%d", width, height)
 	}
-	stride := width * 4
-	raw := make([]byte, (stride+1)*height)
+	passes := []adam7Pass{{0, 0, 1, 1}}
+	if interlace == 1 {
+		passes = adam7Passes
+	}
+	rawSize := 0
+	for _, p := range passes {
+		if w, h := p.size(width, height); w > 0 {
+			rawSize += h * (1 + w*4)
+		}
+	}
+	raw := make([]byte, rawSize)
 	if _, err := io.ReadFull(flate.NewReader(&idat), raw); err != nil {
 		return nil, errors.WithMessage(err, "inflate CgBI data")
 	}
+	stride := width * 4
 	pix := make([]byte, stride*height)
-	prev := make([]byte, stride)
-	for y := range height {
-		line := raw[y*(stride+1) : (y+1)*(stride+1)]
-		cur := line[1:]
-		if err := unfilter(line[0], cur, prev, 4); err != nil {
-			return nil, err
+	pos := 0
+	for _, p := range passes {
+		w, h := p.size(width, height)
+		if w == 0 {
+			continue
 		}
-		copy(pix[y*stride:], cur)
-		prev = cur
+		passStride := w * 4
+		prev := make([]byte, passStride)
+		for y := range h {
+			line := raw[pos : pos+1+passStride]
+			pos += 1 + passStride
+			cur := line[1:]
+			if err := unfilter(line[0], cur, prev, 4); err != nil {
+				return nil, err
+			}
+			row := pix[(p.y0+y*p.dy)*stride:]
+			for x := range w {
+				copy(row[(p.x0+x*p.dx)*4:(p.x0+x*p.dx)*4+4], cur[x*4:x*4+4])
+			}
+			prev = cur
+		}
 	}
 	return premultipliedBGRAToNRGBA(pix, width, height), nil
 }
 
+type adam7Pass struct{ x0, y0, dx, dy int }
+
+var adam7Passes = []adam7Pass{{0, 0, 8, 8}, {4, 0, 8, 8}, {0, 4, 4, 8}, {2, 0, 4, 4}, {0, 2, 2, 4}, {1, 0, 2, 2}, {0, 1, 1, 2}}
+
+// size is the pass's width and height in pixels, or zero if the image is too small for it.
+func (p adam7Pass) size(width, height int) (int, int) {
+	w, h := (width-p.x0+p.dx-1)/p.dx, (height-p.y0+p.dy-1)/p.dy
+	if w <= 0 || h <= 0 {
+		return 0, 0
+	}
+	return w, h
+}
+
+func toNRGBA(src image.Image) *image.NRGBA {
+	b := src.Bounds()
+	if img, ok := src.(*image.NRGBA); ok && b.Min == (image.Point{}) {
+		return img
+	}
+	img := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(img, img.Bounds(), src, b.Min, draw.Src)
+	return img
+}
+
 // shrinkImage scales an image down with a box filter so that no side exceeds maxSide.
 func shrinkImage(src image.Image, maxSide int) *image.NRGBA {
-	b := src.Bounds()
-	img, ok := src.(*image.NRGBA)
-	if !ok || b.Min != (image.Point{}) {
-		img = image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-		draw.Draw(img, img.Bounds(), src, b.Min, draw.Src)
-	}
-	w, h := b.Dx(), b.Dy()
+	img := toNRGBA(src)
+	w, h := img.Bounds().Dx(), img.Bounds().Dy()
 	if w <= maxSide && h <= maxSide {
 		return img
 	}

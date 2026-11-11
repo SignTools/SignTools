@@ -40,16 +40,34 @@ func writeChunk(buf *bytes.Buffer, typ string, data []byte) {
 }
 
 // crushPNG mimics Xcode's pngcrush: premultiplied BGRA, raw deflate, CgBI chunk first.
-// Each row uses a different filter so all of them get exercised.
 func crushPNG(t *testing.T, img *image.NRGBA) []byte {
+	return crushPNGInterlaced(t, img, false)
+}
+
+func crushPNGInterlaced(t *testing.T, img *image.NRGBA, interlaced bool) []byte {
 	w, h := img.Rect.Dx(), img.Rect.Dy()
-	stride := w * 4
+	passes := []adam7Pass{{0, 0, 1, 1}}
+	if interlaced {
+		passes = adam7Passes
+	}
 	var raw bytes.Buffer
+	for _, p := range passes {
+		pw, ph := p.size(w, h)
+		if pw > 0 {
+			writeCrushedRows(&raw, img, p, pw, ph)
+		}
+	}
+	return crushedPNG(t, raw.Bytes(), w, h, interlaced)
+}
+
+// writeCrushedRows writes premultiplied BGRA rows, each with a different filter so all of them get exercised.
+func writeCrushedRows(raw *bytes.Buffer, img *image.NRGBA, p adam7Pass, w, h int) {
+	stride := w * 4
 	prev := make([]byte, stride)
 	for y := range h {
 		cur := make([]byte, stride)
 		for x := range w {
-			c := img.NRGBAAt(x, y)
+			c := img.NRGBAAt(p.x0+x*p.dx, p.y0+y*p.dy)
 			premul := func(v uint8) byte { return byte(int(v) * int(c.A) / 255) }
 			cur[x*4], cur[x*4+1], cur[x*4+2], cur[x*4+3] = premul(c.B), premul(c.G), premul(c.R), c.A
 		}
@@ -77,10 +95,13 @@ func crushPNG(t *testing.T, img *image.NRGBA) []byte {
 		raw.Write(out)
 		prev = cur
 	}
+}
+
+func crushedPNG(t *testing.T, raw []byte, w, h int, interlaced bool) []byte {
 	var compressed bytes.Buffer
 	fw, err := flate.NewWriter(&compressed, flate.BestCompression)
 	require.NoError(t, err)
-	_, err = fw.Write(raw.Bytes())
+	_, err = fw.Write(raw)
 	require.NoError(t, err)
 	require.NoError(t, fw.Close())
 
@@ -91,6 +112,9 @@ func crushPNG(t *testing.T, img *image.NRGBA) []byte {
 	binary.BigEndian.PutUint32(ihdr[0:], uint32(w))
 	binary.BigEndian.PutUint32(ihdr[4:], uint32(h))
 	ihdr[8], ihdr[9] = 8, 6
+	if interlaced {
+		ihdr[12] = 1
+	}
 	writeChunk(&buf, "IHDR", ihdr)
 	writeChunk(&buf, "IDAT", compressed.Bytes())
 	writeChunk(&buf, "IEND", nil)
@@ -246,4 +270,82 @@ func TestReadAppInfoVersion(t *testing.T) {
 	assert.Equal(t, "2.0", info.Version)
 	assert.Error(t, info.IconErr)
 	assert.Empty(t, info.Icon)
+}
+
+func TestDecodeIconPNGInterlaced(t *testing.T) {
+	// sizes that leave some Adam7 passes empty or partial
+	for _, size := range [][2]int{{1, 1}, {3, 2}, {9, 7}, {17, 13}} {
+		want := testImage(size[0], size[1])
+		want.SetNRGBA(0, 0, color.NRGBA{R: 200, G: 100, B: 50, A: 128})
+		plain, err := DecodeIconPNG(crushPNGInterlaced(t, want, false))
+		require.NoError(t, err)
+		interlaced, err := DecodeIconPNG(crushPNGInterlaced(t, want, true))
+		require.NoError(t, err, "%v", size)
+		assert.Equal(t, toNRGBA(plain).Pix, toNRGBA(interlaced).Pix, "%v", size)
+	}
+}
+
+func makeIcns(t *testing.T, pngs ...[]byte) []byte {
+	var body bytes.Buffer
+	// an old-style entry that isn't a PNG is skipped
+	for _, entry := range append([][]byte{[]byte("not a png")}, pngs...) {
+		body.WriteString("ic10")
+		_ = binary.Write(&body, binary.BigEndian, uint32(8+len(entry)))
+		body.Write(entry)
+	}
+	out := append([]byte("icns"), binary.BigEndian.AppendUint32(nil, uint32(8+body.Len()))...)
+	return append(out, body.Bytes()...)
+}
+
+func TestReadAppInfoMac(t *testing.T) {
+	macPlist := plistWith(`<key>CFBundleShortVersionString</key><string>1.2</string>` +
+		`<key>CFBundleIconFile</key><string>AppIcon</string><key>CFBundleIconName</key><string>AppIcon</string>`)
+	big := testImage(30, 30)
+
+	// from the asset catalog
+	ipa := makeIPA(t, map[string][]byte{
+		"Game.app/Contents/Info.plist":            macPlist,
+		"Game.app/Contents/Resources/Assets.car":  testCar,
+		"Game.app/Contents/Resources/AppIcon.png": encodePNG(t, testImage(500, 500)),
+		"__MACOSX/Game.app/Contents/._Info.plist": []byte("junk"),
+	})
+	info, err := ReadAppInfo(ipa, ipa.Size())
+	require.NoError(t, err)
+	assert.Equal(t, "1.2", info.Version)
+	require.NoError(t, info.IconErr)
+	assert.Equal(t, iconColor, color.NRGBAModel.Convert(decode(t, info.Icon).At(5, 5)))
+
+	// from the icns file when the catalog has no bitmap
+	ipa = makeIPA(t, map[string][]byte{
+		"Game.app/Contents/Info.plist":             macPlist,
+		"Game.app/Contents/Resources/Assets.car":   makeCar([]testRendition{{identifier: 42, layout: 1010}}),
+		"Game.app/Contents/Resources/AppIcon.icns": makeIcns(t, encodePNG(t, testImage(8, 8)), encodePNG(t, big)),
+	})
+	info, err = ReadAppInfo(ipa, ipa.Size())
+	require.NoError(t, err)
+	require.NoError(t, info.IconErr)
+	assert.Equal(t, big.Pix, toNRGBA(decode(t, info.Icon)).Pix)
+
+	// loose files aren't guessed at in Mac apps, where Resources holds all sorts of images
+	ipa = makeIPA(t, map[string][]byte{
+		"Game.app/Contents/Info.plist":         macPlist,
+		"Game.app/Contents/Resources/Icon.png": encodePNG(t, big),
+	})
+	info, err = ReadAppInfo(ipa, ipa.Size())
+	require.NoError(t, err)
+	assert.Error(t, info.IconErr)
+}
+
+func TestReadAppInfoPrefersIOS(t *testing.T) {
+	ipa := makeIPA(t, map[string][]byte{
+		"Mac.app/Contents/Info.plist":      plistWith(`<key>CFBundleShortVersionString</key><string>mac</string>`),
+		"Payload/Test.app/Info.plist":      plistWith(`<key>CFBundleShortVersionString</key><string>ios</string>`),
+		"Payload/Test.app/Icon.png":        encodePNG(t, testImage(4, 4)),
+		"__MACOSX/Payload/._Test.app":      []byte("junk"),
+		"__MACOSX/Payload/Test.app/._Icon": []byte("junk"),
+	})
+	info, err := ReadAppInfo(ipa, ipa.Size())
+	require.NoError(t, err)
+	assert.Equal(t, "ios", info.Version)
+	assert.NoError(t, info.IconErr)
 }
