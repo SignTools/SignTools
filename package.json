@@ -24,7 +24,7 @@
     "@popperjs/core": "2.11.8",
     "@uppy/core": "6.3.1",
     "@uppy/tus": "6.0.1",
-    "bootstrap": "5.3.8",
+    "bootstrap": "5.3.9",
     "bootstrap-icons": "1.13.2",
     "masonry-layout": "4.2.2"
   }
