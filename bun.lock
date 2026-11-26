@@ -5,7 +5,7 @@
     "": {
       "dependencies": {
         "@popperjs/core": "2.11.8",
-        "@uppy/core": "6.3.1",
+        "@uppy/core": "6.3.2",
         "@uppy/tus": "6.0.1",
         "bootstrap": "5.3.8",
         "bootstrap-icons": "1.13.2",
@@ -30,7 +30,7 @@
 
     "@types/node": ["@types/node@26.6.6", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog=="],
 
-    "@uppy/core": ["@uppy/core@6.3.1", "", { "dependencies": { "@transloadit/prettier-bytes": "^2.0.0", "classnames": "^2.5.1", "lodash": "^4.18.1", "mime-match": "^1.0.2", "namespace-emitter": "^2.0.1", "nanoid": "^6.0.1", "p-queue": "^9.3.3", "p-retry": "^8.0.0", "preact": "^10.29.2", "type-fest": "^5.10.0" } }, "sha512-yIhg41/2RHzyZcxCW0Ta81JyveCGoiBpWozpXRJSjsr4Xip61mzFgPyUEeb0VCLKprK4m8xiJyr2nJqnZwgcww=="],
+    "@uppy/core": ["@uppy/core@6.3.2", "", { "dependencies": { "@transloadit/prettier-bytes": "^2.0.0", "classnames": "^2.5.1", "lodash": "^4.18.1", "mime-match": "^1.0.2", "namespace-emitter": "^2.0.1", "nanoid": "^6.0.1", "p-queue": "^9.3.3", "p-retry": "^8.0.0", "preact": "^10.29.2", "type-fest": "^5.10.0" } }, "sha512-xZOazr4P59wwEeGJVktH67/0D0OzWy3HbsdCKi368JKzSNgTmDHv2FvGbFqcNY4b3K3j09ji+AwE6Oif7IvTmg=="],
 
     "@uppy/tus": ["@uppy/tus@6.0.1", "", { "dependencies": { "tus-js-client": "^4.3.1" }, "peerDependencies": { "@uppy/core": "^6.3.1" } }, "sha512-svsbIJlVqKoudatxuFf+o7SiK/kklbcQiKDuIoTBfaHKNYJnfDvPjn16iHzQ0kyh6GfBmrc7NHUXXgv5sC6UWw=="],
 
